@@ -20,7 +20,7 @@ resources:
   - ../../../apps/paperless-ngx/overlays/prod
   - ../../../apps/speedtest/overlays/prod
   - ../../../apps/uptime/overlays/prod
-  # - ../../../apps/karakeep/overlays/prod
+  - ../../../apps/karakeep/overlays/prod
 
 patches:
   - target:
