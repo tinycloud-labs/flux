@@ -70,6 +70,9 @@ config:
         - Photopea:
             - abbr: PP
               href: https://www.photopea.com/
+        - HowItWorks:
+            - abbr: HIW
+              href: https://toolkit.whysonil.dev/how-it-works/
 
   services:
       - Infrastructure:
