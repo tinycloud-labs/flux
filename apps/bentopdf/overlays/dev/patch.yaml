@@ -1,0 +1,14 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bentopdf
+spec:
+  values:
+    app:
+      image:
+        tag: sha-fb8c8c0
+      replicaCount: 1
+    ingress:
+      enabled: true
+      host: dev-bentopdf.shakir.cloud
+      ingressClassName: traefik
