@@ -13,8 +13,7 @@
   "packageRules": [
     {
       "matchDatasources": ["docker"],
-      "versioning": "loose",
-      "extractVersion": "^sha-(?<version>.*)$"
+      "versioning": "regex:^sha-(?<version>.*)$"
     }
   ]
 }
