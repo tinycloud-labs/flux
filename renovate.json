@@ -1,19 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "description": "Match Flux Helm values split repo/tag",
-      "fileMatch": [
-        "apps/.+/base/.+\\.ya?ml",
-        "apps/.+/overlays/.+\\.ya?ml"
-      ],
-      "matchStrings": [
-        "repository:\\s*(?<depName>\\S+)",
-        "tag:\\s*\"?(?<currentValue>[\\w.-]+)\"?"
-      ],
-      "datasourceTemplate": "docker"
-    }
+  "extends": [
+    "config:recommended"
   ]
 }
