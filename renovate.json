@@ -1,6 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["apps/.+/overlays/.+\\.ya?ml"],
+      "matchStrings": [
+        "tag:\\s*\"?(?<currentValue>[\\w.-]+)\"?\\s*#\\s*renovate:\\s*depName=(?<depName>\\S+)\\s+datasource=(?<datasource>\\S+)"
+      ]
+    }
   ]
 }
