@@ -9,5 +9,11 @@
         "tag:\\s*\"?(?<currentValue>[\\w.-]+)\"?\\s*#\\s*renovate:\\s*depName=(?<depName>\\S+)\\s+datasource=(?<datasource>\\S+)"
       ]
     }
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "versioning": "loose"
+    }
   ]
 }
