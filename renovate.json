@@ -10,7 +10,7 @@
         "/apps/.+/overlays/.+\\.ya?ml/"
       ],
       "matchStrings": [
-        "digest:\\s*\"?(?<currentDigest>sha256:[a-f0-9]+)\"?\\s*#\\s*renovate:\\s*depName=(?<depName>\\S+)"
+        "tag:\\s*\"?(?<currentValue>[\\w.-]+)\"?\\s*#\\s*renovate:\\s*depName=(?<depName>\\S+)[\\s\\S]*?digest:\\s*\"?(?<currentDigest>sha256:[a-f0-9]+)\"?"
       ],
       "datasourceTemplate": "docker",
       "currentValueTemplate": "{{currentDigest}}"
