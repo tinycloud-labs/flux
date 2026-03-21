@@ -8,7 +8,8 @@
       "matchStrings": [
         "digest:\\s*\"?(?<currentDigest>sha256:[a-f0-9]+)\"?\\s*#\\s*renovate:\\s*depName=(?<depName>\\S+)"
       ],
-      "datasourceTemplate": "docker"
+      "datasourceTemplate": "docker",
+      "currentValueTemplate": "{{currentDigest}}"
     }
   ]
 }
