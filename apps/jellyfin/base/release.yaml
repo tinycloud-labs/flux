@@ -23,7 +23,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: jellyfin-app-values
-      valuesKey: app-values.yaml
+      valuesKey: values.yaml
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2

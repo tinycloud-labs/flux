@@ -6,7 +6,7 @@ resources:
 configMapGenerator:
   - name: uptime-values
     files:
-      - values.yaml=uptime-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

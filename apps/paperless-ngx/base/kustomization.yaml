@@ -4,7 +4,7 @@ resources:
 configMapGenerator:
   - name: paperless-app-values
     files:
-      - app-values.yaml=app-values.yaml
+      - values.yaml
   - name: paperless-data-values
     files:
       - data-values.yaml=data-values.yaml
