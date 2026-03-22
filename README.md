@@ -1,8 +1,15 @@
 ![Kustomize Build](https://github.com/tinycloud-labs/flux/actions/workflows/kustomize-build.yml/badge.svg) 
 
-Managed K8s deployment with FluxCD using an app-centric base/overlay structure. Bases and overlays are defined per application to keep deployments easy to reason about. There're some intentional non-DRY configuration to favor clarity and locality over abstraction (e.g. when working on `apps/foo/` configs, I don't want to jump between directories or mentally reconstruct how everything is wired together). Plus a[ GitHub Action runs](https://github.com/tinycloud-labs/flux/blob/main/.github/workflows/kustomize-build.yml) `kustomize build` on PRs to catch rendering issues early.
+Managed K8s deployment with FluxCD using base/overlay app-centric structure. 
 
-### Top-level view
+Bases and overlays are defined per application to keep deployments easy to reason about. There're some intentional non-DRY configuration to favor clarity and locality over abstraction (e.g. when working on `apps/foo/` configs, I don't want to mentally reconstruct how everything is wired together). 
+
+Automation:
+- [ GitHub Action runs](https://github.com/tinycloud-labs/flux/blob/main/.github/workflows/kustomize-build.yml) `kustomize build` on PRs to catch rendering issues early.
+- Renovate bot to update container images.
+- Flux reconciliation loop.
+
+### Repo top-level view
 ```
 apps/                # reusable applications definitions
     ├── ...
@@ -11,13 +18,17 @@ clusters/            # environment-specific wiring
     └── prod/            # monitored by a Flux instance on a K3s-prod
 ```
 
-### Apps are reusable (not env aware)
+### `apps/` organization
+
+- Bases are reusable and not environment aware
+- Overlays are environment specific
+
 ```
 apps/
-├── foo/
+├── app-foo/
 │   ├── base/
-│   │   ├── helm-values.yaml       # generic Helm values
-│   │   ├── release.yaml
+│   │   ├── values.yaml        # generic Helm values
+│   │   ├── release.yaml       # flux release manifest
 │   │   └── kustomization.yaml
 │   └── overlays/
 │       ├── dev/
@@ -29,7 +40,10 @@ apps/
 └── ...
 ```
 
-### Clusters call the needed releases
+### `clusters/` organization
+
+Each cluster call the needed releases
+
 ```
 clusters/
 └── prod/
