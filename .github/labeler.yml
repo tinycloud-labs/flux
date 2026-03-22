@@ -22,3 +22,7 @@ flux-patch:
   - changed-files:
       - any-glob-to-any-file: "apps/*/overlays/*"
       - any-glob-to-any-file: "apps/*/overlays/**/*"
+
+enhancement:
+  - changed-files:
+      - any-glob-to-any-file: "README.md"
