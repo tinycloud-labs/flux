@@ -1,3 +1,4 @@
+# renovate: depName=linuxserver/speedtest-tracker datasource=docker
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -6,7 +7,7 @@ spec:
   values:
     app:
       image:
-        tag: latest
+        tag: latest # TODO: pin to a release tag
       replicaCount: 1
     ingress:
       enabled: true
