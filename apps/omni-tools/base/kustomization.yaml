@@ -4,7 +4,7 @@ resources:
 configMapGenerator:
   - name: omni-tools-values
     files:
-      - values.yaml=omni-tools-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

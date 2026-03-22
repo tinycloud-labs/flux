@@ -4,7 +4,7 @@ resources:
 configMapGenerator:
   - name: jellyfin-app-values
     files:
-      - app-values.yaml=app-values.yaml
+      - values.yaml
   - name: jellyfin-media-values
     files:
       - media-values.yaml=media-values.yaml

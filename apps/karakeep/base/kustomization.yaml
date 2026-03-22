@@ -6,7 +6,7 @@ resources:
 configMapGenerator:
   - name: karakeep-values
     files:
-      - values.yaml=karakeep-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

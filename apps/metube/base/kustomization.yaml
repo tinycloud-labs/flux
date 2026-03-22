@@ -4,7 +4,7 @@ resources:
 configMapGenerator:
   - name: metube-values
     files:
-      - values.yaml=metube-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

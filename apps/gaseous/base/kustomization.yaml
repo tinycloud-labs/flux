@@ -4,7 +4,7 @@ resources:
 configMapGenerator:
   - name: gaseous-values
     files:
-      - values.yaml=gaseous-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

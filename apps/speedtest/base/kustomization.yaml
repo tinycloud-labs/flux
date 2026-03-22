@@ -4,7 +4,7 @@ resources:
 configMapGenerator:
   - name: speedtest-values
     files:
-      - values.yaml=speedtest-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

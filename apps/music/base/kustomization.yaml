@@ -4,7 +4,7 @@ resources:
 configMapGenerator:
   - name: plex-values
     files:
-      - values.yaml=plex-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

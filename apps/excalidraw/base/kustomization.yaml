@@ -6,7 +6,7 @@ resources:
 configMapGenerator:
   - name: excalidraw-values
     files:
-      - values.yaml=excalidraw-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

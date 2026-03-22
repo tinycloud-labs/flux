@@ -4,7 +4,7 @@ resources:
 configMapGenerator:
   - name: deemix-values
     files:
-      - values.yaml=deemix-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
