@@ -2,7 +2,6 @@ app:
   name: metube
   image:
     repository: ghcr.io/alexta69/metube
-    tag: latest
     pullPolicy: IfNotPresent
 
   replicaCount: 1

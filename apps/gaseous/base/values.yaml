@@ -47,7 +47,7 @@ database:
 
   image:
     repository: mariadb
-    tag: latest
+    tag: 12-ubi10
     pullPolicy: IfNotPresent
 
   volumeMounts:
