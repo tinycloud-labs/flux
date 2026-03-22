@@ -7,7 +7,7 @@ spec:
   values:
     app:
       image:
-        tag: latest # TODO: pin to a release tag
+        tag: 1.13.11
       replicaCount: 1
     ingress:
       enabled: true
