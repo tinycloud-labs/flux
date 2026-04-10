@@ -3,6 +3,7 @@ app:
   image:
     repository: excalidraw/excalidraw
     pullPolicy: IfNotPresent
+    tag: sha-4bfc5bb
 
   replicaCount: 1
 

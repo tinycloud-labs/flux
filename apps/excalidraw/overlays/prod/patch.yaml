@@ -6,8 +6,6 @@ metadata:
 spec:
   values:
     app:
-      image:
-        tag: sha-4bfc5bb
       replicaCount: 1
     ingress:
       enabled: true

@@ -6,8 +6,6 @@ metadata:
 spec:
   values:
     app:
-      image:
-        tag: sha-23adf06 # renovate: depName=docker.io/actualbudget/actual-server datasource=docker
       replicaCount: 1
     ingress:
       enabled: true

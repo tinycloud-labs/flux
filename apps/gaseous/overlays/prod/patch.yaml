@@ -6,8 +6,6 @@ metadata:
 spec:
   values:
     app:
-      image:
-        tag: v1.7.14
       replicaCount: 1
     ingress:
       enabled: true
