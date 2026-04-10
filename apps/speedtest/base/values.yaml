@@ -3,7 +3,7 @@ app:
   image:
     repository: linuxserver/speedtest-tracker
     pullPolicy: IfNotPresent
-    tag: 1.13.11
+    tag: 1.13.12
   containerPort: 80
 
   service:
