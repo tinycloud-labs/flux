@@ -3,7 +3,7 @@ app:
   image:
     repository: ghcr.io/alexta69/metube
     pullPolicy: IfNotPresent
-    tag: "2026.04.09" # renovate: depName=ghcr.io/alexta69/metube
+    tag: "2026.04.10" # renovate: depName=ghcr.io/alexta69/metube
   replicaCount: 1
 
   containerPort: 80
