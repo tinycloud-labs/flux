@@ -15,5 +15,12 @@
       "datasourceTemplate": "docker",
       "versioningTemplate": "loose"
     }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["*"],
+      "matchCurrentValue": "/^sha-/",
+      "versioningTemplate": "loose"
+    }
   ]
 }
