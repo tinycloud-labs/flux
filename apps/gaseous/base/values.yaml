@@ -3,6 +3,7 @@ app:
   image:
     repository: gaseousgames/gaseousserver
     pullPolicy: IfNotPresent
+    tag: v1.7.14
 
   replicaCount: 1
   containerPort: 80
