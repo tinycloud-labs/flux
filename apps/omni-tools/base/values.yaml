@@ -3,6 +3,7 @@ app:
   image:
     repository: iib0011/omni-tools
     pullPolicy: IfNotPresent
+    tag: "0.6" # renovate: depName=iib0011/omni-tools
 
   containerPort: 80
 

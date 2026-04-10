@@ -6,8 +6,6 @@ metadata:
 spec:
   values:
     app:
-      image:
-        tag: "2026.01.30"
       replicaCount: 1
     ingress:
       enabled: true

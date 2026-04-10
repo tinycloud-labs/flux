@@ -3,7 +3,7 @@ app:
   image:
     repository: excalidraw/excalidraw
     pullPolicy: IfNotPresent
-    tag: sha-4bfc5bb
+    tag: sha-4bfc5bb # renovate: depName=excalidraw/excalidraw
 
   replicaCount: 1
 
