@@ -1,4 +1,4 @@
-# renovate: depName=docker.io/actualbudget/actual-server datasource=docker
+
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -7,8 +7,7 @@ spec:
   values:
     app:
       image:
-        digest: "sha256:0b6c761f15dda9b4fb4c2b66d87e94b8f9cc646c18045382bfc49c1d35b52a7e"
-        tag: sha-23adf06
+        tag: sha-23adf06 # renovate: depName=docker.io/actualbudget/actual-server datasource=docker
       replicaCount: 1
     ingress:
       enabled: true
