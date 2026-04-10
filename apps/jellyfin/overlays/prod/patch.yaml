@@ -4,8 +4,6 @@ metadata:
   name: jellyfin
 spec:
   values:
-    image:
-      tag: ""
     replicaCount: 1
     ingress:
       enabled: true

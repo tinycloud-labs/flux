@@ -7,7 +7,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/apps/.+/overlays/.+/patch\\.ya?ml$"
+        "patch\\.ya?ml$"
       ],
       "matchStrings": [
         "digest:\\s*\"?(?<currentDigest>sha256:[a-f0-9]+)\"?[\\s\\S]*?tag:\\s*\"?(?<currentValue>[\\w.-]+)\"?\\s*#\\s*renovate:\\s*depName=(?<depName>\\S+)",
