@@ -1,10 +1,10 @@
 app:
-  name: excalidraw
+  name: uptime
   image:
     repository: louislam/uptime-kuma
     pullPolicy: IfNotPresent
-
   replicaCount: 1
+  tag: "2" # renovate: depName=louislam/uptime-kuma
 
   containerPort: 3001
 
