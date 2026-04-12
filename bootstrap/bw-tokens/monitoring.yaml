@@ -1,0 +1,22 @@
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: grafana
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: grafana
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: f3c40b65-4be3-4306-9987-b4060166ca3b
+      secretKeyName: grafana-secret
+
+    - bwSecretId: 03189e93-0c0d-454d-81ee-b407002ed482
+      secretKeyName: grafana-user
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

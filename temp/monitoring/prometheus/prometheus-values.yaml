@@ -50,7 +50,7 @@ grafana:
     enabled: true
 
   admin:
-    existingSecret: grafana-admin-credentials
+    existingSecret: grafana
     userKey: admin-user
     passwordKey: admin-password
 
