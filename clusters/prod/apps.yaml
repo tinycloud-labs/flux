@@ -6,7 +6,6 @@ metadata:
 spec:
   interval: 10m
   dependsOn:
-    - name: namespaces
     - name: helm-repos
   path: ./flux/clusters/prod/apps
   prune: true
