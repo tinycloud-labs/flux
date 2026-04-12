@@ -8,7 +8,7 @@ spec:
   dependsOn:
     - name: namespaces
     - name: helm-repos
-  path: ../../bootstrap/helm-repos
+  path: ./bootstrap/helm-repos
   prune: true
   sourceRef:
     kind: GitRepository

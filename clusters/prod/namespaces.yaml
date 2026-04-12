@@ -7,7 +7,7 @@ spec:
   interval: 10m
   dependsOn:
     - name: flux-system
-  path: ./namespaces
+  path: ./clusters/prod/namespaces
   prune: true
   sourceRef:
     kind: GitRepository

@@ -8,7 +8,7 @@ spec:
   dependsOn:
     - name: namespaces
     - name: helm-repos
-  path: ./apps
+  path: ./clusters/prod/apps
   prune: true
   sourceRef:
     kind: GitRepository
