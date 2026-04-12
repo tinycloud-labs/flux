@@ -4,6 +4,5 @@ kind: Kustomization
 resources:
   - flux-system
   # - monitoring
-  - apps.yaml
+  # - apps.yaml
   - helm-repos.yaml
-  - namespaces.yaml
