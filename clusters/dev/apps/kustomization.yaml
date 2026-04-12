@@ -4,5 +4,4 @@ kind: Kustomization
 namespace: apps
 
 resources:
-  - ../../../apps/excalidraw/overlays/dev
-  - ../../../apps/bentopdf/overlays/dev
+  - ../../../apps/excalidraw/overlays/prod
