@@ -7,7 +7,7 @@ spec:
   interval: 10m
   dependsOn:
     - name: helm-repos
-  path: ./flux/clusters/prod/apps
+  path: ./clusters/prod/apps
   prune: true
   sourceRef:
     kind: GitRepository
