@@ -4,4 +4,4 @@ kind: Kustomization
 namespace: apps
 
 resources:
-  - ../../../apps/excalidraw/overlays/dev
+  - ../../../apps/excalidraw/overlays/prod
