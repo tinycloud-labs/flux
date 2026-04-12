@@ -51,8 +51,8 @@ grafana:
 
   admin:
     existingSecret: grafana
-    userKey: admin-user
-    passwordKey: admin-password
+    userKey:  grafana-user
+    passwordKey:  grafana-secret
 
   ingress:
     enabled: true
