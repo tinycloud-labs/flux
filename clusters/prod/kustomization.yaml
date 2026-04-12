@@ -3,7 +3,7 @@ kind: Kustomization
 
 resources:
   - flux-system
-  - ../../helm-repos
-  - namespaces
-  - apps
   - monitoring
+  - apps.yaml
+  - helm-repos.yaml
+  - namespaces.yaml

@@ -3,5 +3,5 @@ kind: Kustomization
 
 resources:
   - flux-system
-  - ../../helm-repos
+  - ../../bootstrap/helm-repos
   - apps
