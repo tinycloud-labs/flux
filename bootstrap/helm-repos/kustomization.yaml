@@ -6,3 +6,7 @@ resources:
   - ./grafana.yaml
   - ./homepage.yaml
   - ./anza-labs.yaml
+  - ./cert-manager.yaml
+  - ./csi-driver-nfs.yaml
+  - ./metallb.yaml
+  - ./bw-secrets-manager.yaml
