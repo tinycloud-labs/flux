@@ -1,0 +1,14 @@
+labels:
+  app: jellyfin
+annotations:
+  volume.kubernetes.io/description: "Shared PVC for jellyfin-config"
+  custom.synology/path-hint: "maps to /vol1/k3s-main/jellyfin-config"
+
+persistence:
+  name: jellyfin-config
+  size: 100Mi
+  accessMode: ReadWriteMany
+  reclaimPolicy: Retain
+  nfs:
+    server: synology.shakir.cloud
+    path: /volume1/k3s-main/pv-jellyfin-config

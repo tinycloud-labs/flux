@@ -1,0 +1,16 @@
+resources:
+  - release.yaml
+
+configMapGenerator:
+  - name: jellyfin-app-values
+    files:
+      - values.yaml
+  - name: jellyfin-media-values
+    files:
+      - media-values.yaml=media-values.yaml
+  - name: jellyfin-config-values
+    files:
+      - config-values.yaml=config-values.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
