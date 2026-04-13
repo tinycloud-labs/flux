@@ -18,5 +18,4 @@ spec:
     - name: helm-repos
     - name: metallb-config
     - name: csi-driver-nfs
-    # TODO: needed later
-    # - name: bw-secrets-app
+    - name: bw-secrets
