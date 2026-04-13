@@ -1,0 +1,14 @@
+app:
+  name: excalidraw
+  image:
+    repository: excalidraw/excalidraw
+    pullPolicy: IfNotPresent
+    tag: sha-4bfc5bb # renovate: depName=excalidraw/excalidraw
+
+  replicaCount: 1
+
+  containerPort: 80
+
+  service:
+    port: 80
+    targetPort: 80
