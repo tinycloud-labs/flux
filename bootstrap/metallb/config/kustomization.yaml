@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Assembles MetalLB custom resources: IPAddressPool and L2Advertisement.
+# This directory is reconciled by a separate Flux Kustomization (metallb-config)
+# in the `clusters/<env>/metallb-config.yaml`
+# that depends on the metallb Flux Kustomization to ensure CRDs are present.
+resources:
+  - ip-address-pool.yaml
+  - l2-advertisement.yaml

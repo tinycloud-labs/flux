@@ -1,0 +1,11 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: default-pool
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/component: metallb
+    app.kubernetes.io/part-of: bootstrap
+spec:
+  addresses:
+    - 10.10.50.95-10.10.50.97

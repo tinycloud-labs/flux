@@ -1,0 +1,11 @@
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: default-advertisement
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/component: metallb
+    app.kubernetes.io/part-of: bootstrap
+spec:
+  ipAddressPools:
+    - default-pool # must match IPAddressPool name in ip-address-pool.yaml
