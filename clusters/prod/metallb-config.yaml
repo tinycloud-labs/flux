@@ -1,0 +1,20 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: metallb-config
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/component: metallb
+    app.kubernetes.io/part-of: bootstrap
+spec:
+  # Applies MetalLB custom resources (IPAddressPool, L2Advertisement).
+  # MUST depend on metallb so CRDs from the Helm chart exist before
+  # these CRs are applied, otherwise the API server will reject them.
+  interval: 10m
+  path: ./bootstrap/metallb/config
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: metallb

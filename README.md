@@ -4,6 +4,8 @@ Managed K8s deployment with FluxCD using base/overlay app-centric structure.
 
 Bases and overlays are defined per application to keep deployments easy to reason about. There're some intentional non-DRY configuration to favor clarity and locality over abstraction (e.g. when working on `apps/foo/` configs, I don't want to mentally reconstruct how everything is wired together). 
 
+bootstrapping using split-mirrors as a pattern to reuse anything that installs CRDs and then needs CRs applied
+
 Automation:
 - [ GitHub Action runs](https://github.com/tinycloud-labs/flux/blob/main/.github/workflows/kustomize-build.yml) `kustomize build` on PRs to catch rendering issues early.
 - Renovate bot to update container images.
