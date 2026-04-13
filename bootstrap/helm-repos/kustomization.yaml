@@ -1,12 +1,17 @@
+# Assembles all HelmRepository objects for the cluster.
+# These define the upstream Helm chart sources used by HelmRelease resources
+# throughout bootstrap and apps. No ordering required between them.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 resources:
-  - ./tinycloud-labs.yaml
-  - ./jellyfin.yaml
-  - ./karakeep.yaml
-  - ./prometheus-stack.yaml
-  - ./grafana.yaml
-  - ./homepage.yaml
-  - ./anza-labs.yaml
-  - ./cert-manager.yaml
-  - ./csi-driver-nfs.yaml
-  - ./metallb.yaml
-  - ./bw-secrets-manager.yaml
+  - anza-labs.yaml
+  - bw-secrets-manager.yaml
+  - cert-manager.yaml
+  - csi-driver-nfs.yaml
+  - grafana.yaml
+  - homepage.yaml
+  - jellyfin.yaml
+  - karakeep.yaml
+  - metallb.yaml
+  - prometheus-stack.yaml
+  - tinycloud-labs.yaml

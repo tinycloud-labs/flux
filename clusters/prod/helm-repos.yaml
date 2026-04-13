@@ -3,8 +3,13 @@ kind: Kustomization
 metadata:
   name: helm-repos
   namespace: flux-system
+  labels:
+    app.kubernetes.io/component: helm-repos
+    app.kubernetes.io/part-of: bootstrap
 spec:
-  interval: 1m
+  # Reconciles all HelmRepository objects.
+  # No dependsOn needed — HelmRepositories have no prerequisites.
+  interval: 10m
   path: ./bootstrap/helm-repos
   prune: true
   sourceRef:
