@@ -1,0 +1,10 @@
+resources:
+  - release.yaml
+
+configMapGenerator:
+  - name: carlogger-values
+    files:
+      - values.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true

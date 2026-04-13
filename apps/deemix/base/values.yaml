@@ -1,0 +1,28 @@
+app:
+  name: deemix
+  image:
+    repository: ghcr.io/bambanah/deemix
+    pullPolicy: IfNotPresent
+    tag: v4.5.1
+
+  service:
+    port: 80
+    targetPort: 6595
+
+  volumeMounts:
+    - mountPath: /downloads
+      subPath: downloads
+    - mountPath: /config
+      subPath: config
+
+  env:
+    - name: PUID
+      value: "1000"
+    - name: PGID
+      value: "1000"
+    - name: UMASK_SET
+      value: "022"
+    - name: DEEMIX_SINGLE_USER
+      value: "true"
+
+

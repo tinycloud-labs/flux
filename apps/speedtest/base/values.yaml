@@ -1,0 +1,27 @@
+app:
+  name: speedtest
+  image:
+    repository: linuxserver/speedtest-tracker
+    pullPolicy: IfNotPresent
+    tag: 1.13.12
+  containerPort: 80
+
+  service:
+    port: 80
+    targetPort: 80
+
+  volumeMounts:
+    - mountPath: /config
+      subPath: config
+
+  env:
+    - name: PUID
+      value: "1000"
+    - name: PGID
+      value: "1000"
+    - name: TZ
+      value: "America/Los_Angeles"
+    - name: OOKLA_EULA_GDPR
+      value: "true"
+    - name: DB_CONNECTION
+      value: sqlite
