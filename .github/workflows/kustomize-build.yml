@@ -14,8 +14,8 @@ jobs:
         cluster:
           - path: clusters/prod
             name: prod
-          - path: clusters/dev
-            name: dev
+          # - path: clusters/dev
+          #   name: dev
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v6
