@@ -1,0 +1,21 @@
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: apps
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: apps
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: apps
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: 561810a3-c0a9-4ae3-bceb-b407002dfe32
+      secretKeyName: paperless-username
+    - bwSecretId: 6e59fe97-8a2e-4ebb-8d36-b407002e2cce
+      secretKeyName: paperless-password
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
