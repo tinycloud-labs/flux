@@ -1,0 +1,5 @@
+labels:
+  app: paperless-ngx
+annotations:
+  volume.kubernetes.io/description: "Shared PVC for paperless-ngx"
+  custom.synology/path-hint: "maps to /vol1/k3s-main/paperless-ngx"

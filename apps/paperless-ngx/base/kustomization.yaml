@@ -1,0 +1,13 @@
+resources:
+  - release.yaml
+
+configMapGenerator:
+  - name: paperless-app-values
+    files:
+      - values.yaml
+  - name: paperless-data-values
+    files:
+      - data-values.yaml=data-values.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true

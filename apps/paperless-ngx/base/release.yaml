@@ -1,0 +1,48 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperless-ngx
+  namespace: default
+spec:
+  interval: 1h0m0s
+  releaseName: paperless-ngx
+  dependsOn:
+    - name: paperless-ngx-data
+      namespace: apps
+  chart:
+    spec:
+      chart: paperless-ngx
+      version: "0.1.2"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+  valuesFrom:
+    - kind: ConfigMap
+      name: paperless-app-values
+      valuesKey: values.yaml
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperless-ngx-data
+  namespace: default
+
+spec:
+  interval: 1h0m0s
+  releaseName: paperless-ngx-data
+
+  chart:
+    spec:
+      chart: nfspersistence
+      version: "0.3.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+  valuesFrom:
+    - kind: ConfigMap
+      name: paperless-data-values
+      valuesKey: data-values.yaml
