@@ -1,0 +1,26 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/component: cert-manager
+    app.kubernetes.io/part-of: bootstrap
+spec:
+  # Installs cert-manager. Depends on helm-repos being reconciled first
+  # so the HelmRepository index is available for the HelmRelease.
+  interval: 10m
+  path: ./bootstrap/cert-manager
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: helm-repos
+  # Flux won't attempt to apply cert-manager until helm-repos is healthy,
+  # and it won't mark cert-manager itself as healthy until the HelmRelease reports ready.
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: cert-manager
+      namespace: cert-manager
