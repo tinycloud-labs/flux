@@ -1,0 +1,14 @@
+# Common HelmRelease values
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+#	Kubernetes namespace in kustomization.yaml
+namespace: apps
+
+resources:
+  - ../../../apps/excalidraw/overlays/prod
+
+patches:
+  - target:
+      kind: HelmRelease
+    path: common-patch.yaml
