@@ -1,0 +1,24 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: metube
+  namespace: default
+
+spec:
+  interval: 1h0m0s
+  releaseName: metube
+
+  chart:
+    spec:
+      chart: unichart
+      version: "0.0.7"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  valuesFrom:
+    - kind: ConfigMap
+      name: metube-values
+      valuesKey: values.yaml

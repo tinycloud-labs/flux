@@ -1,0 +1,18 @@
+app:
+  name: metube
+  image:
+    repository: ghcr.io/alexta69/metube
+    pullPolicy: IfNotPresent
+    tag: "2026.04.09" # renovate: depName=ghcr.io/alexta69/metube
+  replicaCount: 1
+
+  containerPort: 80
+
+  service:
+    port: 80
+    targetPort: 8081
+
+  volumeMounts:
+    - mountPath: /downloads
+      subPath: downloads
+

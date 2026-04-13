@@ -1,0 +1,13 @@
+# renovate: depName=ghcr.io/alam00000/bentopdf datasource=docker
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bentopdf
+spec:
+  values:
+    app:
+      replicaCount: 1
+    ingress:
+      enabled: true
+      host: bentopdf.shakir.cloud
+      ingressClassName: traefik

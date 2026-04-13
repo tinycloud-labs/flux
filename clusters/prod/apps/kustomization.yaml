@@ -6,7 +6,15 @@ kind: Kustomization
 namespace: apps
 
 resources:
+  - ../../../apps/actualbudget/overlays/prod
+  - ../../../apps/bentopdf/overlays/prod
+  - ../../../apps/carlogger/overlays/prod
+  - ../../../apps/deemix/overlays/prod
   - ../../../apps/excalidraw/overlays/prod
+  - ../../../apps/homepage/overlays/prod
+  - ../../../apps/metube/overlays/prod
+  - ../../../apps/omni-tools/overlays/prod
+  - ../../../apps/speedtest/overlays/prod
 
 patches:
   - target:
