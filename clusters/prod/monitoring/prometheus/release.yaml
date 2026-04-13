@@ -22,4 +22,3 @@ spec:
     - kind: ConfigMap
       name: prometheus-values
       valuesKey: values.yaml
-

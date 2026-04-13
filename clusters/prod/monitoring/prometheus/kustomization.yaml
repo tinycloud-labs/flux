@@ -8,3 +8,8 @@ configMapGenerator:
 
 generatorOptions:
   disableNameSuffixHash: true
+
+# pseduo code
+# depends on:
+#   - bootstrap/bw-tokens/monitoring.yaml
+#   - helm-repos
