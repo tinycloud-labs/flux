@@ -3,7 +3,7 @@ app:
   image:
     repository: docker.io/actualbudget/actual-server
     pullPolicy: IfNotPresent
-    tag: sha-23adf06 # renovate: depName=docker.io/actualbudget/actual-server
+    tag: latest # renovate: depName=docker.io/actualbudget/actual-server
 
   service:
     port: 80
