@@ -3,7 +3,7 @@ app:
   image:
     repository: ghcr.io/bambanah/deemix
     pullPolicy: IfNotPresent
-    tag: v4.5.2
+    tag: v4.5.2@sha256:cd53202a41e77066419af2af9e1ff68b2d68682df3698e6a5e84d9b29a12912d
 
   service:
     port: 80

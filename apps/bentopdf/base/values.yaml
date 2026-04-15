@@ -3,7 +3,7 @@ app:
   image:
     repository: ghcr.io/alam00000/bentopdf
     pullPolicy: IfNotPresent
-    tag: 2.8.2 # renovate: depName=ghcr.io/alam00000/bentopdf
+    tag: 2.8.2@sha256:ceee3325f10c3c7e2eef582cc14492e809c1646b5bee4ef00094f2ef3bacebf9 # renovate: depName=ghcr.io/alam00000/bentopdf
   containerPort: 8080
 
   service:
