@@ -21,8 +21,6 @@
       "matchPackageNames": ["*"],
       "matchCurrentValue": "/^sha-/",
       "versioningTemplate": "loose",
-      "matchDatasources": ["docker"],
-      "pinDigests": true
     }
   ]
 }
