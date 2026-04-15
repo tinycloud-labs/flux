@@ -14,7 +14,7 @@ image:
   # -- Registry and repository for the lubelogger image.
   repository: ghcr.io/hargata/lubelogger
   # -- Tag for the image.
-  tag: "v1.6.3"
+  tag: "v1.6.3@sha256:35daede9d9675cc979cde1cfe08cae8eb7fe92506e890445bb6bde5533daa624"
   # -- Image pull policy.
   pullPolicy: IfNotPresent
 
@@ -206,7 +206,7 @@ curl:
     # -- Registry and repository for the image.
     repository: docker.io/curlimages/curl
     # -- Tag for the image.
-    tag: "8.19.0"
+    tag: "8.19.0@sha256:9a6f6a17667960e077f1b153009aaf18ac99a622221084e1938a45a06fff057a"
     # -- Image pull policy.
     pullPolicy: IfNotPresent
 
