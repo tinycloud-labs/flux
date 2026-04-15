@@ -20,7 +20,7 @@
     {
       "matchPackageNames": ["*"],
       "matchCurrentValue": "/^sha-/",
-      "versioningTemplate": "loose",
+      "versioningTemplate": "loose"
     }
   ]
 }
