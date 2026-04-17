@@ -1,0 +1,23 @@
+---
+# Get promtail labels: kubectl get pods -n monitoring -l app.kubernetes.io/name=promtail --show-labels
+# how it works: MetalLB assigns an external ip, traffic hits this service, service forwards to Promtail pods, promtail receives syslog
+# This service is intended to expose promtail for syslogs
+# always send syslogs as tcp, because udp syslog + load-balancing = dropped logs (never worked for me, see this discussion https://github.com/grafana/loki/issues/6772 )
+apiVersion: v1
+kind: Service
+metadata:
+  name: promtail-syslog
+  namespace: monitoring
+  annotations:
+    metallb.universe.tf/address-pool: default-pool
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: promtail
+    app.kubernetes.io/instance: loki-stack
+    syslog-receiver: "true"
+  ports:
+    - name: syslog-tcp
+      port: 1514
+      targetPort: 1514
+      protocol: TCP

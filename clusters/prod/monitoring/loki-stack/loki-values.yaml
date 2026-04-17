@@ -1,0 +1,89 @@
+loki:
+  enabled: true
+  persistence:
+    enabled: true
+    storageClassName: "nfs-client"
+
+  # control log writes
+  limits_config:
+    # data lifecycle = 7 days
+    retention_period: 168h
+
+    # caps per-tenant write speed, don't hammer the NAS with too much small writes
+    ingestion_rate_mb: 4
+    ingestion_burst_size_mb: 8
+
+    # flushing small chunks, no open-files for long time
+    max_chunk_age: 1h
+
+  # prevent Loki from hoarding chunks
+  compactor:
+    enabled: true
+    retention_enabled: true
+    delete_request_store: filesystem           # required when object store = filesystem (e.g. PVC through NFS)
+    shared_store: filesystem                   # required for NFS/PVC backend
+    retention_delete_delay: 2h                 # avoids deleting data that might still be referenced
+    working_directory: /var/loki/compactor     # where compactor writes its temp files inside the PV
+
+promtail:
+  enabled: true
+  podLabels:
+    syslog-receiver: "true"
+  service:
+    extraPorts:
+      syslog:
+        port: 1514
+        targetPort: 1514
+  config:
+    snippets:
+      extraScrapeConfigs: |
+        # Scraping job for: syslogs
+        - job_name: syslog
+          syslog:
+            listen_address: 0.0.0.0:1514
+            idle_timeout: 60s
+            label_structured_data: yes
+            labels:
+              job: "syslog"
+          relabel_configs:
+            - source_labels: ['__syslog_message_hostname']
+              target_label: 'host'
+
+        # Scraping jobs for: pods, namespaces, containers
+        - job_name: kubernetes-pods
+          kubernetes_sd_configs:
+            - role: pod
+
+          pipeline_stages:
+            - cri: {}
+
+          relabel_configs:
+            - action: replace
+              source_labels: [__meta_kubernetes_namespace]
+              target_label: namespace
+
+            - action: replace
+              source_labels: [__meta_kubernetes_pod_name]
+              target_label: pod
+
+            - action: replace
+              source_labels: [__meta_kubernetes_pod_container_name]
+              target_label: container
+
+            - action: replace
+              source_labels: [__meta_kubernetes_pod_node_name]
+              target_label: node
+
+            - action: replace
+              target_label: __path__
+              replacement: /var/log/pods/*$1/*/*.log
+              separator: /
+              source_labels:
+                - __meta_kubernetes_pod_uid
+grafana:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+

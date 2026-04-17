@@ -11,3 +11,4 @@ resources:
   - metallb.yaml
   - metallb-config.yaml
   - apps.yaml
+  - monitoring.yaml
