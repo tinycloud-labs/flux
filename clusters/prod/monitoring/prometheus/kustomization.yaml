@@ -1,15 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 resources:
   - release.yaml
 
 configMapGenerator:
   - name: prometheus-values
     files:
-      - values.yaml=prometheus-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
-
-# pseduo code
-# depends on:
-#   - bootstrap/bw-tokens/monitoring.yaml
-#   - helm-repos

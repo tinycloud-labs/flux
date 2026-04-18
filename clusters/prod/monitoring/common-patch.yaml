@@ -1,7 +1,13 @@
+# Kustomize patch: common values for all HelmReleases
+# The patch will inject automatically into every release in this directory.
+# clusters/prod/apps/common-patch.yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: not-used
+  name: not-used  # ignored - target selector in kustomization.yaml matches by kind
 spec:
+  # tells Flux/Helm to deploy workloads into this namespace
+  targetNamespace: monitoring
   values:
-    namespace: "monitoring"
+    # only needed if charts consume this value explicitly
+    namespace: monitoring

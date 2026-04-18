@@ -1,12 +1,13 @@
+# native Kustomize entrypoint for the prod cluster.
+# It lists every Flux Kustomization CRD that Flux should reconcile.
+# Flux watches this directory and applies whatever is listed here.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: monitoring
-
 resources:
-  - prometheus
-  - loki-stack
-  - dashboards
+  - prometheus.yaml
+  - loki.yaml
+  - dashboards.yaml
 
 patches:
   - target:

@@ -1,3 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 resources:
   - release.yaml
   - promtail-syslog-svc.yaml
@@ -5,7 +8,7 @@ resources:
 configMapGenerator:
   - name: loki-values
     files:
-      - values.yaml=loki-values.yaml
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
