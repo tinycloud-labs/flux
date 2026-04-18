@@ -12,3 +12,4 @@ resources:
   - metallb-config.yaml
   - bw-secrets.yaml
   - apps.yaml
+  - monitoring.yaml

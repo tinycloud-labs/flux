@@ -1,0 +1,23 @@
+# native Kustomize entrypoint for the prod cluster.
+# It lists every Flux Kustomization CRD that Flux should reconcile.
+# Flux watches this directory and applies whatever is listed here.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - prometheus.yaml
+  - loki.yaml
+  - dashboards.yaml
+
+patches:
+  - target:
+      kind: HelmRelease
+    path: common-patch.yaml
+
+# secretGenerator:
+#   - name: grafana-admin
+#     namespace: monitoring
+#     literals:
+#       - admin-password={{randAlphaNum 32}}
+#     options:
+#       disableNameSuffixHash: true
