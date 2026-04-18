@@ -10,5 +10,6 @@ resources:
   - csi-driver-nfs.yaml
   - metallb.yaml
   - metallb-config.yaml
+  - bw-secrets.yaml
   - apps.yaml
   - monitoring.yaml

@@ -20,7 +20,7 @@ paperlessngx:
 adminSecret:
   enabled: true
   create: true
-  name: apps
+  name: paperless-initialization
   usernameKey: paperless-username
   passwordKey: paperless-password
   username: admin
