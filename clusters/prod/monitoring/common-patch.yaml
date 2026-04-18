@@ -1,6 +1,6 @@
 # Kustomize patch: common values for all HelmReleases
-# The patch will inject automatically into every release in this directory.
-# clusters/prod/apps/common-patch.yaml
+# The patch will inject automatically into every Helm release in this directory.
+# clusters/prod/monitoring/common-patch.yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
