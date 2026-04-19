@@ -7,6 +7,18 @@ resources:
   - release.yaml
   - promtail-syslog-svc.yaml
 
+# tells Flux to delete and recreate the resource whenever it detects drift (i.e. git change) or during reconciliation
+# helps avoid the LoadBalancer service defined in promtail-syslog-svc.yaml become a ghost object
+# that prevents a reinstall with new overlay IP and eventually breaks rsyslog from shipping logs
+patches:
+  - target:
+      kind: Service
+      name: promtail-syslog
+    patch: |-
+      - op: add
+        path: /metadata/annotations/kustomize.toolkit.fluxcd.io~1force
+        value: "enabled"
+
 configMapGenerator:
   - name: loki-values
     files:
