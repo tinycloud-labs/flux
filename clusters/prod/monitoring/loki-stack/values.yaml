@@ -1,3 +1,9 @@
+grafana:
+  enabled: false
+
+prometheus:
+  enabled: false
+
 loki:
   enabled: true
   persistence:
@@ -37,18 +43,6 @@ promtail:
   config:
     snippets:
       extraScrapeConfigs: |
-        # Scraping job for: syslogs
-        - job_name: syslog
-          syslog:
-            listen_address: 0.0.0.0:1514
-            idle_timeout: 60s
-            label_structured_data: yes
-            labels:
-              job: "syslog"
-          relabel_configs:
-            - source_labels: ['__syslog_message_hostname']
-              target_label: 'host'
-
         # Scraping jobs for: pods, namespaces, containers
         - job_name: kubernetes-pods
           kubernetes_sd_configs:
@@ -74,16 +68,127 @@ promtail:
               source_labels: [__meta_kubernetes_pod_node_name]
               target_label: node
 
+            - source_labels: ['__syslog_message_hostname']
+              regex: '(?i)pfsense\.shakir\.cloud'
+              target_label: 'source'
+              replacement: 'pfsense'
+
             - action: replace
               target_label: __path__
               replacement: /var/log/pods/*$1/*/*.log
               separator: /
               source_labels:
                 - __meta_kubernetes_pod_uid
-grafana:
-  enabled: false
 
-prometheus:
-  enabled: false
+        # Scraping job for: syslogs
+        - job_name: syslog
+          syslog:
+            listen_address: 0.0.0.0:1514
+            idle_timeout: 60s
+            label_structured_data: yes
+            labels:
+              job: "syslog"
+          relabel_configs:
+            - source_labels: ['__syslog_message_hostname']
+              target_label: 'host'
 
+          pipeline_stages:
+            # ---------------------------------------------------------------------------------
+            # Pipeline to process Pfsense logs payload (improving readability and adding labels)
+            # ---------------------------------------------------------------------------------
 
+            # ======================================================
+            # DROP: unstructured noise — DHCPv6 client + IDS signals
+            # ======================================================
+            - match:
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
+                stages:
+                  - regex:
+                      expression: '^(?P<noise>Sending Solicit|Now monitoring attacks\.|Exiting on signal\.|restart)$'
+                  - drop:
+                      source: noise
+                      value: ""
+                      # drop if regex matched (field is non-empty)
+
+            # =================================================================================
+            # KEA DHCP4 — e.g.:
+            # INFO  [kea-dhcp4.dhcpsrv.0x...] EVAL_RESULT Expression pool_opt4_0 evaluated to 1
+            # =================================================================================
+            - match:
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
+                stages:
+                  - regex:
+                      expression: '(?P<kea_level>INFO|WARN|ERROR|DEBUG)\s+\[(?P<kea_component>[^\]]+)\]\s+(?P<kea_msgid>\S+)\s+(?P<kea_message>.+)'
+                  - labels:
+                      kea_level:      # INFO / WARN / ERROR / DEBUG
+                      kea_component:  # kea-dhcp4.dhcpsrv etc.
+                  - template:
+                      source: _formatted
+                      template: 'source=kea-dhcp4 level={{ .kea_level }} component={{ .kea_component }} msgid={{ .kea_msgid }} msg={{ .kea_message }}'
+                  - output:
+                      source: _formatted
+
+            # ================================
+            # CRON — e.g.:
+            # (root) CMD (/usr/sbin/newsyslog)
+            # ================================
+            - match:
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
+                stages:
+                  - regex:
+                      expression: '^\((?P<cron_user>[^)]+)\)\s+CMD\s+\((?P<cron_cmd>[^)]+)\)$'
+                  - labels:
+                      cron_user:   # root / www / etc.
+                  - template:
+                      source: _formatted
+                      template: 'source=cron user={{ .cron_user }} cmd={{ .cron_cmd }}'
+                  - output:
+                      source: _formatted
+
+            # ============================================================================================================
+            # FILTERLOG IPv6 — field 9 (ip_ver) == 6
+            # e.g.: 112,,,1732945884,igc0,match,block,in,6,0x01,0x7fde7,64,UDP,17,1358,<src_v6>,<dst_v6>,sport,dport,datalen
+            # ============================================================================================================
+            - match:
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
+                stages:
+                  - regex:
+                      expression: 'filterlog\[\d+\]:\s+(?P<filterlog_csv>\d+,,,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,6,.+)'
+                  - regex:
+                      source: filterlog_csv
+                      expression: '^(?P<rule_num>[^,]*),(?P<sub_rule>[^,]*),(?P<anchor>[^,]*),(?P<tracker>[^,]*),(?P<iface>[^,]*),(?P<reason>[^,]*),(?P<action>[^,]*),(?P<direction>[^,]*),(?P<ip_ver>6),(?P<tos>[^,]*),(?P<flow_label>[^,]*),(?P<ttl>[^,]*),(?P<proto>[^,]*),(?P<proto_id>[^,]*),(?P<length>[^,]*),(?P<src_ip>[^,]*),(?P<dst_ip>[^,]*),(?P<src_port>[^,]*),(?P<dst_port>[^,]*),(?P<data_len>[^,]*)$'
+                  - labels:
+                      action:
+                      direction:
+                      proto:
+                      iface:
+                      ip_ver:
+                  - template:
+                      source: _formatted
+                      template: 'source=filterlog ip_ver=6 action={{ .action }} direction={{ .direction }} proto={{ .proto }} iface={{ .iface }} src={{ .src_ip }}:{{ .src_port }} dst={{ .dst_ip }}:{{ .dst_port }} ttl={{ .ttl }} flow_label={{ .flow_label }} length={{ .length }} rule={{ .rule_num }} reason={{ .reason }}'
+                  - output:
+                      source: _formatted
+
+            # ====================================================================================================
+            # FILTERLOG IPv4 — field 9 (ip_ver) == 4
+            # e.g.: 4,,,1000000103,ix3,match,block,in,4,0x0,,246,54321,0,none,6,tcp,40,<src>,<dst>,sport,dport,...
+            # ====================================================================================================
+            - match:
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
+                stages:
+                  - regex:
+                      expression: 'filterlog\[\d+\]:\s+(?P<filterlog_csv>\d+,,,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,4,.+)'
+                  - regex:
+                      source: filterlog_csv
+                      expression: '^(?P<rule_num>[^,]*),(?P<sub_rule>[^,]*),(?P<anchor>[^,]*),(?P<tracker>[^,]*),(?P<iface>[^,]*),(?P<reason>[^,]*),(?P<action>[^,]*),(?P<direction>[^,]*),(?P<ip_ver>4),(?P<tos>[^,]*),(?P<ecn>[^,]*),(?P<ttl>[^,]*),(?P<pkt_id>[^,]*),(?P<offset>[^,]*),(?P<ip_flags>[^,]*),(?P<proto_id>[^,]*),(?P<proto>[^,]*),(?P<length>[^,]*),(?P<src_ip>[^,]*),(?P<dst_ip>[^,]*),(?P<src_port>[^,]*),(?P<dst_port>[^,]*)'
+                  - labels:
+                      action:
+                      direction:
+                      proto:
+                      iface:
+                      ip_ver:
+                  - template:
+                      source: _formatted
+                      template: 'source=filterlog ip_ver=4 action={{ .action }} direction={{ .direction }} proto={{ .proto }} iface={{ .iface }} src={{ .src_ip }}:{{ .src_port }} dst={{ .dst_ip }}:{{ .dst_port }} ttl={{ .ttl }} ip_flags={{ .ip_flags }} length={{ .length }} rule={{ .rule_num }} reason={{ .reason }}'
+                  - output:
+                      source: _formatted
