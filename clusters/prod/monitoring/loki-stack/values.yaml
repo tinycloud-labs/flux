@@ -69,7 +69,7 @@ promtail:
               target_label: node
 
             - source_labels: ['__syslog_message_hostname']
-              regex: '(?i)pfsense\.shakir\.cloud'
+              regex: 'pfSense\.shakir\.cloud'
               target_label: 'source'
               replacement: 'pfsense'
 
