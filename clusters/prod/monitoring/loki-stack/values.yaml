@@ -68,6 +68,11 @@ promtail:
               source_labels: [__meta_kubernetes_pod_node_name]
               target_label: node
 
+            - source_labels: ['__syslog_message_hostname']
+              regex: '(?i)pfsense\.shakir\.cloud'
+              target_label: 'source'
+              replacement: 'pfsense'
+
             - action: replace
               target_label: __path__
               replacement: /var/log/pods/*$1/*/*.log
@@ -91,11 +96,12 @@ promtail:
             # ---------------------------------------------------------------------------------
             # Pipeline to process Pfsense logs payload (improving readability and adding labels)
             # ---------------------------------------------------------------------------------
+
             # ======================================================
             # DROP: unstructured noise — DHCPv6 client + IDS signals
             # ======================================================
             - match:
-                selector: '{job="syslog"}'
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
                 stages:
                   - regex:
                       expression: '^(?P<noise>Sending Solicit|Now monitoring attacks\.|Exiting on signal\.|restart)$'
@@ -109,7 +115,7 @@ promtail:
             # INFO  [kea-dhcp4.dhcpsrv.0x...] EVAL_RESULT Expression pool_opt4_0 evaluated to 1
             # =================================================================================
             - match:
-                selector: '{job="syslog"}'
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
                 stages:
                   - regex:
                       expression: '(?P<kea_level>INFO|WARN|ERROR|DEBUG)\s+\[(?P<kea_component>[^\]]+)\]\s+(?P<kea_msgid>\S+)\s+(?P<kea_message>.+)'
@@ -127,7 +133,7 @@ promtail:
             # (root) CMD (/usr/sbin/newsyslog)
             # ================================
             - match:
-                selector: '{job="syslog"}'
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
                 stages:
                   - regex:
                       expression: '^\((?P<cron_user>[^)]+)\)\s+CMD\s+\((?P<cron_cmd>[^)]+)\)$'
@@ -144,7 +150,7 @@ promtail:
             # e.g.: 112,,,1732945884,igc0,match,block,in,6,0x01,0x7fde7,64,UDP,17,1358,<src_v6>,<dst_v6>,sport,dport,datalen
             # ============================================================================================================
             - match:
-                selector: '{job="syslog"}'
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
                 stages:
                   - regex:
                       expression: 'filterlog\[\d+\]:\s+(?P<filterlog_csv>\d+,,,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,6,.+)'
@@ -168,7 +174,7 @@ promtail:
             # e.g.: 4,,,1000000103,ix3,match,block,in,4,0x0,,246,54321,0,none,6,tcp,40,<src>,<dst>,sport,dport,...
             # ====================================================================================================
             - match:
-                selector: '{job="syslog"}'
+                selector: '{job="syslog", host="pfSense.shakir.cloud"}'
                 stages:
                   - regex:
                       expression: 'filterlog\[\d+\]:\s+(?P<filterlog_csv>\d+,,,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,4,.+)'
