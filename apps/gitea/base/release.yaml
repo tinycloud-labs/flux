@@ -13,11 +13,11 @@ spec:
       version: "0.0.7"
       sourceRef:
         kind: HelmRepository
-        name: gitea-charts/gitea
+        name: gitea
         namespace: flux-system
       interval: 2h0m0s
 
   valuesFrom:
     - kind: ConfigMap
-      name: excalidraw-values
+      name: gitea-values
       valuesKey: values.yaml
