@@ -302,7 +302,7 @@ persistence:
   labels: {}
   storageClass: nfs-client
   subPath:
-  volumeName: gitea
+  volumeName:
   annotations:
     helm.sh/resource-policy: keep
 
