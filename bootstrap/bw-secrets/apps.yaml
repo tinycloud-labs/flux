@@ -16,6 +16,10 @@ spec:
       secretKeyName: paperless-username
     - bwSecretId: 6e59fe97-8a2e-4ebb-8d36-b407002e2cce
       secretKeyName: paperless-password
+    - bwSecretId: 1ff5be92-9080-448b-8ecc-b4320182440c
+      secretKeyName: gitea-user
+    - bwSecretId: 7f4daff6-c6cd-488f-8b75-b432018282b2
+      secretKeyName: gitea-pwd
   authToken:
     secretName: bw-auth-token
     secretKey: token
