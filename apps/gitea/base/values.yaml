@@ -295,7 +295,7 @@ persistence:
   enabled: true
   create: true
   mount: true
-  claimName: gitea-shared-storage
+  claimName:
   size: 1Gi
   accessModes:
     - ReadWriteOnce
