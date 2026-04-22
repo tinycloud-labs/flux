@@ -301,8 +301,8 @@ persistence:
     - ReadWriteOnce
   labels: {}
   storageClass: nfs-client
-  subPath:
-  volumeName: ""
+  subPath: /volume1/k3s-main/gitea
+  volumeName: gitea
   annotations:
     helm.sh/resource-policy: keep
 
@@ -394,11 +394,7 @@ gitea:
   ## @param gitea.admin.email Email for the Gitea admin user
   ## @param gitea.admin.passwordMode Mode for how to set/update the admin user password. Options are: initialOnlyNoReset, initialOnlyRequireReset, and keepUpdated
   admin:
-    # existingSecret: gitea-admin-secret
-    existingSecret:
-    username: gitea_admin
-    password: r8sA8CPHD9!bt6d
-    email: "gitea@local.domain"
+    existingSecret: apps
     passwordMode: keepUpdated
 
   ## @param gitea.metrics.enabled Enable Gitea metrics
@@ -576,7 +572,7 @@ valkey-cluster:
   # Consider omitting such or open an issue in the Bitnami repo and let us know once this got fixed.
   ## @param valkey-cluster.usePassword Whether to use password authentication.
   ## @param valkey-cluster.usePasswordFiles Whether to mount passwords as files instead of environment variables.
-  enabled: true
+  enabled: false
   usePassword: false
   usePasswordFiles: false
 
@@ -600,7 +596,7 @@ valkey-cluster:
   ## @param valkey-cluster.persistence.size Persistent Volume size.
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: nfs-client
     size: 8Gi
 
   ## @param valkey-cluster.service.ports.valkey Port of Valkey service
@@ -664,7 +660,7 @@ valkey:
   ## @param valkey.primary.persistence.size Persistent Volume size.
     persistence:
       enabled: true
-      storageClass: ""
+      storageClass: nfs-client
       size: 8Gi
 
   replica:
@@ -673,7 +669,7 @@ valkey:
     ## @param valkey.replica.persistence.size Persistent Volume size.
     persistence:
       enabled: true
-      storageClass: ""
+      storageClass: nfs-client
       size: 8Gi
 
   ## @param valkey.sentinel.image.repository Image repository, eg. `bitnamilegacy/sentinel`.
@@ -689,7 +685,7 @@ valkey:
 ## @section PostgreSQL HA
 postgresql-ha:
   ## @param postgresql-ha.enabled Enable PostgreSQL HA
-  enabled: true
+  enabled: false
 
   ## @param postgresql-ha.global.postgresql.database Name for a custom database to create (overrides `auth.database`)
   ## @param postgresql-ha.global.postgresql.username Name for a custom user to create (overrides `auth.username`)
@@ -735,7 +731,7 @@ postgresql-ha:
   ## @param postgresql-ha.persistence.size PVC Storage Request for PostgreSQL HA volume
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: nfs-client
     size: 10Gi
 
   ## @param postgresql-ha.volumePermissions.image.repository Image repository, eg. `bitnamilegacy/os-shell`.
