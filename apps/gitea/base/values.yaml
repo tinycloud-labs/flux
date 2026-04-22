@@ -301,7 +301,7 @@ persistence:
     - ReadWriteOnce
   labels: {}
   storageClass: nfs-client
-  subPath: /volume1/k3s-main/gitea
+  subPath:
   volumeName: gitea
   annotations:
     helm.sh/resource-policy: keep
