@@ -7,6 +7,9 @@ configMapGenerator:
   - name: gitea-values
     files:
       - values.yaml
+  - name: gitea-data-values
+    files:
+      - values.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
