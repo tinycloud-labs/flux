@@ -10,7 +10,7 @@ resources:
   - ../../../apps/carlogger/overlays/prod
   - ../../../apps/deemix/overlays/prod
   - ../../../apps/excalidraw/overlays/prod
-  - ../../../apps/gitea/overlays/prod
+  # - ../../../apps/gitea/overlays/prod
   - ../../../apps/homepage/overlays/prod
   - ../../../apps/jellyfin/overlays/prod
   - ../../../apps/metube/overlays/prod
