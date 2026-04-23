@@ -1,0 +1,14 @@
+labels:
+  app: gitea
+annotations:
+  volume.kubernetes.io/description: "Gitea backend storage"
+  custom.synology/path-hint: "maps to /vol1/k3s-main/gitea"
+
+persistence:
+  name: gitea-data
+  size: 100Mi
+  accessMode: ReadWriteMany
+  reclaimPolicy: Retain
+  nfs:
+    server: synology.shakir.cloud
+    path: /volume1/k3s-main/gitea
