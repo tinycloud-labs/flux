@@ -21,7 +21,7 @@ spec:
 
   valuesFrom:
     - kind: ConfigMap
-      name: gitea-values
+      name: gitea-data-values
       valuesKey: values.yaml
 
 ---
