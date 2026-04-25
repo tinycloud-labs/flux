@@ -20,7 +20,13 @@ loki:
     ingestion_burst_size_mb: 8
 
     # flushing small chunks, no open-files for long time
-    max_chunk_age: 1h
+    # will set fewer but larger chunks flushed to avoid small file writes churn on the NAS
+    max_chunk_age: 2h
+
+    # controls how long an inactive stream keeps a chunk open before flushing
+    chunk_idle_period: 1h
+
+    chunk_target_size: 1572864  # = 1.5MB and it's the default just to make it explicit
 
   # prevent Loki from hoarding chunks
   compactor:
@@ -30,6 +36,7 @@ loki:
     shared_store: filesystem                   # required for NFS/PVC backend
     retention_delete_delay: 2h                 # avoids deleting data that might still be referenced
     working_directory: /var/loki/compactor     # where compactor writes its temp files inside the PV
+    compaction_interval: 30m                   # control when the compactor start writing to the backend storage
 
 promtail:
   enabled: true
