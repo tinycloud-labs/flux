@@ -37,7 +37,7 @@ strategy:
     maxUnavailable: 0
 
 ## @param clusterDomain cluster domain
-clusterDomain: shakir.cloud
+clusterDomain:
 
 ## @section Image
 ## @param image.registry image registry, e.g. gcr.io,docker.io
