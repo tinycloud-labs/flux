@@ -95,50 +95,48 @@ promtail:
               target_label: 'host'
 
           pipeline_stages:
-            # 1. Parse RFC5424 syslog
+            # 1. Parse syslog
             - syslog:
                 format: rfc5424
 
-            # 2. Extract the actual filterlog message
+            # 2. Capture full message
             - regex:
-                expression: 'filterlog:\s(?P<csv>.*)'
+                expression: '^(?P<msg>.*)$'
 
-            # 3. Parse CSV fields into named groups
+            # 3. Extract interface, action, direction (stable early segment)
             - regex:
-                source: csv
+                source: msg
                 expression: >
-                  ^(?P<rule>\d+),,,
-                  (?P<tracker>\d+),
+                  ^\d+,,,\d+,
                   (?P<interface>[^,]+),
-                  (?P<reason>[^,]+),
+                  match,
                   (?P<action>[^,]+),
                   (?P<direction>[^,]+),
-                  (?P<ip_version>\d+),
-                  (?P<tos>[^,]*),
-                  (?P<ecn>[^,]*),
-                  (?P<ttl>\d+),
-                  (?P<id>\d+),
-                  (?P<offset>\d+),
-                  (?P<flags>[^,]+),
-                  (?P<proto_id>\d+),
-                  (?P<proto>[^,]+),
-                  (?P<length>\d+),
-                  (?P<src_ip>[^,]+),
-                  (?P<dst_ip>[^,]+),
-                  (?P<src_port>\d+),
-                  (?P<dst_port>\d+),
-                  (?P<data_length>\d+),
-                  (?P<tcp_flags>[^,]+),
-                  (?P<sequence>[^,]*),
-                  (?P<ack>[^,]*),
-                  (?P<window>\d+),
-                  (?P<urg>[^,]*),
-                  (?P<options>.*)$
 
-            # 4. Promote useful fields to labels
+            # 4. Extract protocol (TCP/UDP/ICMP anywhere in line)
+            - regex:
+                source: msg
+                expression: ',(?P<proto>(TCP|UDP|ICMP|tcp|udp|icmp)),'
+
+            # normalize proto to lowercase
+            - template:
+                source: proto
+                template: '{{ ToLower .Value }}'
+                dest: proto
+
+            # 5. Extract IPs + ports (from the tail. works for v4/v6)
+            - regex:
+                source: msg
+                expression: >
+                  (?P<src_ip>[0-9a-fA-F\.:]+),
+                  (?P<dst_ip>[0-9a-fA-F\.:]+),
+                  (?P<src_port>\d+),
+                  (?P<dst_port>\d+)
+
+            # 6. Promote labels
             - labels:
-                action:
                 interface:
+                action:
                 direction:
                 proto:
                 src_ip:
@@ -146,7 +144,7 @@ promtail:
                 src_port:
                 dst_port:
 
-            # 5. Optional: better label names
+            # 7. Friendly aliases
             - template:
                 source: src_ip
                 template: '{{ .Value }}'
@@ -161,10 +159,9 @@ promtail:
                 source:
                 destination:
 
-            # 6. Clean up message (optional)
+            # 8. Output clean message
             - output:
-                source: csv
-# - source_labels: ['__syslog_message_hostname']
+                source: msg# - source_labels: ['__syslog_message_hostname']
 #   regex: 'pfSense\.shakir\.cloud'
 #   target_label: 'source'
 #   replacement: 'pfsense'
