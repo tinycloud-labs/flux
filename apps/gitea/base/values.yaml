@@ -51,7 +51,7 @@ image:
   registry: "docker.gitea.com"
   repository: gitea
   # Overrides the image tag whose default is the chart appVersion.
-  digest: "@sha256:af07b88edbb2173d20932f9c75ebcf4e61d7d5c2d6a7ab5cc6b97cba28aea352"
+  digest: "sha256:af07b88edbb2173d20932f9c75ebcf4e61d7d5c2d6a7ab5cc6b97cba28aea352"
   pullPolicy: IfNotPresent
   rootless: true
   fullOverride: ""
