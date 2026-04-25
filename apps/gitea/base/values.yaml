@@ -742,7 +742,7 @@ postgresql-ha:
 ## @section PostgreSQL
 postgresql:
   ## @param postgresql.enabled Enable PostgreSQL
-  enabled: false
+  enabled: true
 
   ## @param postgresql.global.postgresql.auth.password Password for the `gitea` user (overrides `auth.password`)
   ## @param postgresql.global.postgresql.auth.database Name for a custom database to create (overrides `auth.database`)
