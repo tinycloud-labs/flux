@@ -14,7 +14,7 @@ resources:
   - ../../../apps/homepage/overlays/prod
   - ../../../apps/jellyfin/overlays/prod
   - ../../../apps/metube/overlays/prod
-  - ../../../apps/netalertx/overlays/prod
+  # - ../../../apps/netalertx/overlays/prod
   - ../../../apps/omni-tools/overlays/prod
   - ../../../apps/paperless-ngx/overlays/prod
   - ../../../apps/speedtest/overlays/prod
