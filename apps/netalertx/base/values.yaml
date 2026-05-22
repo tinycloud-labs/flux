@@ -1,0 +1,26 @@
+app:
+  name: netalertx
+  image:
+    repository: jokobsk/netalertx
+    pullPolicy: IfNotPresent
+    tag: 26@sha256:656da7fc9f9fa5429cc75a33b0eb073fe538fd58b3d370f229fa0e4725f065b7
+
+  service:
+    port: 80
+    targetPort: 20211
+
+  volumeMounts:
+    - mountPath: /data
+      subPath: data
+
+  env:
+    - name: TZ
+      value: "America/Los_Angeles"
+    - name: PORT
+      values: 20211
+    - name: NETALERTX_UID
+      value: 20211
+    - name: NETALERTX_GID
+      value: 20211
+    - name: ALWAYS_FRESH_INSTALL
+      value: "false"
