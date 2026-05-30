@@ -103,7 +103,7 @@ grafana:
           uid: prometheus
           type: prometheus
           access: proxy
-          url: http://prometheus-operated.monitoring.svc.cluster.local:9090
+          url: http://prometheus-prometheus.monitoring.svc.cluster.local:9090
           isDefault: true
 
         - name: Alertmanager
