@@ -110,7 +110,7 @@ grafana:
           uid: alertmanager
           type: alertmanager
           access: proxy
-          url: http://alertmanager-operated.monitoring.svc.cluster.local:9093
+          url: http://prometheus-alertmanager.monitoring.svc.cluster.local:9093
 
         - name: Loki
           uid: loki
