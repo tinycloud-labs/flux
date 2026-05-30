@@ -19,6 +19,9 @@ alertmanager:
     - name: loki-receiver
       webhook_configs:
         - url: http://loki-stack.monitoring.svc.cluster.local:3100/loki/api/v1/push
+    - name: grafana
+      webhook_configs:
+        - url: http://grafana.monitoring.svc.cluster.local/api/alertmanager
 
 grafana:
   enabled: true
