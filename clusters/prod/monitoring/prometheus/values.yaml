@@ -28,6 +28,26 @@ grafana:
   fullnameOverride: grafana
   defaultDashboardsEnabled: false # must be disabled if you set a default datasources below
   defaultDashboardsTimezone: "America/Los_Angeles"
+  # important to avoid dashboards sidecar race condition
+  startupProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    failureThreshold: 30
+    periodSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  livenessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 60
+    periodSeconds: 10
 
   grafana.ini:
     auth.anonymous:
