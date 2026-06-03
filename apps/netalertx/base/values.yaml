@@ -3,7 +3,7 @@ app:
   image:
     repository: jokobsk/netalertx
     pullPolicy: IfNotPresent
-    tag: 26@sha256:656da7fc9f9fa5429cc75a33b0eb073fe538fd58b3d370f229fa0e4725f065b7
+    tag: 26@sha256:cd5176052fec71a75c902cc555e97cb540833d79c7cac8695c6adc611c402347
 
   service:
     port: 80
