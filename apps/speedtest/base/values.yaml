@@ -3,7 +3,7 @@ app:
   image:
     repository: linuxserver/speedtest-tracker
     pullPolicy: IfNotPresent
-    tag: 1.14.2@sha256:3f75c5ec7a14c232f91af1ddda4248543bb2e8f0aeb18fec64c34d2f42dd00ce
+    tag: 1.14.3@sha256:c3750c40948a9360000ce62d694da92e85584b4ab6d3d9a9d1432d76fa5e0726
   containerPort: 80
 
   service:
