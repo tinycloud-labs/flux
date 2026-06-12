@@ -3,7 +3,7 @@ app:
   image:
     repository: ghcr.io/alexta69/metube
     pullPolicy: IfNotPresent
-    tag: "2026.04.28@sha256:caf21da7d83a4003b429ef1126e9c1499f36f8401a1f8a7b158f70b94ade8edd" # renovate: depName=ghcr.io/alexta69/metube
+    tag: "2026.06.10@sha256:891ccbb5f025e622c8d9d516b2ec56b8ec79b988be38e5c9958c4b7a83fa1883" # renovate: depName=ghcr.io/alexta69/metube
   replicaCount: 1
 
   containerPort: 80
