@@ -11,6 +11,7 @@ Release dependencies are handled with Flux Kustomize. Bootstrap stuff goes first
 Automation:
 - [ GitHub Action runs](https://github.com/tinycloud-labs/flux/blob/main/.github/workflows/kustomize-build.yml) `kustomize build` on PRs to catch rendering issues early.
 - Renovate to update container images.
+- Integrated FluxCD `Alert` and `Provider` CRDs with Discord webhooks to receive deployment and activity notifications
 
 ### Repo top-level view
 ```
