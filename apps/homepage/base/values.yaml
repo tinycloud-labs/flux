@@ -96,6 +96,10 @@ config:
               icon: alertmanager
               href: https://alertmanager.shakir.cloud
               description: Alertmanager for Prometheus
+          - Datadog:
+              icon: datadog
+              href: https://app.datadoghq.com
+              description: Backbone infra monitoring
       - Synology:
           - DSM:
               icon: sh-synology
