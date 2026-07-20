@@ -20,6 +20,8 @@ spec:
       secretKeyName: username
     - bwSecretId: 7f4daff6-c6cd-488f-8b75-b432018282b2
       secretKeyName: password
+    - bwSecretId: a677efc5-c46b-41bc-a638-b48d00883466
+      secretKeyName: discord-webhook
   authToken:
     secretName: bw-auth-token
     secretKey: token

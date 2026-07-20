@@ -17,6 +17,7 @@ resources:
   - ../../../apps/omni-tools/overlays/prod
   - ../../../apps/paperless-ngx/overlays/prod
   - ../../../apps/speedtest/overlays/prod
+  - ../notifications
 
 patches:
   - target:
