@@ -1,0 +1,7 @@
+# Provisioned as part of ./apps due to the dependency on the bw resources which are already
+# handled by the apps/ project.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./alert.yaml
+  - ./provider.yaml
