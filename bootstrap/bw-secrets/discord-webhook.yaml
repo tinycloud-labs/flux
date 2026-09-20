@@ -1,0 +1,19 @@
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: discord-webhook
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: discord-webhook
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: discord-webhook
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: a677efc5-c46b-41bc-a638-b48d00883466
+      secretKeyName: discord-webhook
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

@@ -2,7 +2,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Alert
 metadata:
   name: discord
-  namespace: flux-system
+  namespace: apps
 spec:
   summary: "Kustomize and HelmRelease resources event triggered"
   providerRef:
@@ -10,7 +10,7 @@ spec:
   eventSeverity: info
   # so far, only kustomize-controller is dispatching notifications when images are updated
   # the problem is, image tag values are set via ConfigMaps, a change in a ConfigMap trigger
-  # a kustomization reconcile. We need to capture this only and avoid all other reconcilations
+  # a kustomization reconcile. We need to capture this only and avoid all other reconciliations
   # I will add a comment?!
   eventSources:
     - kind: Kustomization
