@@ -1,0 +1,23 @@
+# renovate: depName=ghcr.io/bambanah/deemix datasource=docker
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: deemix
+spec:
+  values:
+    app:
+      replicaCount: 1
+
+    ingress:
+      enabled: true
+      host: deemix.shakir.cloud
+      ingressClassName: traefik
+
+    persistence:
+      enabled: true
+      size: 200Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/k3s-main/deemix
