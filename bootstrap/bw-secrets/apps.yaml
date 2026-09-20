@@ -22,6 +22,8 @@ spec:
       secretKeyName: password
     - bwSecretId: a677efc5-c46b-41bc-a638-b48d00883466
       secretKeyName: discord-webhook
+    - bwSecretId: b8df1e5b-b298-4090-b694-b4cb002d5113
+      secretKeyName: meilisearch-key
   authToken:
     secretName: bw-auth-token
     secretKey: token
