@@ -37,3 +37,10 @@ database:
   volumeMounts:
     - mountPath: /var/lib/postgresql/data
       subPath: pgdata
+  securityContext:
+    enabled: true
+    runAsUser: 999
+    runAsGroup: 999
+#    runAsNonRoot: false
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
