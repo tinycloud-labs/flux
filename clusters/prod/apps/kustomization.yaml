@@ -12,6 +12,7 @@ resources:
   - ../../../apps/excalidraw/overlays/prod
   - ../../../apps/homepage/overlays/prod
   - ../../../apps/jellyfin/overlays/prod
+  - ../../../apps/linkwarden/overlays/prod
   - ../../../apps/meilisearch/overlays/prod
   - ../../../apps/metube/overlays/prod
   - ../../../apps/omni-tools/overlays/prod

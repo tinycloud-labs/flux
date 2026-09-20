@@ -1,0 +1,39 @@
+app:
+  name: linkwarden
+  image:
+    repository: ghcr.io/linkwarden/linkwarden
+    pullPolicy: IfNotPresent
+    tag: latest
+
+  service:
+    port: 80
+    targetPort: 3000
+
+  volumeMounts:
+    - mountPath: /data/data
+      subPath: data
+
+  dbHostname: postgres-unichart
+
+  envFromSecrets:
+    enabled: true
+    secretRefNames:
+      - meilisearch
+      - linkwarden
+  env:
+    - name: NEXTAUTH_URL
+      value: "http://localhost:3000/api/v1/auth	"
+    - name: MEILI_HOST
+      value: "meilisearch-unichart.apps.svc.cluster.local"
+
+## ------------ StatefulSet Specifications ------------ ##
+database:
+  enabled: true
+  host: postgres-unichart
+  port: 5432
+  image:
+    repository: postgres
+    tag: 16-alpine
+  volumeMounts:
+    - mountPath: /var/lib/postgresql/data
+      subPath: pgdata
