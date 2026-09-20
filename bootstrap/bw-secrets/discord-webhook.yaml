@@ -13,7 +13,7 @@ spec:
   onlyMappedSecrets: true
   map:
     - bwSecretId: a677efc5-c46b-41bc-a638-b48d00883466
-      secretKeyName: discord-webhook
+      secretKeyName: address
   authToken:
     secretName: bw-auth-token
     secretKey: token
