@@ -3,3 +3,5 @@ kind: Kustomization
 resources:
   - ./monitoring.yaml
   - ./apps.yaml
+  - ./discord-webhook.yaml
+  - ./meilisearch.yaml
