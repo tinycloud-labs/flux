@@ -7,5 +7,5 @@ resources:
 patches:
   - target:
       kind: HelmRelease
-      name: deemix
+      name: meilisearch
     path: patch.yaml

@@ -16,4 +16,4 @@ app:
   envFromSecrets:
     enabled: true
     secretRefNames:
-      - meilisearch-key
+      - meilisearch

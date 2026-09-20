@@ -2,7 +2,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: deemix
+  name: meilisearch
 spec:
   values:
     app:
@@ -10,7 +10,7 @@ spec:
 
     ingress:
       enabled: true
-      host: deemix.shakir.cloud
+      host: meilisearch.shakir.cloud
       ingressClassName: traefik
 
     persistence:
@@ -20,4 +20,4 @@ spec:
       reclaimPolicy: Retain
       nfs:
         server: synology.shakir.cloud
-        path: /volume1/k3s-main/deemix
+        path: /volume1/k3s-main/meilisearch
