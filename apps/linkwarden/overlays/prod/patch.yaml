@@ -1,7 +1,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: meilisearch
+  name: linkwarden
 spec:
   values:
     app:
@@ -9,7 +9,7 @@ spec:
 
     ingress:
       enabled: true
-      host: meilisearch.shakir.cloud
+      host: linkwarden.shakir.cloud
       ingressClassName: traefik
 
     persistence:
@@ -19,4 +19,4 @@ spec:
       reclaimPolicy: Retain
       nfs:
         server: synology.shakir.cloud
-        path: /volume1/k3s-main/meilisearch
+        path: /volume1/k3s-main/linkwarden
