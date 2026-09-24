@@ -3,7 +3,7 @@ app:
   image:
     repository: ghcr.io/linkwarden/linkwarden
     pullPolicy: IfNotPresent
-    tag: latest
+    tag: latest@sha256:0664c28a039bda8ffa6663389e8536b2fc717219e329f85b83faca7efed3b144
 
   service:
     port: 80
@@ -33,7 +33,7 @@ database:
   port: 5432
   image:
     repository: postgres
-    tag: 16-alpine
+    tag: 16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
   volumeMounts:
     - mountPath: /var/lib/postgresql/data
       subPath: pgdata
