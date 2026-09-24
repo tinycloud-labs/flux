@@ -3,7 +3,7 @@ app:
   image:
     repository: getmeili/meilisearch
     pullPolicy: IfNotPresent
-    tag: v1.37.0@sha256:9cde2774864e6c19cdd09fcd2950bc01ac9a0454b6f343fffafa14faae6eb7ea
+    tag: v1.54.0@sha256:0bf32debcbfa8ba4e418679025f4935884972171513c92f0584689ff994a61df
 
   service:
     port: 7700
