@@ -1,0 +1,26 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: csi-driver-proxmox
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/component: csi-driver-proxmox
+    app.kubernetes.io/part-of: bootstrap
+spec:
+  # Deploys the Proxmox CSI Plugin. Waits for helm-repos to be healthy
+  # so the HelmRepository index is available before the HelmRelease is applied.
+  # Depends on associated BW secret for PVE auth
+  interval: 10m
+  path: ./bootstrap/csi-driver-proxmox
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: helm-repos
+    - name: bw-secrets
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: csi-driver-proxmox
+      namespace: flux-system

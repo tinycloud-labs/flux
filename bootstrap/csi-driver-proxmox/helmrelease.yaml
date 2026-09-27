@@ -1,0 +1,41 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: csi-driver-proxmox
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/component: csi-driver-proxmox
+    app.kubernetes.io/part-of: bootstrap
+spec:
+  interval: 10m
+  releaseName: csi-driver-proxmox
+  targetNamespace: csi-proxmox
+  chart:
+    spec:
+      chart: csi-driver-proxmox
+      version: 0.5.12
+      sourceRef:
+        kind: HelmRepository
+        name: csi-driver-proxmox
+        namespace: flux-system
+  # Chart values ref https://github.com/sergelogvinov/proxmox-csi-plugin/blob/main/charts/proxmox-csi-plugin/values.yaml
+  values:
+    existingConfigSecret: proxmox-csi-plugin
+    existingConfigSecretKey: config.yaml
+
+    # Define the storage classes some FIELDS ARE IMMUTABLE. And updated value requires destroy & redeploy
+    storageClass:
+      - name: proxmox
+        storage: tank
+        reclaimPolicy: Delete
+        fstype: xfs
+        ssd: true
+        # Define the storage class as default
+        # annotations:
+        #  storageclass.kubernetes.io/is-default-class: "true"
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: "true"
+
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule

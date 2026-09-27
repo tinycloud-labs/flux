@@ -1,0 +1,19 @@
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: csi-driver-proxmox
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: proxmox-csi-plugin
+  namespace: csi-proxmox
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: proxmox-csi-plugin
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: 016e3877-7ca5-4abc-83fc-b4d20040c4d9
+      secretKeyName: config.yaml
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
