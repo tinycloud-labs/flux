@@ -2,7 +2,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: metallb
-  namespace: metallb-system
+  namespace: flux-system
   labels:
     app.kubernetes.io/component: metallb
     app.kubernetes.io/part-of: bootstrap
