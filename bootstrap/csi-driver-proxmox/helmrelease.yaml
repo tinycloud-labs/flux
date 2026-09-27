@@ -2,7 +2,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: csi-driver-proxmox
-  namespace: flux-system
+  namespace: csi-proxmox
   labels:
     app.kubernetes.io/component: csi-driver-proxmox
     app.kubernetes.io/part-of: bootstrap
