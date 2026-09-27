@@ -6,4 +6,4 @@ resources:
   - ./discord-webhook.yaml
   - ./meilisearch.yaml
   - ./linkwarden.yaml
-#  - ./csi-driver-proxmox.yaml
+  - ./csi-driver-proxmox.yaml
