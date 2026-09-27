@@ -12,11 +12,11 @@ spec:
   targetNamespace: csi-proxmox
   chart:
     spec:
-      chart: csi-driver-proxmox
+      chart: proxmox-csi-plugin
       version: 0.5.12
       sourceRef:
         kind: HelmRepository
-        name: csi-driver-proxmox
+        name: proxmox-csi-plugin
         namespace: flux-system
   # Chart values ref https://github.com/sergelogvinov/proxmox-csi-plugin/blob/main/charts/proxmox-csi-plugin/values.yaml
   values:
