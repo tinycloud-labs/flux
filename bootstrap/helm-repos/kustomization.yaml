@@ -8,6 +8,7 @@ resources:
   - bw-secrets-manager.yaml
   - cert-manager.yaml
   - csi-driver-nfs.yaml
+  - csi-driver-proxmox.yaml
   - grafana.yaml
   - homepage.yaml
   - jellyfin.yaml
