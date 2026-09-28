@@ -25,17 +25,20 @@ spec:
 
     # Define the storage classes some FIELDS ARE IMMUTABLE. And updated value requires destroy & redeploy
     storageClass:
-      - name: proxmox
+      - name: proxmox-delete
         storage: tank
         reclaimPolicy: Delete
         fstype: xfs
         ssd: true
-        # Define the storage class as default
         # annotations:
         #  storageclass.kubernetes.io/is-default-class: "true"
+      - name: proxmox-retain
+        storage: tank
+        reclaimPolicy: Retain
+        fstype: xfs
+        ssd: true
     nodeSelector:
       node-role.kubernetes.io/control-plane: "true"
-
     tolerations:
       - key: node-role.kubernetes.io/control-plane
         effect: NoSchedule
