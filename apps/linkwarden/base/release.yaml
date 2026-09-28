@@ -18,7 +18,66 @@ spec:
         namespace: flux-system
       interval: 2h0m0s
 
-  valuesFrom:
-    - kind: ConfigMap
-      name: linkwarden-values
-      valuesKey: values.yaml
+  values:
+    app:
+      name: linkwarden
+      image:
+        repository: ghcr.io/linkwarden/linkwarden
+        pullPolicy: IfNotPresent
+        tag: latest
+
+      service:
+        port: 80
+        targetPort: 3000
+
+      volumeMounts:
+        - mountPath: /data/data
+          subPath: data
+
+      dbHostname: postgres-unichart
+
+      envFromSecrets:
+        enabled: true
+        secretRefNames:
+          - meilisearch
+          - linkwarden
+      env:
+        - name: NEXTAUTH_URL
+          value: "http://localhost:3000/api/v1/auth	"
+        - name: MEILI_HOST
+          value: "meilisearch-unichart.apps.svc.cluster.local"
+
+    ## ------------ StatefulSet Specifications ------------ ##
+    database:
+      enabled: true
+      host: postgres-unichart
+      port: 5432
+      image:
+        repository: postgres
+        tag: 16-alpine
+      volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          subPath: pgdata
+      securityContext:
+        enabled: true
+        runAsUser: 999
+        runAsGroup: 999
+        #    runAsNonRoot: false
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
+
+      replicaCount: 1
+
+    ingress:
+      enabled: true
+      host: linkwarden.shakir.cloud
+      ingressClassName: traefik
+
+    persistence:
+      enabled: true
+      size: 200Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/k3s-main/linkwarden
