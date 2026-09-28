@@ -14,6 +14,8 @@ spec:
   map:
     - bwSecretId: dfa98e9c-9934-45d2-8eee-b4cb011ef406
       secretKeyName: DATABASE_URL
+    - bwSecretId: d054459b-6e62-4bfd-b5aa-b4d3000a7059
+      secretKeyName: NEXTAUTH_SECRET
   authToken:
     secretName: bw-auth-token
     secretKey: token
