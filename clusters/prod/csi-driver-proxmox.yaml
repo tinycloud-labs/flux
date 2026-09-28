@@ -23,4 +23,4 @@ spec:
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
       name: csi-driver-proxmox
-      namespace: flux-system
+      namespace: csi-proxmox
