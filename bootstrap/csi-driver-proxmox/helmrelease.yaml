@@ -25,7 +25,7 @@ spec:
 
     # Define the storage classes some FIELDS ARE IMMUTABLE. And updated value requires destroy & redeploy
     storageClass:
-      - name: proxmox
+      - name: proxmox-delete
         storage: tank
         reclaimPolicy: Delete
         fstype: xfs
