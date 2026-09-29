@@ -1,0 +1,107 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: linkwarden
+  namespace: default
+
+spec:
+  interval: 1h0m0s
+  releaseName: linkwarden
+
+  chart:
+    spec:
+      chart: unichart
+      version: "0.0.7"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    app:
+      name: linkwarden
+      image:
+        repository: ghcr.io/linkwarden/linkwarden
+        pullPolicy: IfNotPresent
+        tag: latest
+
+      ports:
+        - containerPort: 3000
+      service:
+        ports:
+          - port: 80
+            targetPort: 3000
+
+      volumeMounts:
+        - mountPath: /data/data
+          subPath: data
+
+      dbHostname: postgres-unichart
+
+      envFromSecrets:
+        enabled: true
+        secretRefNames:
+          - meilisearch
+          - linkwarden
+
+      env:
+        - name: NEXTAUTH_URL
+          value: "http://localhost:3000/api/v1/auth"
+        - name: MEILI_HOST
+          value: "meilisearch-unichart.apps.svc.cluster.local:7700"
+    #    - name: DATABASE_URL
+    #      value: "postgresql://postgres:Zm9vYmFyCg@linkwarden-test-unichart-db-headless.apps.svc.cluster.local:5432/postgres"
+
+    ## ------------ StatefulSet Specifications ------------ ##
+    database:
+      enabled: true
+      host: postgres-unichart
+      port: 5432
+
+      env:
+        - name: POSTGRES_HOST_AUTH_METHOD
+          value: "trust"
+
+      image:
+        repository: postgres
+        tag: 16-alpine
+      volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          subPath: pgdata
+
+    ingress:
+      enabled: true
+      host: "linkwarden.shakir.cloud"
+      ingressClassName: "traefik"
+      port: 80
+
+    ## ------------ Persistence ------------ ##
+    persistence:
+      # -- App (Deployment): stays on CSI-NFS, static PV/subPath pattern --
+      app:
+        enabled: true
+        size: 200Mi
+        accessMode: ReadWriteMany
+        reclaimPolicy: Retain
+        storageClassName: ""   # empty = static NFS PV, no dynamic provisioner
+        nfs:
+          server: synology.shakir.cloud
+          path: /volume1/k3s-main/linkwarden
+
+      # -- Database (StatefulSet): moves to Proxmox CSI, one disk per replica via volumeClaimTemplates --
+      # Binds to an existing disk
+      database:
+        size: 512Mi
+        accessMode: ReadWriteOnce
+        storageClassName: proxmox-retain
+        existingVolume:
+          handle: "homelab/pve1/tank/vm-9999-pvc-c80e4058-3d8b-424a-9699-acb65c18560e"
+          fsType: xfs
+          volumeAttributes:
+            backup: "0"
+            discard: "on"
+            iothread: "1"
+            replicate: "0"
+            ssd: "1"
+            storage: tank
