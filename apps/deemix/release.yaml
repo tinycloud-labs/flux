@@ -1,0 +1,62 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: deemix
+  namespace: default
+
+spec:
+  interval: 1h0m0s
+  releaseName: deemix
+
+  chart:
+    spec:
+      chart: unichart
+      version: "0.0.7"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    app:
+      name: deemix
+      replicaCount: 1
+      image:
+        repository: ghcr.io/bambanah/deemix
+        pullPolicy: IfNotPresent
+        tag: v4.7.0@sha256:9450515dcf049ce764e4d08fed74b6a429ade83e1fe5424cd18482aa6f1683a2
+
+      service:
+        port: 80
+        targetPort: 6595
+
+      volumeMounts:
+        - mountPath: /downloads
+          subPath: downloads
+        - mountPath: /config
+          subPath: config
+
+      env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: UMASK_SET
+          value: "022"
+        - name: DEEMIX_SINGLE_USER
+          value: "true"
+
+    ingress:
+      enabled: true
+      host: deemix.shakir.cloud
+      ingressClassName: traefik
+
+    persistence:
+      enabled: true
+      size: 200Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/k3s-main/deemix

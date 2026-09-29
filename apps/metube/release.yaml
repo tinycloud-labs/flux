@@ -1,0 +1,51 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: metube
+  namespace: default
+
+spec:
+  interval: 1h0m0s
+  releaseName: metube
+
+  chart:
+    spec:
+      chart: unichart
+      version: "0.0.7"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    app:
+      name: metube
+      replicaCount: 1
+      image:
+        repository: ghcr.io/alexta69/metube
+        pullPolicy: IfNotPresent
+        tag: "2026.09.15@sha256:5ebff7a547bf175e614c024053e5602a0b9193586a20c107dd47d571c391e635" # renovate: depName=ghcr.io/alexta69/metube
+
+      containerPort: 80
+
+      service:
+        port: 80
+        targetPort: 8081
+
+      volumeMounts:
+        - mountPath: /downloads
+          subPath: downloads
+
+    ingress:
+      enabled: true
+      host: metube.shakir.cloud
+      ingressClassName: traefik
+    persistence:
+      enabled: true
+      size: 200Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/k3s-main/metube

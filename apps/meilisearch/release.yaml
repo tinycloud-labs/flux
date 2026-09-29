@@ -1,0 +1,55 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: meilisearch
+  namespace: default
+
+spec:
+  interval: 1h0m0s
+  releaseName: meilisearch
+
+  chart:
+    spec:
+      chart: unichart
+      version: "0.0.7"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    app:
+      name: meilisearch
+      replicaCount: 1
+      image:
+        repository: getmeili/meilisearch
+        pullPolicy: IfNotPresent
+        tag: v1.37.0@sha256:9cde2774864e6c19cdd09fcd2950bc01ac9a0454b6f343fffafa14faae6eb7ea
+
+      service:
+        port: 7700
+        targetPort: 7700
+
+      volumeMounts:
+        - mountPath: /meili_data
+          subPath: meili_data
+
+      envFromSecrets:
+        enabled: true
+        secretRefNames:
+          - meilisearch
+
+    ingress:
+      enabled: true
+      host: meilisearch.shakir.cloud
+      ingressClassName: traefik
+
+    persistence:
+      enabled: true
+      size: 200Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/k3s-main/meilisearch

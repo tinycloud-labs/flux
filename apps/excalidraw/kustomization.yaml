@@ -3,10 +3,5 @@ kind: Kustomization
 resources:
   - release.yaml
 
-configMapGenerator:
-  - name: excalidraw-values
-    files:
-      - values.yaml
-
 generatorOptions:
   disableNameSuffixHash: true

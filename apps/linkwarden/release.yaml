@@ -21,6 +21,7 @@ spec:
   values:
     app:
       name: linkwarden
+      replicaCount: 1
       image:
         repository: ghcr.io/linkwarden/linkwarden
         pullPolicy: IfNotPresent
@@ -53,6 +54,7 @@ spec:
 
     ## ------------ StatefulSet Specifications ------------ ##
     database:
+      replicaCount: 1
       enabled: true
       host: postgres-unichart
       port: 5432
