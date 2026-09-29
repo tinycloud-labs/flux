@@ -50,8 +50,6 @@ spec:
           value: "http://localhost:3000/api/v1/auth"
         - name: MEILI_HOST
           value: "meilisearch-unichart.apps.svc.cluster.local:7700"
-    #    - name: DATABASE_URL
-    #      value: "postgresql://postgres:Zm9vYmFyCg@linkwarden-test-unichart-db-headless.apps.svc.cluster.local:5432/postgres"
 
     ## ------------ StatefulSet Specifications ------------ ##
     database:
