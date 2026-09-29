@@ -1,0 +1,37 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bentopdf
+  namespace: default
+
+spec:
+  interval: 1h0m0s
+  releaseName: bentopdf
+
+  chart:
+    spec:
+      chart: unichart
+      version: "0.0.7"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+  values:
+    app:
+      name: bentopdf
+      replicaCount: 1
+      image:
+        repository: ghcr.io/alam00000/bentopdf
+        pullPolicy: IfNotPresent
+        tag: 2.8.8@sha256:6ef493c8e3bdbaa26c9bfcec330377ae95116fa00660ca0342769063197b1952 # renovate: depName=ghcr.io/alam00000/bentopdf
+      containerPort: 8080
+
+      service:
+        port: 80
+        targetPort: 8080
+
+    ingress:
+      enabled: true
+      host: bentopdf.shakir.cloud
+      ingressClassName: traefik
