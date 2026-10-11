@@ -17,12 +17,17 @@ flux-release:
   - changed-files:
       - any-glob-to-any-file: "apps/*/base/*"
       - any-glob-to-any-file: "apps/*/base/**/*"
+      - any-glob-to-any-file: "apps/*/release.yaml"
 
 flux-patch:
   - changed-files:
       - any-glob-to-any-file: "apps/*/overlays/*"
       - any-glob-to-any-file: "apps/*/overlays/**/*"
 
-enhancement:
+flux-bootstrap:
+  - changed-files:
+      - any-glob-to-any-file: "bootstrap/**/*"
+
+documentation:
   - changed-files:
       - any-glob-to-any-file: "**/README.md"
