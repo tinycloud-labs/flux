@@ -48,7 +48,6 @@ spec:
     ingress:
       enabled: true
       host: gaseous.shakir.cloud
-      ingressClassName: nginx
       port: 80
 
     ## ------------ StatefulSet Specifications ------------ ##
