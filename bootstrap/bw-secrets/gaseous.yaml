@@ -1,0 +1,26 @@
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: gaseous
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: gaseous
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: gaseous-server
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: 2ec3f887-8a39-471b-ad3c-b407002bb848
+      secretKeyName: igdbclientsecret
+    - bwSecretId: ffa2815d-e88f-4e4e-8ad4-b4e0004ee6d4
+      secretKeyName: igdbclientid
+    - bwSecretId: 284b8ece-942c-43b0-9033-b4e0004ff6ad
+      secretKeyName: dbuser
+    - bwSecretId: 97203d02-b7b3-4ce2-899d-b4e0004f5d7c
+      secretKeyName: dbpass
+
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

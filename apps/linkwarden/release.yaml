@@ -52,6 +52,12 @@ spec:
         - name: MEILI_HOST
           value: "meilisearch-unichart.apps.svc.cluster.local:7700"
 
+    ingress:
+      enabled: true
+      host: "linkwarden.shakir.cloud"
+      ingressClassName: "traefik"
+      port: 80
+
     ## ------------ StatefulSet Specifications ------------ ##
     database:
       replicaCount: 1
@@ -66,15 +72,10 @@ spec:
       image:
         repository: postgres
         tag: 16-alpine
+        
       volumeMounts:
         - mountPath: /var/lib/postgresql/data
           subPath: pgdata
-
-    ingress:
-      enabled: true
-      host: "linkwarden.shakir.cloud"
-      ingressClassName: "traefik"
-      port: 80
 
     ## ------------ Persistence ------------ ##
     persistence:

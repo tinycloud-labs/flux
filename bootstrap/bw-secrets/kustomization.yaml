@@ -7,3 +7,4 @@ resources:
   - ./meilisearch.yaml
   - ./linkwarden.yaml
   - ./csi-driver-proxmox.yaml
+  - ./gaseous.yaml
