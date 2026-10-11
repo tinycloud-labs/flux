@@ -30,8 +30,9 @@ spec:
       ports:
         - containerPort: 5198
       service:
-        - port: 80
-          targetPort: 5198
+        ports:
+          - port: 80
+            targetPort: 5198
 
       volumeMounts:
         - mountPath: /root/.gaseous-server
