@@ -10,6 +10,7 @@ resources:
   - ../../../apps/carlogger/overlays/prod
   - ../../../apps/deemix
   - ../../../apps/excalidraw
+  - ../../../apps/gaseous
   - ../../../apps/homepage/overlays/prod
   - ../../../apps/jellyfin/overlays/prod
   - ../../../apps/linkwarden
