@@ -49,6 +49,7 @@ spec:
       enabled: true
       host: gaseous.shakir.cloud
       port: 80
+      ingressClassName: traefik
 
     ## ------------ StatefulSet Specifications ------------ ##
     database:
