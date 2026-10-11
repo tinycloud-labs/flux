@@ -25,7 +25,7 @@ spec:
       image:
         repository: ghcr.io/linkwarden/linkwarden
         pullPolicy: IfNotPresent
-        tag: latest
+        tag: v2.16.3@sha256:0664c28a039bda8ffa6663389e8536b2fc717219e329f85b83faca7efed3b144 # renovate: depName=ghcr.io/linkwarden/linkwarden
 
       ports:
         - containerPort: 3000
