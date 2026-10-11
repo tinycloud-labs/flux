@@ -96,4 +96,13 @@ spec:
         accessMode: ReadWriteOnce
         storageClassName: proxmox-retain
         # Binds to an existing disk
-        existingVolume: {}
+        existingVolume:
+          handle: "homelab/pve1/tank/vm-9999-pvc-686ff75e-0907-4423-86a8-b8e043bd33c3"
+          fsType: xfs
+          volumeAttributes:
+            backup: "0"
+            discard: "on"
+            iothread: "1"
+            replicate: "0"
+            ssd: "1"
+            storage: tank
