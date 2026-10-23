@@ -3,29 +3,23 @@
   "extends": [
     "config:recommended"
   ],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "description": "Container images in HelmRelease values: a `repository:` line followed (within a few lines) by its `tag:` line",
-      "managerFilePatterns": [
-        "/^apps/[^/]+/release\\.ya?ml$/",
-        "/^apps/[^/]+/(base|overlays/[^/]+)/[^/]+\\.ya?ml$/"
-      ],
-      "matchStringsStrategy": "recursive",
-      "matchStrings": [
-        "repository:[ \\t]*[\"']?(?<depName>[^\\s\"'#]+)[\"']?[^\\n]*\\n(?:[^\\n]*\\n){0,3}?[ \\t]*tag:[ \\t]*[\"']?[^\\s\"'#]+[\"']?",
-        "tag:[ \\t]*[\"']?(?<currentValue>[^\\s\"'#@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\"']?"
-      ],
-      "autoReplaceStringTemplate": "tag: \"{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}\"",
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "loose"
-    }
-  ],
+  "flux": {
+    "description": "HelmRelease chart versions and the images in their values; HelmRepository sources are resolved from bootstrap/helm-repos",
+    "managerFilePatterns": [
+      "/^(apps|bootstrap|clusters)/.+\\.ya?ml$/"
+    ]
+  },
   "packageRules": [
     {
       "matchPackageNames": ["*"],
       "matchDatasources": ["docker"],
       "pinDigests": true
+    },
+    {
+      "description": "One PR bumps unichart across every app that uses it",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["unichart"],
+      "groupName": "unichart"
     }
   ]
 }
