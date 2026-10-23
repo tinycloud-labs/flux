@@ -5,19 +5,19 @@ kind: Kustomization
 namespace: apps
 
 resources:
-  - ../../../apps/actualbudget/overlays/prod
+  - ../../../apps/actualbudget
   - ../../../apps/bentopdf
-  - ../../../apps/carlogger/overlays/prod
+  - ../../../apps/carlogger
   - ../../../apps/deemix
   - ../../../apps/excalidraw
 #  - ../../../apps/gaseous
-  - ../../../apps/homepage/overlays/prod
-  - ../../../apps/jellyfin/overlays/prod
+  - ../../../apps/homepage
+  - ../../../apps/jellyfin
   - ../../../apps/linkwarden
   - ../../../apps/meilisearch
   - ../../../apps/metube
   - ../../../apps/omni-tools
-  - ../../../apps/paperless-ngx/overlays/prod
+  - ../../../apps/paperless-ngx
   - ../notifications
 
 patches:
