@@ -6,13 +6,17 @@
   "customManagers": [
     {
       "customType": "regex",
+      "description": "Container images in HelmRelease values: a `repository:` line followed (within a few lines) by its `tag:` line",
       "managerFilePatterns": [
-        "/apps/.+/base/values\\.ya?ml$",
-        "/apps/[^/]+/release\\.yaml$"
+        "/^apps/[^/]+/release\\.ya?ml$/",
+        "/^apps/[^/]+/(base|overlays/[^/]+)/[^/]+\\.ya?ml$/"
       ],
+      "matchStringsStrategy": "recursive",
       "matchStrings": [
-        "tag:\\s*\"?(?<currentValue>[\\w.-]+)\"?\\s*#\\s*renovate:\\s*depName=(?<depName>\\S+)(?:\\s+digest=(?<currentDigest>sha256:[a-f0-9]+))?"
+        "repository:[ \\t]*[\"']?(?<depName>[^\\s\"'#]+)[\"']?[^\\n]*\\n(?:[^\\n]*\\n){0,3}?[ \\t]*tag:[ \\t]*[\"']?[^\\s\"'#]+[\"']?",
+        "tag:[ \\t]*[\"']?(?<currentValue>[^\\s\"'#@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\"']?"
       ],
+      "autoReplaceStringTemplate": "tag: \"{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}\"",
       "datasourceTemplate": "docker",
       "versioningTemplate": "loose"
     }
@@ -20,7 +24,6 @@
   "packageRules": [
     {
       "matchPackageNames": ["*"],
-      "versioningTemplate": "loose",
       "matchDatasources": ["docker"],
       "pinDigests": true
     }

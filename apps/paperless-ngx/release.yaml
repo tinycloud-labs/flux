@@ -1,0 +1,104 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperless-ngx
+  namespace: default
+spec:
+  interval: 1h0m0s
+  releaseName: paperless-ngx
+  dependsOn:
+    - name: paperless-ngx-data
+      namespace: apps
+  chart:
+    spec:
+      chart: paperless-ngx
+      version: "0.1.2"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    paperlessngx:
+      image:
+        repository: ghcr.io/paperless-ngx/paperless-ngx
+        pullPolicy: IfNotPresent
+        tag: 2.20.4
+      replicaCount: 1
+
+      env:
+        - name: PAPERLESS_URL
+          value: "https://paperless.shakir.cloud"
+        - name: PAPERLESS_TIME_ZONE
+          value: "America/Los_Angeles"
+        - name: PAPERLESS_OCR_LANGUAGE
+          value: "eng"
+        - name: "PAPERLESS_OCR_LANGUAGES"
+          value: "ara"
+        - name: PAPERLESS_FILENAME_FORMAT
+          value: "{{ correspondent }}/{{ created_year }}-{{ created_month }}-{{ title }}"
+        - name: PAPERLESS_CONSUMER_POLLING
+          value: "30"
+
+    adminSecret:
+      enabled: true
+      create: true
+      name: paperless-initialization
+      usernameKey: paperless-username
+      passwordKey: paperless-password
+      username: admin
+      password: changeme
+
+    redis:
+      image:
+        repository: docker.io/library/redis
+        pullPolicy: IfNotPresent
+        tag: "8"
+
+    persistence:
+      shared:
+        existingClaim: paperless-ngx-data
+
+    ingress:
+      enabled: true
+      host: paperless.shakir.cloud
+      ingressClassName: traefik
+      annotations: {}
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperless-ngx-data
+  namespace: default
+
+spec:
+  interval: 1h0m0s
+  releaseName: paperless-ngx-data
+
+  chart:
+    spec:
+      chart: nfspersistence
+      version: "0.3.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    labels:
+      app: paperless-ngx
+    annotations:
+      volume.kubernetes.io/description: "Shared PVC for paperless-ngx"
+      custom.synology/path-hint: "maps to /vol1/k3s-main/paperless-ngx"
+
+    persistence:
+      name: paperless-ngx-data
+      size: 100Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/k3s-main/paperless-ngx
