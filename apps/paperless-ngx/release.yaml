@@ -24,7 +24,7 @@ spec:
       image:
         repository: ghcr.io/paperless-ngx/paperless-ngx
         pullPolicy: IfNotPresent
-        tag: 2.20.4
+        tag: "2.20.4@sha256:06ca6a6c2a21cfebcc7c5f2e0d38f892dba4bcb090b8781a55d003c63cce386a"
       replicaCount: 1
 
       env:
@@ -54,7 +54,7 @@ spec:
       image:
         repository: docker.io/library/redis
         pullPolicy: IfNotPresent
-        tag: "8"
+        tag: "8@sha256:97ec88159e6d7cfb5ddef9015386087d58a912de80112f06ebdfa78fa5989901"
 
     persistence:
       shared:
