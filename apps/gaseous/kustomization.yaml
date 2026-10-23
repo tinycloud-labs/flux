@@ -1,5 +1,2 @@
 resources:
   - release.yaml
-
-generatorOptions:
-  disableNameSuffixHash: true

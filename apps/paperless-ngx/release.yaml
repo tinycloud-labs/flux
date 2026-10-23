@@ -2,7 +2,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: paperless-ngx
-  namespace: default
+  namespace: apps
 spec:
   interval: 1h0m0s
   releaseName: paperless-ngx
@@ -71,7 +71,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: paperless-ngx-data
-  namespace: default
+  namespace: apps
 
 spec:
   interval: 1h0m0s
