@@ -24,7 +24,7 @@ spec:
       replicaCount: 1
       image:
         repository: gaseousgames/gaseousserver
-        tag: "latest@sha256:5e506593ff09533f23e742470da2ef37ffe4051f3559dad3b038e81444df75a6"
+        tag: "v1.7.14@sha256:5e506593ff09533f23e742470da2ef37ffe4051f3559dad3b038e81444df75a6" # renovate: depName=gaseousgames/gaseousserver
         pullPolicy: IfNotPresent
 
       ports:
@@ -69,10 +69,12 @@ spec:
           value: gaseous
         - name: MARIADB_DISABLE_CHOWN
           value: "yes"
+        - name: MARIADB_AUTO_UPGRADE
+          value: "1"
 
       image:
         repository: mariadb
-        tag: "latest@sha256:0e4bb0f339feba125d1154fbacd36c16ec8518f52e44e1f82ecec7d6771caf39"
+        tag: "13.0.2@sha256:0e4bb0f339feba125d1154fbacd36c16ec8518f52e44e1f82ecec7d6771caf39" # renovate: depName=mariadb
 
       volumeMounts:
         - mountPath: /var/lib/mysql
