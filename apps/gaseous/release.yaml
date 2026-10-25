@@ -28,11 +28,11 @@ spec:
         pullPolicy: IfNotPresent
 
       ports:
-        - containerPort: 5198
+        - containerPort: 80
       service:
         ports:
           - port: 80
-            targetPort: 5198
+            targetPort: 80
 
       volumeMounts:
         - mountPath: /root/.gaseous-server
