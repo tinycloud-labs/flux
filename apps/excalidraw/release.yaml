@@ -11,7 +11,7 @@ spec:
   chart:
     spec:
       chart: unichart
-      version: "0.0.7"
+      version: "1.0.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
@@ -27,12 +27,19 @@ spec:
         pullPolicy: IfNotPresent
         tag: latest@sha256:f7ee194addd607bf831d2af0f0a34463dd4225e426cf35199ef0b12a803398e9 # renovate: depName=excalidraw/excalidraw
 
-      containerPort: 80
-
+      ports:
+        - containerPort: 80
       service:
-        port: 80
-        targetPort: 80
+        ports:
+          - port: 80
+            targetPort: 80
+
     ingress:
       enabled: true
       host: draw.shakir.cloud
       ingressClassName: traefik
+
+    ## ------------ Persistence ------------ ##
+    persistence:
+      app:
+        enabled: false

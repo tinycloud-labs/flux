@@ -11,7 +11,7 @@ spec:
   chart:
     spec:
       chart: unichart
-      version: "0.0.7"
+      version: "1.0.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
@@ -27,11 +27,12 @@ spec:
         pullPolicy: IfNotPresent
         tag: "2026.10.27@sha256:845a67373a9f9e62b88e5f9067867202200d63db3615a051acbd77b09e86b9ce" # renovate: depName=ghcr.io/alexta69/metube
 
-      containerPort: 80
-
+      ports:
+        - containerPort: 8081
       service:
-        port: 80
-        targetPort: 8081
+        ports:
+          - port: 80
+            targetPort: 8081
 
       volumeMounts:
         - mountPath: /downloads
@@ -42,10 +43,15 @@ spec:
       host: metube.shakir.cloud
       ingressClassName: traefik
     persistence:
-      enabled: true
-      size: 200Mi
-      accessMode: ReadWriteMany
-      reclaimPolicy: Retain
-      nfs:
-        server: synology.shakir.cloud
-        path: /volume1/k3s-main/metube
+      # -- App (Deployment): stays on CSI-NFS, static PV/subPath pattern --
+      app:
+        enabled: true
+        # Keeps the PV/PVC name used before unichart 1.0.0 (default is now <release>-unichart-app-data)
+        name: metube-unichart
+        size: 200Mi
+        accessMode: ReadWriteMany
+        reclaimPolicy: Retain
+        storageClassName: ""   # empty = static NFS PV, no dynamic provisioner
+        nfs:
+          server: synology.shakir.cloud
+          path: /volume1/k3s-main/metube

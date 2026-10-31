@@ -11,7 +11,7 @@ spec:
   chart:
     spec:
       chart: unichart
-      version: "0.0.7"
+      version: "1.0.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
@@ -27,9 +27,12 @@ spec:
         pullPolicy: IfNotPresent
         tag: v4.7.1@sha256:1fa4bdf600d40337abe30d970cfdd4e1a48cac5614742c2f577c3ac5f7092c34
 
+      ports:
+        - containerPort: 6595
       service:
-        port: 80
-        targetPort: 6595
+        ports:
+          - port: 80
+            targetPort: 6595
 
       volumeMounts:
         - mountPath: /downloads
@@ -53,10 +56,15 @@ spec:
       ingressClassName: traefik
 
     persistence:
-      enabled: true
-      size: 200Mi
-      accessMode: ReadWriteMany
-      reclaimPolicy: Retain
-      nfs:
-        server: synology.shakir.cloud
-        path: /volume1/k3s-main/deemix
+      # -- App (Deployment): stays on CSI-NFS, static PV/subPath pattern --
+      app:
+        enabled: true
+        # Keeps the PV/PVC name used before unichart 1.0.0 (default is now <release>-unichart-app-data)
+        name: deemix-unichart
+        size: 200Mi
+        accessMode: ReadWriteMany
+        reclaimPolicy: Retain
+        storageClassName: ""   # empty = static NFS PV, no dynamic provisioner
+        nfs:
+          server: synology.shakir.cloud
+          path: /volume1/k3s-main/deemix
