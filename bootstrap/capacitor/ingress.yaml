@@ -1,0 +1,20 @@
+# No authentication: Capacitor v0.4.8 has none, and its ClusterRole can read Secrets
+# in every namespace and patch Flux resources. Keep this host LAN-only.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: capacitor
+  namespace: flux-system
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: capacitor.shakir.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: capacitor
+                port:
+                  number: 9000

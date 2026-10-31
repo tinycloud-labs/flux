@@ -1,0 +1,17 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: capacitor-manifests
+  namespace: flux-system
+spec:
+  # Applies the upstream Deployment, Service (port 9000) and RBAC from the OCI artifact
+  interval: 1h
+  retryInterval: 2m
+  timeout: 2m
+  wait: true
+  prune: true
+  targetNamespace: flux-system
+  path: "./"
+  sourceRef:
+    kind: OCIRepository
+    name: capacitor

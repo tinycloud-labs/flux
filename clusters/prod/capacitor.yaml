@@ -1,0 +1,22 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: capacitor
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/component: capacitor
+    app.kubernetes.io/part-of: bootstrap
+spec:
+  # Deploys the Capacitor Flux UI (legacy v0.4.8) and exposes it through Traefik.
+  # The nested capacitor-manifests Kustomization pulls the upstream OCI manifests.
+  interval: 10m
+  path: ./bootstrap/capacitor
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: kustomize.toolkit.fluxcd.io/v1
+      kind: Kustomization
+      name: capacitor-manifests
+      namespace: flux-system

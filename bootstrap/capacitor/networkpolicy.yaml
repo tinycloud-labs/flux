@@ -1,0 +1,22 @@
+# Flux's allow-egress policy only admits ingress from pods inside flux-system,
+# so Traefik (kube-system on k3s) needs an explicit rule to reach Capacitor.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-capacitor-ingress
+  namespace: flux-system
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: onechart
+      app.kubernetes.io/instance: capacitor
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 9000
+          protocol: TCP
