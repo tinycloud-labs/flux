@@ -16,6 +16,10 @@ spec:
     - kind: Kustomization
       name: '*'
       namespace: flux-system
+    # App HelmReleases are namespaced to apps by clusters/prod/apps/kustomization.yaml
     - kind: HelmRelease
       name: '*'
-      namespace: flux-system
+      namespace: apps
+    - kind: HelmRelease
+      name: '*'
+      namespace: monitoring
