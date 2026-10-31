@@ -11,7 +11,7 @@ spec:
   chart:
     spec:
       chart: unichart
-      version: "0.0.7"
+      version: "1.0.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
@@ -27,9 +27,12 @@ spec:
         pullPolicy: IfNotPresent
         tag: v1.37.0@sha256:9cde2774864e6c19cdd09fcd2950bc01ac9a0454b6f343fffafa14faae6eb7ea
 
+      ports:
+        - containerPort: 7700
       service:
-        port: 7700
-        targetPort: 7700
+        ports:
+          - port: 7700
+            targetPort: 7700
 
       volumeMounts:
         - mountPath: /meili_data
@@ -43,13 +46,19 @@ spec:
     ingress:
       enabled: true
       host: meilisearch.shakir.cloud
+      port: 7700
       ingressClassName: traefik
 
     persistence:
-      enabled: true
-      size: 200Mi
-      accessMode: ReadWriteMany
-      reclaimPolicy: Retain
-      nfs:
-        server: synology.shakir.cloud
-        path: /volume1/k3s-main/meilisearch
+      # -- App (Deployment): stays on CSI-NFS, static PV/subPath pattern --
+      app:
+        enabled: true
+        # Keeps the PV/PVC name used before unichart 1.0.0 (default is now <release>-unichart-app-data)
+        name: meilisearch-unichart
+        size: 200Mi
+        accessMode: ReadWriteMany
+        reclaimPolicy: Retain
+        storageClassName: ""   # empty = static NFS PV, no dynamic provisioner
+        nfs:
+          server: synology.shakir.cloud
+          path: /volume1/k3s-main/meilisearch

@@ -11,7 +11,7 @@ spec:
   chart:
     spec:
       chart: unichart
-      version: "0.0.7"
+      version: "1.0.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
@@ -27,13 +27,19 @@ spec:
         pullPolicy: IfNotPresent
         tag: "0.6@sha256:ceb5acc317daf387634f7f212cefe4722fd1243ad1cba74203f25254195b6c69" # renovate: depName=iib0011/omni-tools
 
-      containerPort: 80
-
+      ports:
+        - containerPort: 80
       service:
-        port: 80
-        targetPort: 80
+        ports:
+          - port: 80
+            targetPort: 80
 
     ingress:
       enabled: true
       host: omnitools.shakir.cloud
       ingressClassName: traefik
+
+    ## ------------ Persistence ------------ ##
+    persistence:
+      app:
+        enabled: false

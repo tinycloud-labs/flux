@@ -11,7 +11,7 @@ spec:
   chart:
     spec:
       chart: unichart
-      version: "0.0.7"
+      version: "1.0.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
@@ -27,9 +27,12 @@ spec:
         pullPolicy: IfNotPresent
         tag: latest@sha256:24645e971da6bb1a1f953d6859e307a0b29be1e8b4130a35b3220c209b5b860c # renovate: depName=docker.io/actualbudget/actual-server datasource=docker
 
+      ports:
+        - containerPort: 5006
       service:
-        port: 80
-        targetPort: 5006
+        ports:
+          - port: 80
+            targetPort: 5006
 
       volumeMounts:
         - mountPath: /data
@@ -48,10 +51,15 @@ spec:
       host: budget.shakir.cloud
       ingressClassName: traefik
     persistence:
-      enabled: true
-      size: 200Mi
-      accessMode: ReadWriteMany
-      reclaimPolicy: Retain
-      nfs:
-        server: synology.shakir.cloud
-        path: /volume1/k3s-main/actualbudget
+      # -- App (Deployment): stays on CSI-NFS, static PV/subPath pattern --
+      app:
+        enabled: true
+        # Keeps the PV/PVC name used before unichart 1.0.0 (default is now <release>-unichart-app-data)
+        name: actualbudget-unichart
+        size: 200Mi
+        accessMode: ReadWriteMany
+        reclaimPolicy: Retain
+        storageClassName: ""   # empty = static NFS PV, no dynamic provisioner
+        nfs:
+          server: synology.shakir.cloud
+          path: /volume1/k3s-main/actualbudget

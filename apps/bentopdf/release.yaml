@@ -11,7 +11,7 @@ spec:
   chart:
     spec:
       chart: unichart
-      version: "0.0.7"
+      version: "1.0.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
@@ -25,13 +25,19 @@ spec:
         repository: ghcr.io/alam00000/bentopdf
         pullPolicy: IfNotPresent
         tag: 2.8.10@sha256:039239902a01e58a5a0f52e29039fafa18ffc2a481bb8acd807599f1c6dde7ef # renovate: depName=ghcr.io/alam00000/bentopdf
-      containerPort: 8080
-
+      ports:
+        - containerPort: 8080
       service:
-        port: 80
-        targetPort: 8080
+        ports:
+          - port: 80
+            targetPort: 8080
 
     ingress:
       enabled: true
       host: bentopdf.shakir.cloud
       ingressClassName: traefik
+
+    ## ------------ Persistence ------------ ##
+    persistence:
+      app:
+        enabled: false
