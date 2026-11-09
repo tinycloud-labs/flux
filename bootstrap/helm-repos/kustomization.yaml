@@ -10,6 +10,7 @@ resources:
   - csi-driver-nfs.yaml
   - csi-driver-proxmox.yaml
   - grafana.yaml
+  - headlamp.yaml
   - homepage.yaml
   - jellyfin.yaml
   - karakeep.yaml
