@@ -18,3 +18,16 @@ spec:
         kind: HelmRepository
         name: bw-secrets-manager
         namespace: flux-system
+  values:
+    settings:
+      # Seconds between syncs with Bitwarden for each BitwardenSecret. Fixes aggrisve fetch and rate-limit deadlocks
+      bwSecretsManagerRefreshInterval: 3600
+    containers:
+      manager:
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
