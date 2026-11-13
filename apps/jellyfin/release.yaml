@@ -128,3 +128,13 @@ spec:
       #   handle: ""
       #   fsType: xfs
       #   volumeAttributes: {}
+      existingVolume:
+        handle: "homelab/pve1/tank/vm-9999-pvc-324a7d7b-714f-4d8a-ad74-f96b4a31d055"
+        fsType: xfs
+        volumeAttributes:
+          backup: "0"
+          discard: "on"
+          iothread: "1"
+          replicate: "0"
+          ssd: "1"
+          storage: tank
