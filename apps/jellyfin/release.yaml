@@ -6,10 +6,11 @@ metadata:
 spec:
   interval: 1h0m0s
   releaseName: jellyfin
+  # Storage releases must be Ready before Jellyfin installs or upgrades
   dependsOn:
-    - name: jellyfin-media
+    - name: jellyfin-media-nfs
       namespace: apps
-    - name: jellyfin-config
+    - name: jellyfin-config-csi
       namespace: apps
   chart:
     spec:
@@ -36,32 +37,40 @@ spec:
             - path: /
               pathType: ImplementationSpecific
 
-    # PVCs come from the jellyfin-config / jellyfin-media releases below
+    # The config disk is ReadWriteOnce, so the old pod must release it before the new one starts
+    deploymentStrategy:
+      type: Recreate
+
+    # PVCs come from the storage releases below
     persistence:
       config:
-        existingClaim: jellyfin-config
+        existingClaim: jellyfin-config-csi
       media:
-        existingClaim: jellyfin-media
+        existingClaim: jellyfin-media-nfs
 
 ---
+# Media stays on the NAS. New release name on purpose: changing the chart of an
+# installed release makes helm-controller uninstall it, which would wait on the
+# PVC that Jellyfin is still using. The old jellyfin-media release is pruned instead.
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: jellyfin-media
+  name: jellyfin-media-nfs
   namespace: apps
 spec:
   interval: 1h0m0s
-  releaseName: jellyfin-media
+  releaseName: jellyfin-media-nfs
   chart:
     spec:
-      chart: nfspersistence
-      version: "0.3.1"
+      chart: storage
+      version: "0.1.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
         namespace: flux-system
       interval: 2h0m0s
 
+  # Static NFS binds immediately, so the default wait holds Jellyfin until the PVC is Bound
   values:
     labels:
       app: jellyfin
@@ -70,7 +79,7 @@ spec:
       custom.synology/path-hint: "maps to /vol1/k3s-main/jellyfin-media"
 
     persistence:
-      name: jellyfin-media
+      name: jellyfin-media-nfs
       size: 100Mi
       accessMode: ReadWriteMany
       reclaimPolicy: Retain
@@ -79,36 +88,45 @@ spec:
         path: /volume1/k3s-main/pv-jellyfin-media
 
 ---
+# Jellyfin config and SQLite database, on a Proxmox CSI disk
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: jellyfin-config
+  name: jellyfin-config-csi
   namespace: apps
 spec:
   interval: 1h0m0s
-  releaseName: jellyfin-config
+  releaseName: jellyfin-config-csi
   chart:
     spec:
-      chart: nfspersistence
-      version: "0.3.1"
+      chart: storage
+      version: "0.1.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
         namespace: flux-system
       interval: 2h0m0s
 
+  # The PVC only binds once Jellyfin's pod uses it (WaitForFirstConsumer).
+  # Waiting here would deadlock with the dependsOn on the jellyfin release.
+  install:
+    disableWait: true
+  upgrade:
+    disableWait: true
+
   values:
     labels:
       app: jellyfin
     annotations:
-      volume.kubernetes.io/description: "Shared PVC for jellyfin-config"
-      custom.synology/path-hint: "maps to /vol1/k3s-main/jellyfin-config"
+      volume.kubernetes.io/description: "Jellyfin config and SQLite database"
 
     persistence:
-      name: jellyfin-config
-      size: 100Mi
-      accessMode: ReadWriteMany
-      reclaimPolicy: Retain
-      nfs:
-        server: synology.shakir.cloud
-        path: /volume1/k3s-main/pv-jellyfin-config
+      name: jellyfin-config-csi
+      size: 5Gi
+      accessMode: ReadWriteOnce
+      storageClassName: proxmox-retain
+      # After the first install, capture the disk and pin it here so a rebuild rebinds it:
+      # existingVolume:
+      #   handle: ""
+      #   fsType: xfs
+      #   volumeAttributes: {}

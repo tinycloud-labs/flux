@@ -18,4 +18,5 @@ spec:
     - name: helm-repos
     - name: metallb-config
     - name: csi-driver-nfs
+    - name: csi-driver-proxmox
     - name: bw-secrets
