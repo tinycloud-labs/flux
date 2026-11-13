@@ -42,6 +42,15 @@ spec:
     config:
       bookmarks:
         - Bookmarks:
+            - Flux repo:
+                - icon: github
+                  href: https://github.com/tinycloud-labs/flux
+            - Helm repo:
+                - icon: github
+                  href: https://github.com/tinycloud-labs/helm
+            - Renovate:
+                - icon: sh-mend-renovate
+                  href: https://developer.mend.io/github/tinycloud-labs
             - GitLab:
                 - abbr: GL
                   href: https://gitlab.com/
@@ -51,139 +60,205 @@ spec:
             - Photopea:
                 - abbr: PP
                   href: https://www.photopea.com/
-            - HowItWorks:
-                - abbr: HIW
-                  href: https://toolkit.whysonil.dev/how-it-works/
 
+      # siteMonitor: Homepage's own pod checks the URL over HTTP
+      # pfSense is left out - its default selfsigned cert isn't trusted so it would always show as down.
       services:
           - Infrastructure:
               - Proxmox:
                   icon: sh-proxmox
                   href: https://pxmx.shakir.cloud
+                  siteMonitor: https://pxmx.shakir.cloud
                   description: Proxmox Virtual Environment
               - Pfsense:
                   icon: sh-pfsense
                   href: https://pfsense.shakir.cloud:10443
                   description: Pfsense Firewall
+              - Headlamp:
+                  icon: headlamp
+                  href: https://headlamp.shakir.cloud
+                  siteMonitor: https://headlamp.shakir.cloud
+                  description: Kubernetes Dashboard
+                  # Read from Prometheus' API (kube-state-metrics), not from the cluster
+                  widget:
+                    type: prometheusmetric
+                    url: http://prometheus-prometheus.monitoring.svc:9090
+                    refreshInterval: 60000
+                    metrics:
+                      - label: Nodes ready
+                        query: sum(kube_node_status_condition{condition="Ready",status="true"})
+                      - label: Pods running
+                        query: sum(kube_pod_status_phase{phase="Running"})
+              - DSM:
+                  icon: sh-synology
+                  href: https://nas.shakir.cloud
+                  siteMonitor: https://nas.shakir.cloud
+                  description: Synology DSM
+
+          - Monitoring:
               - Grafana:
                   icon: grafana
                   href: https://grafana.shakir.cloud
+                  siteMonitor: https://grafana.shakir.cloud
                   description: Grafana Monitoring
               - Prometheus:
                   icon: prometheus
                   href: https://prometheus.shakir.cloud
+                  siteMonitor: https://prometheus.shakir.cloud
                   description: Prometheus Monitoring
+                  widget:
+                    type: prometheus
+                    url: http://prometheus-prometheus.monitoring.svc:9090
               - Alertmanager:
                   icon: alertmanager
                   href: https://alertmanager.shakir.cloud
+                  siteMonitor: https://alertmanager.shakir.cloud
                   description: Alertmanager for Prometheus
+                  widget:
+                    type: prometheusmetric
+                    url: http://prometheus-prometheus.monitoring.svc:9090
+                    refreshInterval: 60000
+                    metrics:
+                      - label: Firing alerts
+                        query: count(ALERTS{alertstate="firing"}) or vector(0)
               - Datadog:
                   icon: datadog
                   href: https://app.datadoghq.com
                   description: Backbone infra monitoring
-          - Synology:
-              - DSM:
-                  icon: sh-synology
-                  href: https://nas.shakir.cloud
-                  description: Synology DSM
-              - Photos:
-                  icon: synology-photos
-                  href: https://photos.shakir.cloud
-                  description: Synology Photos
-              - Drive:
-                  icon: synology-drive
-                  href: https://drive.shakir.cloud
-                  description: Synology Drive
 
-          - Multimedia:
+          - Media:
+              - Jellyfin:
+                  icon: jellyfin
+                  href: https://jellyfin.shakir.cloud
+                  siteMonitor: https://jellyfin.shakir.cloud
+                  description: Jellyfin Media Server
               - Plex:
                   icon: plex
                   href: https://plex.shakir.cloud/web/index.html
+                  siteMonitor: https://plex.shakir.cloud/web/index.html
                   description: Plex Media Server
               - Metube:
                   icon: metube
                   href: https://metube.shakir.cloud
+                  siteMonitor: https://metube.shakir.cloud
                   description: Metube Media Server
               - Deemix:
                   icon: deemix
                   href: https://deemix.shakir.cloud
+                  siteMonitor: https://deemix.shakir.cloud
                   description: Deemix Music Manager
-              - Jellyfin:
-                  icon: jellyfin
-                  href: https://jellyfin.shakir.cloud
-                  description: Jellyfin Media Server
               - Gaseous:
                   icon: gaseous
                   href: https://gaseous.shakir.cloud
+                  siteMonitor: https://gaseous.shakir.cloud
                   description: Gaming Server
+              - Photos:
+                  icon: synology-photos
+                  href: https://photos.shakir.cloud
+                  siteMonitor: https://photos.shakir.cloud
+                  description: Synology Photos
 
-          - Other:
+          - Productivity:
               - Paperless:
                   icon: paperless
                   href: https://paperless.shakir.cloud
+                  siteMonitor: https://paperless.shakir.cloud
                   description: Paperless-ngx Document Management
-              - Excalidraw:
-                  icon: excalidraw
-                  href: https://draw.shakir.cloud
-                  description: Excalidraw Collaborative Drawing
-              - ActualBudget:
-                  icon: sh-actual-budget
-                  href: https://budget.shakir.cloud
-                  description: Actual Budget Personal Finance
               - Linkwarden:
                   icon: sh-linkwarden
                   href: https://linkwarden.shakir.cloud
+                  siteMonitor: https://linkwarden.shakir.cloud
                   description: Linkwarden Bookmarks Manager
+              - ActualBudget:
+                  icon: sh-actual-budget
+                  href: https://budget.shakir.cloud
+                  siteMonitor: https://budget.shakir.cloud
+                  description: Actual Budget Personal Finance
+              - Excalidraw:
+                  icon: excalidraw
+                  href: https://draw.shakir.cloud
+                  siteMonitor: https://draw.shakir.cloud
+                  description: Excalidraw Collaborative Drawing
+              - Drive:
+                  icon: synology-drive
+                  href: https://drive.shakir.cloud
+                  siteMonitor: https://drive.shakir.cloud
+                  description: Synology Drive
 
           - Utilities:
-              - Ntopng:
-                  icon: mdi-security-network
-                  href: https://ntopng.shakir.cloud
-                  description: NtopNG Network Monitoring
+              - Forgejo:
+                  icon: forgejo
+                  href: https://git.shakir.cloud
+                  siteMonitor: https://git.shakir.cloud
+                  description: Self-hosted Git and CI
               - BentoPDF:
                   icon: sh-bentopdf
                   href: https://bentopdf.shakir.cloud
+                  siteMonitor: https://bentopdf.shakir.cloud
                   description: PDF Document Management
-              - Renovate:
-                  icon: sh-mend-renovate
-                  href: https://developer.mend.io/github/tinycloud-labs
-                  description: Renovate Dashboard
               - LubeLogger:
                   icon: sh-lubelogger
                   href: https://car.shakir.cloud
+                  siteMonitor: https://car.shakir.cloud
                   description: Car maintenance tracking
               - Omnitools:
                   icon: sh-omnitools
                   href: https://omnitools.shakir.cloud
+                  siteMonitor: https://omnitools.shakir.cloud
                   description: OmniTools for various utilities
 
       widgets:
+        - greeting:
+            text_size: xl
+            text: tinycloud-labs
+        - datetime:
+            text_size: md
+            format:
+              dateStyle: long
+              timeStyle: short
+              hourCycle: h23
+        ## Weather w/no API key
+        # - openmeteo:
+        #     latitude: 0.0
+        #     longitude: 0.0
+        #     units: metric
+        #     cache: 15
         - search:
             provider: duckduckgo
             target: _blank
-        ## Uncomment to enable Kubernetes integration
-        # - kubernetes:
-        #     cluster:
-        #       show: true
-        #       cpu: true
-        #       memory: true
-        #       showLabel: true
-        #       label: "K3s Prod"
-        #     nodes:
-        #       show: true
-        #       cpu: true
-        #       memory: true
-        #       showLabel: true
       # all sections can alternately be appended with "String" such as this example settings. This is useful
       # for defining a stable ordering. Unfortunately Go's (and therefore Helm's) toYaml function sorts keys
       # and loses and input ordering. Using a string is the best way around this.
       settingsString: |
         title: Homepage
-        headerStyle: boxed
+        theme: dark
+        color: slate
+        headerStyle: clean
+        cardStyle: hairline
+        statusStyle: dot
+        useEqualHeights: true
+        quicklaunch:
+          searchDescriptions: true
         layout:
           Infrastructure:
-          Multimedia:
+            icon: mdi-server-network
+            style: row
+            columns: 4
+          Monitoring:
+            icon: mdi-chart-line
+            style: row
+            columns: 4
+          Media:
+            icon: mdi-play-circle-outline
+            style: row
+            columns: 3
           Productivity:
-          Synology:
+            icon: mdi-briefcase-outline
+            style: row
+            columns: 3
           Utilities:
+            icon: mdi-toolbox-outline
+            style: row
+            columns: 4
           Bookmarks:
+            icon: mdi-bookmark-outline
