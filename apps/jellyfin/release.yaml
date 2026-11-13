@@ -49,9 +49,7 @@ spec:
         existingClaim: jellyfin-media-nfs
 
 ---
-# Media stays on the NAS. New release name on purpose: changing the chart of an
-# installed release makes helm-controller uninstall it, which would wait on the
-# PVC that Jellyfin is still using. The old jellyfin-media release is pruned instead.
+# Media stays on the NAS
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:

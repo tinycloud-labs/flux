@@ -13,7 +13,7 @@ resources:
   - ../../../apps/gaseous
   - ../../../apps/headlamp
   - ../../../apps/homepage
-#  - ../../../apps/jellyfin
+  - ../../../apps/jellyfin
   - ../../../apps/linkwarden
   - ../../../apps/meilisearch
   - ../../../apps/metube
