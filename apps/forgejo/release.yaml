@@ -1,0 +1,127 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: forgejo
+  namespace: apps
+
+spec:
+  interval: 1h0m0s
+  releaseName: forgejo
+
+  chart:
+    spec:
+      chart: unichart
+      version: "1.0.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    app:
+      name: forgejo
+      replicaCount: 1
+      image:
+        repository: codeberg.org/forgejo/forgejo
+        tag: "15.0.11@sha256:5d050e6d623e540923ff54b1c0c7acf41c3f9174a6c7ad515cc0c63d703fcd22" # renovate: depName=codeberg.org/forgejo/forgejo
+        pullPolicy: IfNotPresent
+
+      ports:
+        - containerPort: 3000
+      service:
+        ports:
+          - port: 80
+            targetPort: 3000
+
+      # app.ini, repositories, LFS and Actions logs
+      volumeMounts:
+        - mountPath: /data
+          subPath: data
+
+      # Settings below are written to /data/gitea/conf/app.ini on startup
+      env:
+        - name: USER_UID
+          value: "1000"
+        - name: USER_GID
+          value: "1000"
+        - name: FORGEJO__server__DOMAIN
+          value: git.shakir.cloud
+        # TLS ends at HAProxy, so clone URLs must still say https
+        - name: FORGEJO__server__ROOT_URL
+          value: https://git.shakir.cloud/
+        - name: FORGEJO__server__HTTP_PORT
+          value: "3000"
+        # Only HTTP is exposed; clone over HTTPS with an access token
+        - name: FORGEJO__server__DISABLE_SSH
+          value: "true"
+        - name: FORGEJO__database__DB_TYPE
+          value: postgres
+        - name: FORGEJO__database__HOST
+          value: forgejo-unichart-db-headless:5432
+        - name: FORGEJO__database__NAME
+          value: forgejo
+        - name: FORGEJO__database__USER
+          value: forgejo
+        # The default bleve index and LevelDB queue rely on file locks, which NFS handles poorly
+        - name: FORGEJO__indexer__ISSUE_INDEXER_TYPE
+          value: db
+        - name: FORGEJO__queue__TYPE
+          value: channel
+        - name: FORGEJO__service__DISABLE_REGISTRATION
+          value: "true"
+        - name: FORGEJO__actions__ENABLED
+          value: "true"
+
+    ingress:
+      enabled: true
+      host: git.shakir.cloud
+      ingressClassName: traefik
+      port: 80
+
+    ## ------------ StatefulSet Specifications ------------ ##
+    database:
+      replicaCount: 1
+      enabled: true
+      port: 5432
+
+      # Cluster-internal only, same as linkwarden
+      env:
+        - name: POSTGRES_USER
+          value: forgejo
+        - name: POSTGRES_DB
+          value: forgejo
+        - name: POSTGRES_HOST_AUTH_METHOD
+          value: "trust"
+
+      image:
+        repository: postgres
+        tag: "16-alpine@sha256:f4610795587492cd4fb887c2dc3de301b813278bb6f616992061141b5f15ac36"
+
+      volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          subPath: pgdata
+
+    ## ------------ Persistence ------------ ##
+    persistence:
+      # -- App (Deployment): CSI-NFS, static PV/subPath pattern --
+      app:
+        enabled: true
+        size: 200Mi
+        accessMode: ReadWriteMany
+        reclaimPolicy: Retain
+        storageClassName: ""   # empty = static NFS PV, no dynamic provisioner
+        nfs:
+          server: synology.shakir.cloud
+          path: /volume1/k3s-main/git
+
+      # -- Database (StatefulSet): Proxmox CSI, one disk per replica via volumeClaimTemplates --
+      database:
+        size: 2Gi
+        accessMode: ReadWriteOnce
+        storageClassName: proxmox-retain
+        # Empty handle = new disk. After the first install, capture the disk and pin it here so a rebuild rebinds it
+        existingVolume:
+          handle: ""
+          # fsType: xfs
+          # volumeAttributes: {}

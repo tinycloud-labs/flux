@@ -17,4 +17,3 @@ resources:
   - metallb.yaml
   - prometheus-stack.yaml
   - tinycloud-labs.yaml
-  - gitea.yaml
