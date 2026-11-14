@@ -337,15 +337,12 @@ spec:
           memory: 64Mi
         limits:
           memory: 256Mi
-      # Export BitwardenSecret sync freshness, so a dead BW token (invalid_client)
-      # alerts instead of silently freezing every secret. The operator's
-      # conditions are sticky and can't tell "failing now" from "failed once";
-      # status.lastSuccessfulSyncTime is the only reliable signal
+      # Bitwarden sync health is not read from here: BitwardenSecret status is
+      # only updated when a value changes (unchanged syncs are skipped without
+      # touching lastSuccessfulSyncTime). The operator's own reconcile-error
+      # metrics are scraped instead (servicemonitor-sm-operator.yaml).
       rbac:
         extraRules:
-          - apiGroups: ["k8s.bitwarden.com"]
-            resources: ["bitwardensecrets"]
-            verbs: ["list", "watch"]
           # Flux object status (GitOps dashboard). Read from the API instead of
           # scraping the Flux controllers: K3s' NetworkPolicy enforcement on the
           # Flux-managed allow-scraping policy refuses cross-node scrapes
@@ -364,23 +361,6 @@ spec:
           kind: CustomResourceStateMetrics
           spec:
             resources:
-              - groupVersionKind:
-                  group: k8s.bitwarden.com
-                  version: v1
-                  kind: BitwardenSecret
-                metricNamePrefix: bitwarden_secret
-                labelsFromPath:
-                  namespace: [metadata, namespace]
-                  name: [metadata, name]
-                metrics:
-                  # -> bitwarden_secret_last_successful_sync_timestamp_seconds
-                  - name: last_successful_sync_timestamp_seconds
-                    help: Unix time of the BitwardenSecret's last successful sync
-                    each:
-                      type: Gauge
-                      gauge:
-                        path: [status, lastSuccessfulSyncTime]
-
               # Flux objects -> gotk_resource_info{customresource_kind, exported_namespace,
               # name, ready, reason, suspended, revision} = 1 and
               # gotk_resource_ready_transition_timestamp_seconds (when Ready last flipped).

@@ -1,0 +1,37 @@
+# Bitwarden sm-operator's controller-runtime metrics (HTTPS :8443, needs a
+# bearer token allowed to GET /metrics: Prometheus' own service account token,
+# the same one kube-prometheus-stack uses for the kubelet).
+# Only the BitwardenSecret reconcile counters are kept (~5 series); they drive
+# BitwardenSyncFailing / BitwardenOperatorNotSyncing in rules-homelab.yaml.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sm-operator
+  namespace: monitoring
+spec:
+  namespaceSelector:
+    matchNames: [sm-operator-system]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sm-operator
+      control-plane: controller-manager
+  endpoints:
+    - port: https
+      scheme: https
+      path: /metrics
+      interval: 60s
+      authorization:
+        type: Bearer
+        credentials:
+          name: kube-prometheus-stack-prometheus-token
+          key: token
+      # the operator serves a self-signed certificate
+      tlsConfig:
+        insecureSkipVerify: true
+      relabelings:
+        - targetLabel: job
+          replacement: sm-operator
+      metricRelabelings:
+        - sourceLabels: [__name__, controller]
+          regex: controller_runtime_reconcile_(total|errors_total);bitwardensecret
+          action: keep
