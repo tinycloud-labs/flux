@@ -12,6 +12,24 @@ spec:
   # the problem is, image tag values are set via ConfigMaps, a change in a ConfigMap trigger
   # a kustomization reconcile. We need to capture this only and avoid all other reconciliations
   # I will add a comment?!
+  #
+  # Drop routine "nothing happened" events (Go regexps, matched against the event
+  # message). Measured over 24h: ~364 of ~414 events were these four kinds, and they
+  # arrive in bursts during reconcile waves, which trips Discord's per-webhook rate
+  # limit (~5 messages / 2s) and ends in "context deadline exceeded" in
+  # notification-controller. Still sent: object change lists ("HelmRelease/apps/x
+  # configured", i.e. image tag bumps), Helm install/upgrade/uninstall, and every
+  # Warning (health check / install / upgrade failures).
+  exclusionList:
+    # Kustomization: periodic successful reconcile with no changes
+    - '^Reconciliation finished in .+, next run in .+$'
+    # dependsOn wait; retried automatically, a real failure shows up as HealthCheckFailed
+    - '^Dependencies do not meet ready condition'
+    # follow-up to a change that was already reported
+    - '^Health check passed in '
+    # helm-controller bookkeeping of its own HelmChart objects
+    - '^(Created|Configured) HelmChart/'
+    - '^deleted HelmChart '
   eventSources:
     - kind: Kustomization
       name: '*'
