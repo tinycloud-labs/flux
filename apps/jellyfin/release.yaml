@@ -6,6 +6,17 @@ metadata:
 spec:
   interval: 1h0m0s
   releaseName: jellyfin
+  # Helm's default 5m was too short for the first install (the config disk binds
+  # on first use, then has to attach; the pod became Ready ~10m in). The install
+  # was marked failed and, with no retries, the release stalled for good even
+  # though Jellyfin itself was running
+  timeout: 10m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
   # Storage releases must be Ready before Jellyfin installs or upgrades
   dependsOn:
     - name: jellyfin-media-nfs
