@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Assembles the VolSync namespace and HelmRelease (operator + CRDs only).
+# ReplicationSource objects live next to each app under apps/, so the apps
+# Flux Kustomization depends on this one to ensure the CRDs exist first.
+resources:
+  - namespace.yaml
+  - helmrelease.yaml

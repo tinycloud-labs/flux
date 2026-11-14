@@ -8,3 +8,4 @@ resources:
   - ./linkwarden.yaml
   - ./csi-driver-proxmox.yaml
   - ./gaseous.yaml
+  - ./volsync.yaml

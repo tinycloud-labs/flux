@@ -1,0 +1,40 @@
+# Nightly restic backup of the Jellyfin config disk (Proxmox CSI) into the Synology repo.
+# Restore steps: apps/volsync-repo/RESTORE.md
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: jellyfin-config
+  namespace: apps
+spec:
+  sourcePVC: jellyfin-config-csi
+  trigger:
+    # 03:00 daily, when Jellyfin is idle. The copy is taken from the live disk,
+    # so SQLite is only as consistent as the app is quiet at that moment.
+    schedule: "0 3 * * *"
+  restic:
+    repository: volsync-jellyfin-config
+    # The Proxmox CSI driver has no snapshot support, so the mover reads the PVC directly
+    copyMethod: Direct
+    pruneIntervalDays: 14
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 6
+    moverVolumes:
+      - mountPath: repo   # appears at /mnt/repo
+        volumeSource:
+          persistentVolumeClaim:
+            claimName: volsync-repo
+    # The disk is ReadWriteOnce and attached to one worker VM,
+    # so the mover must run on the same node as Jellyfin
+    moverAffinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: jellyfin
+            topologyKey: kubernetes.io/hostname
+    # Jellyfin runs as root, so the mover does too, to read its files
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0

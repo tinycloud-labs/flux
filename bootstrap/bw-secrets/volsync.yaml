@@ -1,0 +1,30 @@
+# Restic credentials for VolSync, one Secret per backed-up PVC.
+# VolSync reads the restic environment variables from the Secret named in
+# ReplicationSource.spec.restic.repository.
+#   RESTIC_REPOSITORY: local path inside the mover pod, unique per PVC
+#                      (the NAS repo share is mounted at /mnt/repo)
+#   RESTIC_PASSWORD:   encrypts the repository. Shared by all PVCs.
+#                      Losing it makes every backup unreadable.
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: volsync-jellyfin-config
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: volsync-jellyfin-config
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: volsync-jellyfin-config
+  onlyMappedSecrets: true
+  map:
+    # A convenient way to pass the repo path. It's not a real secret, it's just how volsync pass paths to restic via K8s Secrets
+    - bwSecretId: 910ab8d0-4f47-4523-9f86-b502002c04fa
+      secretKeyName: RESTIC_REPOSITORY
+    # value: a long random password, reused for every PVC
+    - bwSecretId: dd4e9a66-a9d3-49fc-84d1-b502002cb6c2
+      secretKeyName: RESTIC_PASSWORD
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

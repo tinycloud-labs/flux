@@ -19,4 +19,5 @@ spec:
     - name: metallb-config
     - name: csi-driver-nfs
     - name: csi-driver-proxmox
+    - name: volsync
     - name: bw-secrets
