@@ -1,0 +1,204 @@
+# Alerts for the Synology NAS (SNMP) and the Proxmox VE host (PVE API).
+#
+# Synology enum values (SYNOLOGY-*-MIB):
+#   systemStatus/powerStatus/*FanStatus: 1 Normal, 2 Failed
+#   diskStatus:       1 Normal, 2 Initialized, 3 NotInitialized,
+#                     4 SystemPartitionFailed, 5 Crashed
+#   diskHealthStatus: 1 Normal, 2 Warning, 3 Critical, 4 Failing  (DSM 7.1+)
+#   raidStatus:       1 Normal, 2 Repairing ... 11 Degrade, 12 Crashed, 13 DataScrubbing
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: nas-pve
+  namespace: monitoring
+spec:
+  groups:
+    # -------------------------------------------------------------------------
+    # Synology: disks first, they are the critical part
+    # -------------------------------------------------------------------------
+    - name: synology.disks
+      rules:
+        - alert: SynologyDiskFailed
+          expr: diskStatus{job="synology-health"} >= 4
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "NAS {{ $labels.diskID }} is {{ if eq $value 5.0 }}crashed{{ else }}failing (system partition){{ end }}"
+            description: "Check Storage Manager > HDD/SSD. Replace the disk if the pool is degraded."
+
+        - alert: SynologyDiskHealthCritical
+          expr: diskHealthStatus{job="synology-health"} >= 3
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "NAS {{ $labels.diskID }} health is {{ if eq $value 4.0 }}Failing{{ else }}Critical{{ end }}"
+            description: "DSM's own disk health assessment (SMART + bad sectors). Plan a replacement now."
+
+        - alert: SynologyDiskHealthWarning
+          expr: diskHealthStatus{job="synology-health"} == 2
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "NAS {{ $labels.diskID }} health is Warning"
+            description: "DSM flagged the disk (SMART attributes or bad sectors). Check Storage Manager and keep a spare ready."
+
+        - alert: SynologyDiskBadSectorsIncreasing
+          expr: delta(diskBadSector{job="synology-health"}[6h]) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: "NAS {{ $labels.diskID }} gained {{ $value }} bad sectors in 6h"
+            description: "Growing bad sector counts usually precede a failure."
+
+        - alert: SynologyDiskHot
+          expr: diskTemperature{job="synology-health"} > 50
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "NAS {{ $labels.diskID }} is at {{ $value }}°C"
+            description: "Sustained >50°C shortens HDD life. Check fans, airflow and room temperature."
+
+        # SSDs only: HDDs report 0 or a negative value
+        - alert: SynologySSDWearHigh
+          expr: diskRemainLife{job="synology-health"} > 0 and diskRemainLife{job="synology-health"} < 20
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "NAS {{ $labels.diskID }} has {{ $value }}% estimated life left"
+
+    - name: synology.storage
+      rules:
+        - alert: SynologyPoolDegraded
+          expr: raidStatus{job="synology-health"} == 11 or raidStatus{job="synology-health"} == 12
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "NAS {{ $labels.raidName }} is {{ if eq $value 12.0 }}CRASHED{{ else }}degraded{{ end }}"
+            description: "Redundancy is gone. Avoid heavy writes until the failed disk is replaced and the pool is repaired."
+
+        - alert: SynologyVolumeFillingUp
+          expr: |
+            hrStorageUsed{job="synology-system", hrStorageDescr=~"/volume[0-9]+"}
+              / hrStorageSize{job="synology-system", hrStorageDescr=~"/volume[0-9]+"} > 0.85
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "NAS {{ $labels.hrStorageDescr }} is {{ $value | humanizePercentage }} full"
+
+        - alert: SynologyVolumeAlmostFull
+          expr: |
+            hrStorageUsed{job="synology-system", hrStorageDescr=~"/volume[0-9]+"}
+              / hrStorageSize{job="synology-system", hrStorageDescr=~"/volume[0-9]+"} > 0.95
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: "NAS {{ $labels.hrStorageDescr }} is {{ $value | humanizePercentage }} full"
+            description: "NFS-backed PVs (and DSM itself) start failing writes soon."
+
+    - name: synology.system
+      rules:
+        - alert: SynologySystemFailed
+          expr: systemStatus{job="synology-health"} == 2 or powerStatus{job="synology-health"} == 2
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "NAS reports a system or power failure"
+
+        - alert: SynologyFanFailed
+          expr: systemFanStatus{job="synology-health"} == 2 or cpuFanStatus{job="synology-health"} == 2
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "NAS fan failure"
+            description: "Disks will overheat. Check the chassis fans."
+
+        - alert: SynologySystemHot
+          expr: temperature{job="synology-health"} > 60
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "NAS system temperature is {{ $value }}°C"
+
+        - alert: SynologyUnreachable
+          expr: up{job=~"synology-health|synology-system"} == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "NAS SNMP is not answering ({{ $labels.job }})"
+            description: "NAS down, SNMP disabled, or SNMPv3 credentials changed. Check `kubectl -n monitoring logs deploy/snmp-exporter-prometheus-snmp-exporter`."
+
+    # -------------------------------------------------------------------------
+    # Proxmox VE
+    # -------------------------------------------------------------------------
+    - name: pve
+      rules:
+        - alert: PveUnreachable
+          expr: up{job="pve"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Proxmox VE API is not answering"
+            description: "PVE host down, API unreachable, or the monitoring@pve!prometheus token was revoked/expired."
+
+        - alert: PveStorageFillingUp
+          expr: |
+            pve_disk_usage_bytes{job="pve", id=~"storage/.+"}
+              / (pve_disk_size_bytes{job="pve", id=~"storage/.+"} > 0) > 0.80
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "PVE {{ $labels.id }} is {{ $value | humanizePercentage }} full"
+
+        - alert: PveStorageAlmostFull
+          expr: |
+            pve_disk_usage_bytes{job="pve", id=~"storage/.+"}
+              / (pve_disk_size_bytes{job="pve", id=~"storage/.+"} > 0) > 0.90
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PVE {{ $labels.id }} is {{ $value | humanizePercentage }} full"
+            description: "VM disks and Proxmox CSI volumes on this storage will fail writes when it fills."
+
+        # Catches a runaway volume (the Gaseous DB case) days before the pool fills
+        - alert: PveStorageFillsWithin3Days
+          expr: |
+            predict_linear(pve_disk_usage_bytes{job="pve", id=~"storage/.+"}[12h], 3 * 86400)
+              > (pve_disk_size_bytes{job="pve", id=~"storage/.+"} > 0)
+            and
+            pve_disk_usage_bytes{job="pve", id=~"storage/.+"}
+              / (pve_disk_size_bytes{job="pve", id=~"storage/.+"} > 0) > 0.5
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "PVE {{ $labels.id }} will be full within 3 days at the current rate"
+            description: "Look for the guest or PVC that is growing (Grafana: Homelab / Proxmox VE)."
+
+        # Guests set to start at boot that are not running (deliberately stopped
+        # test VMs without onboot don't alert)
+        - alert: PveGuestDown
+          expr: |
+            (pve_up{job="pve", id=~"(qemu|lxc)/.+"} == 0)
+              * on (id) group_left (name) pve_guest_info{job="pve", template="0"}
+            and on (id)
+            pve_onboot_status{job="pve"} == 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "PVE guest {{ $labels.name }} ({{ $labels.id }}) is not running"

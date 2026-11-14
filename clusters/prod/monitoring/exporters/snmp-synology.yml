@@ -1,0 +1,763 @@
+# Extra snmp_exporter config, loaded next to the image's built-in snmp.yml
+# (both passed as --config.file; modules/auths are merged).
+#
+# auths.synology_v3: SNMPv3 authPriv. ${...} are expanded from the pod env
+# (--config.expand-environment-variables), which comes from the snmp-synology
+# Secret (BitwardenSecret in bootstrap/bw-secrets/monitoring.yaml).
+#
+# modules.synology_health: the upstream `synology` module (snmp_exporter v0.31.0)
+# trimmed to SYNOLOGY-SYSTEM/DISK/RAID/STORAGEIO/SPACEIO-MIB. Dropped on purpose:
+# the per-disk SMART attribute table (6574.5: large, and polling it can keep
+# HDDs awake), UPS (6574.4), services (6574.6), iSCSI (6574.104).
+# Disk health is still covered by diskStatus/diskHealthStatus/diskBadSector/
+# diskRemainLife from the DISK-MIB.
+#
+# Regenerate after an snmp_exporter bump:
+#   docker run --rm --entrypoint cat quay.io/prometheus/snmp-exporter:<ver> /etc/snmp_exporter/snmp.yml > snmp.yml
+#   KEEP='^1\.3\.6\.1\.4\.1\.6574\.(1|2|3|101|102)(\.|$)'
+#   yq ".modules.synology | {\"walk\": [.walk[] | select(test(\"$KEEP\"))], \"metrics\": [.metrics[] | select(.oid | test(\"$KEEP\"))]}" snmp.yml
+auths:
+  synology_v3:
+    version: 3
+    security_level: authPriv
+    username: ${SNMP_USERNAME}
+    password: ${SNMP_AUTH_PASSWORD}
+    auth_protocol: SHA
+    priv_protocol: AES
+    priv_password: ${SNMP_PRIV_PASSWORD}
+modules:
+  synology_health:
+    walk:
+      - 1.3.6.1.4.1.6574.1
+      - 1.3.6.1.4.1.6574.101
+      - 1.3.6.1.4.1.6574.102
+      - 1.3.6.1.4.1.6574.2
+      - 1.3.6.1.4.1.6574.3
+    metrics:
+      - name: systemStatus
+        oid: 1.3.6.1.4.1.6574.1.1
+        type: gauge
+        help: Synology system status Each meanings of status represented describe below - 1.3.6.1.4.1.6574.1.1
+      - name: temperature
+        oid: 1.3.6.1.4.1.6574.1.2
+        type: gauge
+        help: Synology system temperature The temperature of Disk Station uses Celsius degree. - 1.3.6.1.4.1.6574.1.2
+      - name: powerStatus
+        oid: 1.3.6.1.4.1.6574.1.3
+        type: gauge
+        help: Synology power status Each meanings of status represented describe below - 1.3.6.1.4.1.6574.1.3
+      - name: systemFanStatus
+        oid: 1.3.6.1.4.1.6574.1.4.1
+        type: gauge
+        help: Synology system fan status Each meanings of status represented describe below - 1.3.6.1.4.1.6574.1.4.1
+      - name: cpuFanStatus
+        oid: 1.3.6.1.4.1.6574.1.4.2
+        type: gauge
+        help: Synology cpu fan status Each meanings of status represented describe below - 1.3.6.1.4.1.6574.1.4.2
+      - name: modelName
+        oid: 1.3.6.1.4.1.6574.1.5.1
+        type: DisplayString
+        help: The Model name of this NAS - 1.3.6.1.4.1.6574.1.5.1
+      - name: serialNumber
+        oid: 1.3.6.1.4.1.6574.1.5.2
+        type: DisplayString
+        help: The serial number of this NAS - 1.3.6.1.4.1.6574.1.5.2
+      - name: version
+        oid: 1.3.6.1.4.1.6574.1.5.3
+        type: DisplayString
+        help: The version of this DSM - 1.3.6.1.4.1.6574.1.5.3
+      - name: upgradeAvailable
+        oid: 1.3.6.1.4.1.6574.1.5.4
+        type: gauge
+        help: This oid is for checking whether there is a latest DSM can be upgraded - 1.3.6.1.4.1.6574.1.5.4
+      - name: controllerNumber
+        oid: 1.3.6.1.4.1.6574.1.6
+        type: gauge
+        help: Synology system controller number Controller A(0) Controller B(1) - 1.3.6.1.4.1.6574.1.6
+      - name: cpuUtilization
+        oid: 1.3.6.1.4.1.6574.1.7.1
+        type: gauge
+        help: Synology CPU utilization - 1.3.6.1.4.1.6574.1.7.1
+      - name: memUtilization
+        oid: 1.3.6.1.4.1.6574.1.7.2
+        type: gauge
+        help: Synology memory utilization - 1.3.6.1.4.1.6574.1.7.2
+      - name: thermalStatus
+        oid: 1.3.6.1.4.1.6574.1.8
+        type: gauge
+        help: Synology thermal status - 1.3.6.1.4.1.6574.1.8
+      - name: storageIOIndex
+        oid: 1.3.6.1.4.1.6574.101.1.1.1
+        type: gauge
+        help: Reference index for each observed device. - 1.3.6.1.4.1.6574.101.1.1.1
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIODevice
+        oid: 1.3.6.1.4.1.6574.101.1.1.2
+        type: DisplayString
+        help: The name of the device we are counting/checking. - 1.3.6.1.4.1.6574.101.1.1.2
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIONRead
+        oid: 1.3.6.1.4.1.6574.101.1.1.3
+        type: counter
+        help: The number of bytes read from this device since boot. - 1.3.6.1.4.1.6574.101.1.1.3
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIONWritten
+        oid: 1.3.6.1.4.1.6574.101.1.1.4
+        type: counter
+        help: The number of bytes written to this device since boot. - 1.3.6.1.4.1.6574.101.1.1.4
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIOReads
+        oid: 1.3.6.1.4.1.6574.101.1.1.5
+        type: counter
+        help: The number of read accesses from this device since boot. - 1.3.6.1.4.1.6574.101.1.1.5
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIOWrites
+        oid: 1.3.6.1.4.1.6574.101.1.1.6
+        type: counter
+        help: The number of write accesses to this device since boot. - 1.3.6.1.4.1.6574.101.1.1.6
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIOLA
+        oid: 1.3.6.1.4.1.6574.101.1.1.8
+        type: gauge
+        help: The load of disk (%) - 1.3.6.1.4.1.6574.101.1.1.8
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIOLA1
+        oid: 1.3.6.1.4.1.6574.101.1.1.9
+        type: gauge
+        help: The 1 minute average load of disk (%) - 1.3.6.1.4.1.6574.101.1.1.9
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIOLA5
+        oid: 1.3.6.1.4.1.6574.101.1.1.10
+        type: gauge
+        help: The 5 minute average load of disk (%) - 1.3.6.1.4.1.6574.101.1.1.10
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIOLA15
+        oid: 1.3.6.1.4.1.6574.101.1.1.11
+        type: gauge
+        help: The 15 minute average load of disk (%) - 1.3.6.1.4.1.6574.101.1.1.11
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIONReadX
+        oid: 1.3.6.1.4.1.6574.101.1.1.12
+        type: counter
+        help: The number of bytes read from this device since boot. - 1.3.6.1.4.1.6574.101.1.1.12
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIONWrittenX
+        oid: 1.3.6.1.4.1.6574.101.1.1.13
+        type: counter
+        help: The number of bytes written to this device since boot. - 1.3.6.1.4.1.6574.101.1.1.13
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: storageIODeviceSerial
+        oid: 1.3.6.1.4.1.6574.101.1.1.14
+        type: DisplayString
+        help: The name of the device we are counting/checking. - 1.3.6.1.4.1.6574.101.1.1.14
+        indexes:
+          - labelname: storageIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - storageIOIndex
+            labelname: storageIODevice
+            oid: 1.3.6.1.4.1.6574.101.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: storageIOIndex
+      - name: spaceIOIndex
+        oid: 1.3.6.1.4.1.6574.102.1.1.1
+        type: gauge
+        help: Reference index for each observed device. - 1.3.6.1.4.1.6574.102.1.1.1
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIODevice
+        oid: 1.3.6.1.4.1.6574.102.1.1.2
+        type: DisplayString
+        help: The name of the device we are counting/checking. - 1.3.6.1.4.1.6574.102.1.1.2
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIONRead
+        oid: 1.3.6.1.4.1.6574.102.1.1.3
+        type: counter
+        help: The number of bytes read from this device since boot. - 1.3.6.1.4.1.6574.102.1.1.3
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIONWritten
+        oid: 1.3.6.1.4.1.6574.102.1.1.4
+        type: counter
+        help: The number of bytes written to this device since boot. - 1.3.6.1.4.1.6574.102.1.1.4
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIOReads
+        oid: 1.3.6.1.4.1.6574.102.1.1.5
+        type: counter
+        help: The number of read accesses from this device since boot. - 1.3.6.1.4.1.6574.102.1.1.5
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIOWrites
+        oid: 1.3.6.1.4.1.6574.102.1.1.6
+        type: counter
+        help: The number of write accesses to this device since boot. - 1.3.6.1.4.1.6574.102.1.1.6
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIOLA
+        oid: 1.3.6.1.4.1.6574.102.1.1.8
+        type: gauge
+        help: The load of disk (%) - 1.3.6.1.4.1.6574.102.1.1.8
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIOLA1
+        oid: 1.3.6.1.4.1.6574.102.1.1.9
+        type: gauge
+        help: The 1 minute average load of disk (%) - 1.3.6.1.4.1.6574.102.1.1.9
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIOLA5
+        oid: 1.3.6.1.4.1.6574.102.1.1.10
+        type: gauge
+        help: The 5 minute average load of disk (%) - 1.3.6.1.4.1.6574.102.1.1.10
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIOLA15
+        oid: 1.3.6.1.4.1.6574.102.1.1.11
+        type: gauge
+        help: The 15 minute average load of disk (%) - 1.3.6.1.4.1.6574.102.1.1.11
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIONReadX
+        oid: 1.3.6.1.4.1.6574.102.1.1.12
+        type: counter
+        help: The number of bytes read from this device since boot. - 1.3.6.1.4.1.6574.102.1.1.12
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceIONWrittenX
+        oid: 1.3.6.1.4.1.6574.102.1.1.13
+        type: counter
+        help: The number of bytes written to this device since boot. - 1.3.6.1.4.1.6574.102.1.1.13
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: spaceUUID
+        oid: 1.3.6.1.4.1.6574.102.1.1.14
+        type: DisplayString
+        help: The uuid of space. - 1.3.6.1.4.1.6574.102.1.1.14
+        indexes:
+          - labelname: spaceIOIndex
+            type: gauge
+        lookups:
+          - labels:
+              - spaceIOIndex
+            labelname: spaceIODevice
+            oid: 1.3.6.1.4.1.6574.102.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: spaceIOIndex
+      - name: diskIndex
+        oid: 1.3.6.1.4.1.6574.2.1.1.1
+        type: gauge
+        help: The index of disk table - 1.3.6.1.4.1.6574.2.1.1.1
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskID
+        oid: 1.3.6.1.4.1.6574.2.1.1.2
+        type: DisplayString
+        help: Synology disk ID The ID of disk is assigned by disk Station. - 1.3.6.1.4.1.6574.2.1.1.2
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskModel
+        oid: 1.3.6.1.4.1.6574.2.1.1.3
+        type: DisplayString
+        help: Synology disk model name The disk model name will be showed here. - 1.3.6.1.4.1.6574.2.1.1.3
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskType
+        oid: 1.3.6.1.4.1.6574.2.1.1.4
+        type: DisplayString
+        help: Synology disk type The type of disk will be showed here, including SATA, SSD and so on. - 1.3.6.1.4.1.6574.2.1.1.4
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskStatus
+        oid: 1.3.6.1.4.1.6574.2.1.1.5
+        type: gauge
+        help: Synology disk status Each meanings of status represented describe below - 1.3.6.1.4.1.6574.2.1.1.5
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskTemperature
+        oid: 1.3.6.1.4.1.6574.2.1.1.6
+        type: gauge
+        help: Synology disk temperature The temperature of each disk uses Celsius degree. - 1.3.6.1.4.1.6574.2.1.1.6
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskRole
+        oid: 1.3.6.1.4.1.6574.2.1.1.7
+        type: DisplayString
+        help: Synology disk role The role of the disk in system - 1.3.6.1.4.1.6574.2.1.1.7
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskRetry
+        oid: 1.3.6.1.4.1.6574.2.1.1.8
+        type: gauge
+        help: Synology disk retry count The count of each disk connection retries. - 1.3.6.1.4.1.6574.2.1.1.8
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskBadSector
+        oid: 1.3.6.1.4.1.6574.2.1.1.9
+        type: gauge
+        help: Synology disk bad sector count The count of each disk I/O bad sector. - 1.3.6.1.4.1.6574.2.1.1.9
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskIdentifyFail
+        oid: 1.3.6.1.4.1.6574.2.1.1.10
+        type: gauge
+        help: Synology disk identify fail count The count of each disk identify fails. - 1.3.6.1.4.1.6574.2.1.1.10
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskRemainLife
+        oid: 1.3.6.1.4.1.6574.2.1.1.11
+        type: gauge
+        help: Synology disk remainLife The estimate remain life of each disk. - 1.3.6.1.4.1.6574.2.1.1.11
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskName
+        oid: 1.3.6.1.4.1.6574.2.1.1.12
+        type: DisplayString
+        help: Synology disk name The name of disk which align to storage manager. - 1.3.6.1.4.1.6574.2.1.1.12
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: diskHealthStatus
+        oid: 1.3.6.1.4.1.6574.2.1.1.13
+        type: gauge
+        help: Synology disk health status Each meanings of status represented describe below - 1.3.6.1.4.1.6574.2.1.1.13
+        indexes:
+          - labelname: diskIndex
+            type: gauge
+        lookups:
+          - labels:
+              - diskIndex
+            labelname: diskID
+            oid: 1.3.6.1.4.1.6574.2.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: diskIndex
+      - name: raidIndex
+        oid: 1.3.6.1.4.1.6574.3.1.1.1
+        type: gauge
+        help: The index of raid table - 1.3.6.1.4.1.6574.3.1.1.1
+        indexes:
+          - labelname: raidIndex
+            type: gauge
+        lookups:
+          - labels:
+              - raidIndex
+            labelname: raidName
+            oid: 1.3.6.1.4.1.6574.3.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: raidIndex
+      - name: raidName
+        oid: 1.3.6.1.4.1.6574.3.1.1.2
+        type: DisplayString
+        help: Synology raid name The name of each raid will be showed here. - 1.3.6.1.4.1.6574.3.1.1.2
+        indexes:
+          - labelname: raidIndex
+            type: gauge
+        lookups:
+          - labels:
+              - raidIndex
+            labelname: raidName
+            oid: 1.3.6.1.4.1.6574.3.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: raidIndex
+      - name: raidStatus
+        oid: 1.3.6.1.4.1.6574.3.1.1.3
+        type: gauge
+        help: Synology Raid status Each meanings of status represented describe below - 1.3.6.1.4.1.6574.3.1.1.3
+        indexes:
+          - labelname: raidIndex
+            type: gauge
+        lookups:
+          - labels:
+              - raidIndex
+            labelname: raidName
+            oid: 1.3.6.1.4.1.6574.3.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: raidIndex
+      - name: raidFreeSize
+        oid: 1.3.6.1.4.1.6574.3.1.1.4
+        type: gauge
+        help: Synology raid freesize Free space in bytes. - 1.3.6.1.4.1.6574.3.1.1.4
+        indexes:
+          - labelname: raidIndex
+            type: gauge
+        lookups:
+          - labels:
+              - raidIndex
+            labelname: raidName
+            oid: 1.3.6.1.4.1.6574.3.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: raidIndex
+      - name: raidTotalSize
+        oid: 1.3.6.1.4.1.6574.3.1.1.5
+        type: gauge
+        help: Synology raid totalsize Total space in bytes. - 1.3.6.1.4.1.6574.3.1.1.5
+        indexes:
+          - labelname: raidIndex
+            type: gauge
+        lookups:
+          - labels:
+              - raidIndex
+            labelname: raidName
+            oid: 1.3.6.1.4.1.6574.3.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: raidIndex
+      - name: raidHotspareCnt
+        oid: 1.3.6.1.4.1.6574.3.1.1.6
+        type: gauge
+        help: Synology raid hotspare Total hotspare disks count - 1.3.6.1.4.1.6574.3.1.1.6
+        indexes:
+          - labelname: raidIndex
+            type: gauge
+        lookups:
+          - labels:
+              - raidIndex
+            labelname: raidName
+            oid: 1.3.6.1.4.1.6574.3.1.1.2
+            type: DisplayString
+          - labels: []
+            labelname: raidIndex

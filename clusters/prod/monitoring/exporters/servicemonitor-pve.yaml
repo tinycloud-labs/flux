@@ -1,0 +1,30 @@
+# Scrapes the PVE API through pve-exporter (multi-target pattern: the exporter
+# queries `target`, Prometheus scrapes the exporter).
+# target: the PVE host directly (same endpoint as the infra repo's Terraform
+# provider), not pxmx.shakir.cloud, which goes through the reverse proxy on the
+# NAS and would take PVE monitoring down whenever the NAS is down.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pve-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: pve-exporter
+  endpoints:
+    - port: port-9221
+      path: /pve
+      interval: 60s
+      scrapeTimeout: 30s
+      params:
+        target: ["10.10.50.20"]
+        # cluster collectors: node/guest/storage status, usage, info
+        cluster: ["1"]
+        # node collectors: onboot status, replication, version
+        node: ["1"]
+      relabelings:
+        - targetLabel: instance
+          replacement: pve1
+        - targetLabel: job
+          replacement: pve

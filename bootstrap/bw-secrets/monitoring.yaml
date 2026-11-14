@@ -41,3 +41,56 @@ spec:
   authToken:
     secretName: bw-auth-token
     secretKey: token
+---
+# SNMPv3 credentials for the Synology NAS, read by snmp-exporter as env vars
+# (clusters/prod/monitoring/exporters/snmp-synology.yml expands ${SNMP_*}).
+# TODO before merge: replace the REPLACE-ME ids with the Bitwarden secret ids.
+# A BitwardenSecret that never syncs fails the bw-secrets health check, which
+# holds back every Kustomization that depends on bw-secrets
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: snmp-synology
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: snmp-synology
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: snmp-synology
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: REPLACE-ME-synology-snmp-username
+      secretKeyName: SNMP_USERNAME
+    - bwSecretId: REPLACE-ME-synology-snmp-auth-password
+      secretKeyName: SNMP_AUTH_PASSWORD
+    - bwSecretId: REPLACE-ME-synology-snmp-priv-password
+      secretKeyName: SNMP_PRIV_PASSWORD
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
+# Proxmox VE API token secret for pve-exporter (user monitoring@pve, token
+# "prometheus", role PVEAuditor). The user and token name are plain env in
+# clusters/prod/monitoring/exporters/release-pve.yaml; only the value is secret.
+# TODO before merge: replace the REPLACE-ME id with the Bitwarden secret id
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: pve-exporter
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: pve-exporter
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: pve-exporter
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: REPLACE-ME-pve-exporter-token-value
+      secretKeyName: PVE_TOKEN_VALUE
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

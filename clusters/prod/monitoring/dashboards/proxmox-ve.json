@@ -1,0 +1,149 @@
+{
+  "uid": "homelab_pve",
+  "title": "Proxmox VE",
+  "tags": ["proxmox", "pve", "homelab"],
+  "timezone": "browser",
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    { "id": 100, "type": "row", "title": "Host", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "panels": [] },
+    {
+      "id": 1, "type": "stat", "title": "PVE API",
+      "gridPos": { "h": 4, "w": 3, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "Up", "color": "green" } } }],
+          "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "orange", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "refId": "A", "expr": "max(up{job=\"pve\"})" }]
+    },
+    {
+      "id": 2, "type": "gauge", "title": "Node CPU",
+      "gridPos": { "h": 4, "w": 4, "x": 3, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.75 }, { "color": "red", "value": 0.9 }] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "refId": "A", "expr": "pve_cpu_usage_ratio{job=\"pve\", id=~\"node/.+\"}", "legendFormat": "{{id}}" }]
+    },
+    {
+      "id": 3, "type": "gauge", "title": "Node memory",
+      "gridPos": { "h": 4, "w": 4, "x": 7, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.8 }, { "color": "red", "value": 0.92 }] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "refId": "A", "expr": "pve_memory_usage_bytes{job=\"pve\", id=~\"node/.+\"} / pve_memory_size_bytes{job=\"pve\", id=~\"node/.+\"}", "legendFormat": "{{id}}" }]
+    },
+    {
+      "id": 4, "type": "stat", "title": "Uptime / guests running",
+      "gridPos": { "h": 4, "w": 5, "x": 11, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] } },
+        "overrides": [{ "matcher": { "id": "byName", "options": "Uptime" }, "properties": [{ "id": "unit", "value": "s" }] }]
+      },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name" },
+      "targets": [
+        { "refId": "A", "expr": "max(pve_uptime_seconds{job=\"pve\", id=~\"node/.+\"})", "legendFormat": "Uptime" },
+        { "refId": "B", "expr": "sum(pve_up{job=\"pve\", id=~\"(qemu|lxc)/.+\"})", "legendFormat": "Running" },
+        { "refId": "C", "expr": "count(pve_up{job=\"pve\", id=~\"(qemu|lxc)/.+\"} * on (id) group_left pve_guest_info{template=\"0\"})", "legendFormat": "Guests" }
+      ]
+    },
+    {
+      "id": 5, "type": "bargauge", "title": "Storage usage",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.8 }, { "color": "red", "value": 0.9 }] } },
+        "overrides": []
+      },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "refId": "A", "expr": "pve_disk_usage_bytes{job=\"pve\", id=~\"storage/.+\"} / (pve_disk_size_bytes{job=\"pve\", id=~\"storage/.+\"} > 0)", "legendFormat": "{{id}}" }]
+    },
+
+    { "id": 101, "type": "row", "title": "Storage", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }, "panels": [] },
+    {
+      "id": 6, "type": "timeseries", "title": "Storage used (with 3-day projection alert threshold)",
+      "description": "Used bytes per PVE storage. PveStorageFillsWithin3Days fires when the 12h trend reaches the size within 3 days.",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "custom": { "showPoints": "never", "fillOpacity": 10 } },
+        "overrides": [{ "matcher": { "id": "byRegexp", "options": ".* size" }, "properties": [{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [8, 6] } }, { "id": "custom.fillOpacity", "value": 0 }] }]
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "expr": "pve_disk_usage_bytes{job=\"pve\", id=~\"storage/.+\"} and (pve_disk_size_bytes{job=\"pve\"} > 0)", "legendFormat": "{{id}} used" },
+        { "refId": "B", "expr": "pve_disk_size_bytes{job=\"pve\", id=~\"storage/.+\"} > 0", "legendFormat": "{{id}} size" }
+      ]
+    },
+    {
+      "id": 7, "type": "table", "title": "Storages",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true },
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "Value": true, "__name__": true, "job": true, "instance": true, "namespace": true, "pod": true, "service": true, "endpoint": true, "container": true, "id": true }, "renameByName": { "storage": "Storage", "plugintype": "Type", "content": "Content", "node": "Node" } } }
+      ],
+      "targets": [{ "refId": "A", "expr": "pve_storage_info{job=\"pve\"}", "format": "table", "instant": true }]
+    },
+
+    { "id": 102, "type": "row", "title": "Guests", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 }, "panels": [] },
+    {
+      "id": 8, "type": "table", "title": "Guests",
+      "gridPos": { "h": 9, "w": 10, "x": 0, "y": 15 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "custom": { "cellOptions": { "type": "auto" } } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "State" }, "properties": [
+            { "id": "mappings", "value": [{ "type": "value", "options": { "0": { "text": "stopped", "color": "red" }, "1": { "text": "running", "color": "green" } } }] },
+            { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+          ] }
+        ]
+      },
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "Name" }] },
+      "transformations": [
+        { "id": "organize", "options": {
+          "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true, "namespace": true, "pod": true, "service": true, "endpoint": true, "container": true, "template": true, "node": true },
+          "renameByName": { "id": "ID", "name": "Name", "type": "Type", "tags": "Tags", "Value": "State" },
+          "indexByName": { "name": 0, "id": 1, "type": 2, "Value": 3, "tags": 4 }
+        } }
+      ],
+      "targets": [{ "refId": "A", "expr": "pve_up{job=\"pve\", id=~\"(qemu|lxc)/.+\"} * on (id) group_left (name, type, tags) pve_guest_info{job=\"pve\", template=\"0\"}", "format": "table", "instant": true }]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Guest disk writes",
+      "description": "What each VM/CT writes to the SSD pool. The K3s nodes and their Proxmox CSI volumes show up here.",
+      "gridPos": { "h": 9, "w": 14, "x": 10, "y": 15 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "Bps", "custom": { "showPoints": "never", "fillOpacity": 10, "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"], "sortBy": "Mean", "sortDesc": true }, "tooltip": { "mode": "multi" } },
+      "targets": [{ "refId": "A", "expr": "rate(pve_disk_written_bytes_total{job=\"pve\", id=~\"(qemu|lxc)/.+\"}[$__rate_interval]) * on (id) group_left (name) pve_guest_info{job=\"pve\"}", "legendFormat": "{{name}}" }]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Guest CPU",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [{ "refId": "A", "expr": "pve_cpu_usage_ratio{job=\"pve\", id=~\"(qemu|lxc)/.+\"} * on (id) group_left (name) pve_guest_info{job=\"pve\"}", "legendFormat": "{{name}}" }]
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "Guest memory",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [{ "refId": "A", "expr": "pve_memory_usage_bytes{job=\"pve\", id=~\"(qemu|lxc)/.+\"} * on (id) group_left (name) pve_guest_info{job=\"pve\"}", "legendFormat": "{{name}}" }]
+    }
+  ]
+}
