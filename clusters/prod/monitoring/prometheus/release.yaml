@@ -2,24 +2,334 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: kube-prometheus-stack
-  namespace: flux-system
-
+  namespace: monitoring
 spec:
   interval: 1h0m0s
-  releaseName: prometheus-stack
-  targetNamespace: monitoring
-
+  releaseName: kube-prometheus-stack
+  # First install pulls many images; give it room before Flux calls it failed
+  timeout: 15m
   chart:
     spec:
       chart: kube-prometheus-stack
-      version: "45.0.0"
+      version: "93.3.0"
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
         namespace: flux-system
       interval: 2h0m0s
 
-  valuesFrom:
-    - kind: ConfigMap
-      name: prometheus-values
-      valuesKey: values.yaml
+  # Helm never upgrades CRDs on its own. Without this, a major chart bump runs new
+  # operator code against stale CRDs (the reason the 45 -> 85 upgrade was reverted)
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+
+  values:
+    # Only overrides are listed; see `helm show values kube-prometheus-stack --repo https://prometheus-community.github.io/helm-charts`
+
+    # ---------------------------------------------------------------------------
+    # Rules: keep what means something on a single-server K3s homelab
+    # ---------------------------------------------------------------------------
+    defaultRules:
+      create: true
+      rules:
+        # K3s on SQLite has no etcd, and the scheduler/controller-manager/proxy only
+        # listen on localhost, so these would fire TargetDown/xxxDown forever
+        etcd: false
+        kubeControllerManager: false
+        kubeSchedulerAlerting: false
+        kubeSchedulerRecording: false
+        kubeProxy: false
+        # API server SLO/burn-rate math is built for HA clusters and pages on noise
+        kubeApiserverAvailability: false
+        kubeApiserverBurnrate: false
+        kubeApiserverHistogram: false
+        kubeApiserverSlos: false
+        # Overcommit and CPUThrottlingHigh are expected on a homelab
+        kubernetesResources: false
+        windows: false
+      disabled:
+        # Normal on small VMs running batch-y apps; not actionable
+        NodeCPUHighUsage: true
+        NodeSystemSaturation: true
+        NodeMemoryMajorPagesFaults: true
+        NodeDiskIOSaturation: true
+
+    # Disable the scrape jobs that have nothing to scrape on K3s
+    kubeEtcd:
+      enabled: false
+    kubeControllerManager:
+      enabled: false
+    kubeScheduler:
+      enabled: false
+    kubeProxy:
+      enabled: false
+    windowsMonitoring:
+      enabled: false
+
+    # ---------------------------------------------------------------------------
+    # Series diet. Measured before this change: 188k series, ~100k of them
+    # apiserver/etcd histograms, and the kubelet job on the server node returns a
+    # second copy of them (K3s runs every component in one process/registry)
+    # ---------------------------------------------------------------------------
+    kubeApiServer:
+      serviceMonitor:
+        metricRelabelings:
+          # chart default: thin out the request-latency buckets
+          - action: drop
+            regex: (etcd_request|apiserver_request_slo|apiserver_request_sli|apiserver_request)_duration_seconds_bucket;(0\.15|0\.2|0\.3|0\.35|0\.4|0\.45|0\.6|0\.7|0\.8|0\.9|1\.25|1\.5|1\.75|2|3|3\.5|4|4\.5|6|7|8|9|15|20|40|45|50)(\.0)?
+            sourceLabels: [__name__, le]
+          # nothing we chart or alert on reads these histograms
+          - action: drop
+            regex: (apiserver_request_sli_duration_seconds|apiserver_request_slo_duration_seconds|etcd_request_duration_seconds|apiserver_request_body_size_bytes|apiserver_response_sizes|apiserver_watch_list_duration_seconds|apiserver_watch_cache_read_wait_seconds|apiserver_watch_events_sizes|scheduler_.+|workqueue_.+)_bucket
+            sourceLabels: [__name__]
+
+    kubelet:
+      serviceMonitor:
+        # chart default is 10s for cAdvisor; 6x the samples for no homelab benefit
+        cAdvisorInterval: ""
+        metricRelabelings:
+          # chart default
+          - action: drop
+            sourceLabels: [__name__, le]
+            regex: (csi_operations|storage_operation_duration)_seconds_bucket;(0.25|2.5|15|25|120|600)(\.0)?
+          # K3s duplicates the whole control-plane registry on the kubelet endpoint;
+          # the apiserver job already has its own copy
+          - action: drop
+            sourceLabels: [__name__]
+            regex: (apiserver|etcd|scheduler|aggregator|apiextensions|authentication|authorization|flowcontrol|watch_cache|field_validation|admission|node_authorizer)_.+|workqueue_.+_bucket|kubernetes_feature_enabled
+
+    # ---------------------------------------------------------------------------
+    # Alertmanager -> Discord, one message per incident
+    # ---------------------------------------------------------------------------
+    alertmanager:
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - alertmanager.shakir.cloud
+
+      alertmanagerSpec:
+        # Mounted at /etc/alertmanager/secrets/discord-webhook/address (BitwardenSecret)
+        secrets:
+          - discord-webhook
+        # The notification log must outlive repeat_interval, otherwise a still-firing
+        # alert is re-sent when its log entry expires
+        retention: 720h
+        # Silences + notification log survive pod restarts (no re-send on restart).
+        # Disposable on cluster rebuild, so not pinned
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: proxmox-delete
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 1Gi
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            memory: 128Mi
+
+      config:
+        global:
+          resolve_timeout: 5m
+        route:
+          receiver: discord
+          group_by: [alertname, namespace]
+          group_wait: 1m
+          # only re-notifies a group when an alert joins or resolves
+          group_interval: 15m
+          # effectively "never repeat" (must stay <= alertmanagerSpec.retention)
+          repeat_interval: 720h
+          routes:
+            # Watchdog goes to a dead man's switch later; info is dashboard-only
+            - receiver: "null"
+              matchers:
+                - alertname =~ "Watchdog|InfoInhibitor"
+            - receiver: "null"
+              matchers:
+                - severity = "info"
+        inhibit_rules:
+          # chart defaults: critical hides warning/info for the same alert
+          - source_matchers: ['severity = critical']
+            target_matchers: ['severity =~ warning|info']
+            equal: [namespace, alertname]
+          - source_matchers: ['severity = warning']
+            target_matchers: ['severity = info']
+            equal: [namespace, alertname]
+          - source_matchers: ['alertname = InfoInhibitor']
+            target_matchers: ['severity = info']
+            equal: [namespace]
+          - target_matchers: ['alertname = InfoInhibitor']
+          # a node that is down explains the targets/pods on it being down
+          # (TargetDown carries no node label, so this is cluster-wide on purpose)
+          - source_matchers: ['alertname = KubeNodeUnreachable']
+            target_matchers: ['alertname =~ TargetDown|KubePodNotReady|KubeDeploymentReplicasMismatch|KubeStatefulSetReplicasMismatch|KubeDaemonSetRolloutStuck']
+        receivers:
+          - name: "null"
+          - name: discord
+            discord_configs:
+              - webhook_url_file: /etc/alertmanager/secrets/discord-webhook/address
+                send_resolved: true
+                title: '{{ template "homelab.discord.title" . }}'
+                message: '{{ template "homelab.discord.message" . }}'
+        templates:
+          - /etc/alertmanager/config/*.tmpl
+
+      templateFiles:
+        discord.tmpl: |-
+          {{ define "homelab.discord.title" -}}
+          {{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }} {{ .CommonLabels.alertname }}{{ with .CommonLabels.namespace }} · {{ . }}{{ end }}{{ if gt (len .Alerts.Firing) 1 }} ({{ len .Alerts.Firing }}){{ end }}
+          {{- end }}
+
+          {{ define "homelab.discord.message" -}}
+          {{ range .Alerts -}}
+          **{{ if eq .Status "firing" }}{{ .Labels.severity | toUpper }}{{ else }}RESOLVED{{ end }}** {{ with .Annotations.summary }}{{ . }}{{ else }}{{ .Labels.alertname }}{{ end }}
+          {{ with .Annotations.description }}{{ . }}
+          {{ end -}}
+          {{ with .Labels.node }}node `{{ . }}` {{ end }}{{ with .Labels.pod }}pod `{{ . }}` {{ end }}{{ with .Labels.instance }}instance `{{ . }}` {{ end }}{{ with .Labels.host }}host `{{ . }}`{{ end }}
+          {{ end -}}
+          {{- end }}
+
+    # ---------------------------------------------------------------------------
+    # Grafana: stateless, everything provisioned from git
+    # ---------------------------------------------------------------------------
+    grafana:
+      defaultDashboardsEnabled: true
+      defaultDashboardsTimezone: America/Los_Angeles
+      defaultDashboardsEditable: false
+
+      admin:
+        existingSecret: grafana
+        userKey: grafana-user
+        passwordKey: grafana-secret
+
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - grafana.shakir.cloud
+
+      grafana.ini:
+        auth.anonymous:
+          enabled: true
+          org_role: Viewer
+          hide_version: true
+        users:
+          default_theme: dark
+          viewers_can_edit: false
+        analytics:
+          reporting_enabled: false
+          check_for_updates: false
+          check_for_plugin_updates: false
+        news:
+          news_feed_enabled: false
+        dashboards:
+          min_refresh_interval: 30s
+          default_home_dashboard_path: /tmp/dashboards/Kubernetes/k8s-views-global.json
+
+      sidecar:
+        dashboards:
+          enabled: true
+          label: grafana_dashboard
+          labelValue: "1"
+          searchNamespace: monitoring
+          folderAnnotation: grafana_folder
+          # applied to the chart's own (stock) dashboards
+          annotations:
+            grafana_folder: Stock
+          provider:
+            foldersFromFilesStructure: true
+        datasources:
+          # the chart provisions Prometheus (default) and Alertmanager itself
+          enabled: true
+          defaultDatasourceEnabled: true
+
+      additionalDataSources:
+        - name: Loki
+          uid: loki
+          type: loki
+          access: proxy
+          url: http://loki.monitoring.svc.cluster.local:3100
+          jsonData:
+            maxLines: 1000
+
+      resources:
+        requests:
+          cpu: 50m
+          memory: 192Mi
+        limits:
+          memory: 512Mi
+
+    # ---------------------------------------------------------------------------
+    # Prometheus
+    # ---------------------------------------------------------------------------
+    prometheus:
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - prometheus.shakir.cloud
+
+      prometheusSpec:
+        replicas: 1
+        scrapeInterval: 60s
+        evaluationInterval: 60s
+        retention: 15d
+        # hard stop well below the PVC size
+        retentionSize: 15GB
+        walCompression: true
+        # pick up ServiceMonitors/PodMonitors/rules from every namespace, any labels
+        ruleSelectorNilUsesHelmValues: false
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        probeSelectorNilUsesHelmValues: false
+        scrapeConfigSelectorNilUsesHelmValues: false
+        # TSDB on the SSD pool (Prometheus is unsupported on NFS); history is
+        # disposable on cluster rebuild, so not pinned
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: proxmox-delete
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 20Gi
+        resources:
+          requests:
+            cpu: 100m
+            memory: 768Mi
+          limits:
+            memory: 2Gi
+
+    prometheusOperator:
+      resources:
+        requests:
+          cpu: 20m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+
+    prometheus-node-exporter:
+      resources:
+        requests:
+          cpu: 20m
+          memory: 32Mi
+        limits:
+          memory: 128Mi
+
+    kube-state-metrics:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          memory: 256Mi

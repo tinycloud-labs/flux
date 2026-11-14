@@ -1,0 +1,45 @@
+# Homelab-specific alerts on top of the kube-prometheus-stack defaults.
+# Prometheus picks up every PrometheusRule (ruleSelectorNilUsesHelmValues: false).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab
+  namespace: monitoring
+spec:
+  groups:
+    - name: homelab.disks
+      rules:
+        # The whole point of the stack's storage design: catch anything that starts
+        # hammering the Proxmox SSD pool. Baseline after the revamp is a few GB/day
+        - alert: NodeDiskWriteRateHigh
+          expr: |
+            sum by (instance) (
+              rate(node_disk_written_bytes_total{job="node-exporter", device!~"dm-.*|sr.*|loop.*"}[6h])
+            ) * 86400 > 50e9
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.instance }} is writing {{ $value | humanize1024 }}B/day to disk"
+            description: "6h average write rate is above 50 GB/day. Check container_fs_writes_bytes_total to find the pod."
+
+    - name: homelab.logs
+      rules:
+        # Nothing reached Loki for 30 minutes: Alloy, the syslog receiver or Loki itself is broken
+        - alert: LogIngestionStopped
+          expr: sum(rate(loki_distributor_lines_received_total[30m])) == 0
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Loki has received no log lines for 30 minutes"
+            description: "Check the alloy and alloy-syslog pods and the Loki distributor."
+
+        - alert: AlloyDroppingLogs
+          expr: sum by (pod) (rate(loki_write_dropped_entries_total[15m])) > 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.pod }} is dropping log entries"
+            description: "Alloy could not deliver logs to Loki (rate limit, Loki down, or rejected entries)."

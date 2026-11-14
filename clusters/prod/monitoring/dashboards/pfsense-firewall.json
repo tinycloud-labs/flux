@@ -1,0 +1,149 @@
+{
+  "uid": "homelab_pfsense",
+  "title": "pfSense / Firewall",
+  "tags": ["pfsense", "logs", "homelab"],
+  "timezone": "browser",
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "iface",
+        "label": "Interface",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "loki" },
+        "query": { "label": "iface", "stream": "{job=\"syslog\", app=\"filterlog\"}", "type": 1 },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".+",
+        "current": { "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "search",
+        "label": "Line contains",
+        "type": "textbox",
+        "query": "",
+        "current": { "text": "", "value": "" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Blocked connections by interface",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 60, "stacking": { "mode": "normal" }, "showPoints": "never" } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (iface) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} [$__auto]))",
+          "legendFormat": "{{iface}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Blocked vs passed (range)",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none", "textMode": "value_and_name" },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "instant",
+          "expr": "sum by (action) (count_over_time({job=\"syslog\", app=\"filterlog\", iface=~\"$iface\"} [$__range]))",
+          "legendFormat": "{{action}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Top blocked sources",
+      "gridPos": { "h": 9, "w": 8, "x": 0, "y": 8 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "options": { "sortBy": [{ "displayName": "Value", "desc": true }] },
+      "transformations": [{ "id": "reduce", "options": { "reducers": ["lastNotNull"], "labelsToFields": true } }],
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "instant",
+          "expr": "topk(15, sum by (src_ip) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} [$__range])))",
+          "legendFormat": "{{src_ip}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "Top blocked destination ports",
+      "gridPos": { "h": 9, "w": 8, "x": 8, "y": 8 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "transformations": [{ "id": "reduce", "options": { "reducers": ["lastNotNull"], "labelsToFields": true } }],
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "instant",
+          "expr": "topk(15, sum by (dst_port, proto) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} | dst_port != \"\" [$__range])))",
+          "legendFormat": "{{proto}}/{{dst_port}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Top passed destinations",
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 8 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "transformations": [{ "id": "reduce", "options": { "reducers": ["lastNotNull"], "labelsToFields": true } }],
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "instant",
+          "expr": "topk(15, sum by (dst_ip) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"pass\", iface=~\"$iface\"} [$__range])))",
+          "legendFormat": "{{dst_ip}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "logs",
+      "title": "Firewall log",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 17 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "options": { "showTime": true, "wrapLogMessage": false, "sortOrder": "Descending", "enableLogDetails": true, "dedupStrategy": "none" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{job=\"syslog\", app=\"filterlog\", iface=~\"$iface\"} |= \"$search\""
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "logs",
+      "title": "pfSense system log (everything except filterlog)",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 29 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending", "enableLogDetails": true, "dedupStrategy": "none" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{job=\"syslog\", app!=\"filterlog\"} |= \"$search\""
+        }
+      ]
+    }
+  ]
+}

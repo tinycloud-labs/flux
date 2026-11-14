@@ -1,0 +1,157 @@
+// Alloy config for the alloy-syslog HelmRelease. Rendered into the ConfigMap
+// alloy-syslog-config by kustomization.yaml; the chart's config-reloader picks up changes.
+// Kept as a file (not inline Helm values) because the chart passes inline config
+// through Helm tpl, which would eat the {{ }} templates used below.
+
+
+// ---------------------------------------------------------------------
+// Syslog listeners, reached from the LAN at logs.shakir.cloud (see syslog-svc.yaml,
+// which maps service port udp/514 -> 5514)
+//   udp/5514  RFC5424  pfSense: Status > System Logs > Settings >
+//                      Remote log server = logs.shakir.cloud:514,
+//                      Log Message Format = "syslog (RFC 5424 ...)"
+//   udp/5515  RFC3164  devices that only speak BSD syslog
+//   tcp/1514  RFC5424  existing TCP senders (old Promtail port)
+// ---------------------------------------------------------------------
+loki.source.syslog "lan" {
+  listener {
+    address                = "0.0.0.0:5514"
+    protocol               = "udp"
+    syslog_format          = "rfc5424"
+    use_incoming_timestamp = true
+    labels                 = { job = "syslog" }
+  }
+  listener {
+    address       = "0.0.0.0:5515"
+    protocol      = "udp"
+    syslog_format = "rfc3164"
+    // BSD timestamps carry no year/zone: use arrival time
+    labels        = { job = "syslog" }
+  }
+  listener {
+    address                = "0.0.0.0:1514"
+    protocol               = "tcp"
+    syslog_format          = "rfc5424"
+    use_incoming_timestamp = true
+    idle_timeout           = "1h"
+    labels                 = { job = "syslog" }
+  }
+  relabel_rules = loki.relabel.syslog.rules
+  forward_to    = [loki.process.syslog.receiver]
+}
+
+loki.relabel "syslog" {
+  forward_to = []
+
+  // host = sender IP, overwritten by the hostname in the message when present
+  rule {
+    source_labels = ["__syslog_connection_ip_address"]
+    target_label  = "host"
+  }
+  rule {
+    source_labels = ["__syslog_message_hostname"]
+    regex         = "(.+)"
+    target_label  = "host"
+  }
+  rule {
+    source_labels = ["__syslog_message_app_name"]
+    target_label  = "app"
+  }
+  rule {
+    source_labels = ["__syslog_message_severity"]
+    target_label  = "level"
+  }
+}
+
+loki.process "syslog" {
+  // -------------------------------------------------------------------
+  // pfSense firewall log (filterlog) is positional CSV. Rewrite it as
+  // logfmt:  action=block dir=in iface=igb0 proto=tcp src=1.2.3.4:5555 dst=10.0.0.1:22 rule=1000000103
+  // Grafana shows that readably and LogQL can `| logfmt` it.
+  // Format ref: https://docs.netgate.com/pfsense/en/latest/monitoring/logs/raw-filter-format.html
+  // -------------------------------------------------------------------
+  stage.match {
+    selector = "{app=\"filterlog\"}"
+
+    // common head: rule,subrule,anchor,tracker,interface,reason,action,direction,ipversion,<rest>
+    stage.regex {
+      expression = "^(?P<rule>\\d*),[^,]*,[^,]*,(?P<tracker>[^,]*),(?P<iface>[^,]*),(?P<reason>[^,]*),(?P<action>[^,]*),(?P<dir>[^,]*),(?P<ipver>[46]),(?P<rest>.*)$"
+    }
+    // temporary label so the two address layouts can be matched
+    stage.labels {
+      values = { ipver = "" }
+    }
+
+    // IPv4 rest: tos,ecn,ttl,id,offset,flags,protonum,protoname,length,src,dst[,sport,dport,...]
+    stage.match {
+      selector = "{ipver=\"4\"}"
+      stage.regex {
+        source     = "rest"
+        expression = "^(?:[^,]*,){6}\\d+,(?P<proto>[^,]*),\\d+,(?P<src_ip>[^,]*),(?P<dst_ip>[^,]*)(?:,(?P<src_port>\\d+),(?P<dst_port>\\d+))?"
+      }
+    }
+    // IPv6 rest: class,flowlabel,hoplimit,protoname,protonum,length,src,dst[,sport,dport,...]
+    stage.match {
+      selector = "{ipver=\"6\"}"
+      stage.regex {
+        source     = "rest"
+        expression = "^(?:[^,]*,){3}(?P<proto>[^,]*),\\d+,\\d+,(?P<src_ip>[^,]*),(?P<dst_ip>[^,]*)(?:,(?P<src_port>\\d+),(?P<dst_port>\\d+))?"
+      }
+    }
+    stage.label_drop {
+      values = ["ipver"]
+    }
+
+    stage.template {
+      source   = "proto"
+      template = "{{ ToLower .Value }}"
+    }
+    // ip:port, with IPv6 bracketed so the port is unambiguous ([fe80::1]:546)
+    stage.template {
+      source   = "src"
+      template = "{{ if contains \":\" .src_ip }}[{{ .src_ip }}]{{ else }}{{ .src_ip }}{{ end }}{{ with .src_port }}:{{ . }}{{ end }}"
+    }
+    stage.template {
+      source   = "dst"
+      template = "{{ if contains \":\" .dst_ip }}[{{ .dst_ip }}]{{ else }}{{ .dst_ip }}{{ end }}{{ with .dst_port }}:{{ . }}{{ end }}"
+    }
+    stage.template {
+      source   = "pretty"
+      // lines the regexes could not parse pass through unchanged
+      template = "{{ if and .action .src_ip }}action={{ .action }} dir={{ .dir }} iface={{ .iface }} proto={{ .proto }} src={{ .src }} dst={{ .dst }} rule={{ .tracker }}{{ if ne .reason \"match\" }} reason={{ .reason }}{{ end }}{{ else }}{{ .Entry }}{{ end }}"
+    }
+    stage.output {
+      source = "pretty"
+    }
+
+    // low-cardinality labels for stream selection
+    stage.labels {
+      values = { action = "", iface = "" }
+    }
+    // high-cardinality fields: queryable without being labels
+    stage.structured_metadata {
+      values = { src_ip = "", dst_ip = "", dst_port = "", proto = "" }
+    }
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+
+// ---------------------------------------------------------------------
+// Kubernetes events ("why did that pod restart?"). Single replica, so
+// events are shipped exactly once
+// ---------------------------------------------------------------------
+loki.source.kubernetes_events "cluster" {
+  job_name   = "kubernetes-events"
+  log_format = "logfmt"
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url        = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+    batch_wait = "5s"
+    batch_size = "1MiB"
+  }
+}
+

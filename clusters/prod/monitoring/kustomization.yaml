@@ -1,10 +1,15 @@
-# native Kustomize entrypoint for the prod cluster.
-# It lists every Flux Kustomization CRD that Flux should reconcile.
-# Flux watches this directory and applies whatever is listed here.
+# Entry point for the monitoring stack, reconciled by the `monitoring` Flux
+# Kustomization (clusters/prod/monitoring.yaml), which waits for helm-repos,
+# bw-secrets, CSI drivers and metallb-config.
+# Each file below is a child Flux Kustomization; dependsOn orders them:
+#
+#   monitoring-prometheus ─┬─> monitoring-loki ──> monitoring-alloy
+#                          └─> monitoring-dashboards
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - prometheus.yaml
-  - loki.yaml
-  - dashboards.yaml
+  - monitoring-prometheus.yaml
+  - monitoring-loki.yaml
+  - monitoring-alloy.yaml
+  - monitoring-dashboards.yaml

@@ -1,0 +1,22 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: monitoring-dashboards
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/part-of: monitoring
+spec:
+  # Grafana dashboard ConfigMaps, picked up by the Grafana sidecar
+  interval: 10m
+  retryInterval: 2m
+  timeout: 15m
+  path: ./clusters/prod/monitoring/dashboards
+  prune: true
+  # Ready only when every object (incl. HelmReleases) is Ready, so a dependsOn on
+  # this means "after it is running", not just "after it was applied"
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: monitoring-prometheus

@@ -1,0 +1,68 @@
+# Log-based alerts, evaluated by the Loki ruler and sent to Alertmanager
+# (-> Discord, same routing as metric alerts). The rules sidecar picks up any
+# ConfigMap in monitoring labelled loki_rule=1.
+#
+# Labels come from ../alloy/syslog.alloy: job="syslog", host, app (syslog
+# program name), level, and for filterlog also action/iface.
+#
+# These fire once per incident: an expression goes back to 0 once the matching
+# lines age out of the window, which resolves the alert.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-rules-pfsense
+  namespace: monitoring
+  labels:
+    loki_rule: "1"
+data:
+  pfsense.yaml: |
+    groups:
+      - name: pfsense
+        interval: 1m
+        rules:
+          # dpinger logs "Alarm" when a gateway crosses its loss/latency threshold
+          # and "Clear" when it recovers
+          - alert: PfSenseGatewayAlarm
+            expr: |
+              sum by (host) (count_over_time({job="syslog", app="dpinger"} |= "Alarm" [5m])) > 0
+            labels:
+              severity: critical
+            annotations:
+              summary: "pfSense gateway alarm on {{ $labels.host }}"
+              description: "dpinger reported a gateway in alarm (packet loss or latency). Check Status > Gateways."
+
+          - alert: PfSenseInterfaceDown
+            expr: |
+              sum by (host) (count_over_time({job="syslog", app="kernel"} |~ "link state changed to DOWN" [5m])) > 0
+            labels:
+              severity: warning
+            annotations:
+              summary: "A network interface went down on {{ $labels.host }}"
+
+          - alert: PfSenseWebLoginFailures
+            expr: |
+              sum by (host) (count_over_time({job="syslog", app="php-fpm"} |= "webConfigurator authentication error" [10m])) > 2
+            labels:
+              severity: warning
+            annotations:
+              summary: "Repeated failed webConfigurator logins on {{ $labels.host }}"
+
+          - alert: PfSenseSSHLoginFailures
+            expr: |
+              sum by (host) (count_over_time({job="syslog", app=~"sshd|sshguard"} |~ "Failed password|Invalid user|Attack from|blocking" [10m])) > 3
+            labels:
+              severity: warning
+            annotations:
+              summary: "Repeated failed SSH logins on {{ $labels.host }}"
+
+          # pfSense stopped talking: the receiver works (LogIngestionStopped covers
+          # that) but this sender went quiet. filterlog alone is chatty enough
+          - alert: PfSenseLogsMissing
+            expr: |
+              absent_over_time({job="syslog", app="filterlog"} [30m])
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: "No pfSense firewall logs for 45 minutes"
+              description: "pfSense is not shipping syslog to logs.shakir.cloud udp/514, or the syslog receiver is down."

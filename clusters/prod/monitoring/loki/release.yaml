@@ -1,0 +1,149 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  interval: 1h0m0s
+  releaseName: loki
+  chart:
+    spec:
+      chart: loki
+      version: "7.6.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 2h0m0s
+
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+
+  values:
+    # Only overrides are listed; see `helm show values loki --repo https://grafana.github.io/helm-charts`
+
+    # One process, one PVC, no object store, no caches, no gateway
+    deploymentMode: SingleBinary
+
+    loki:
+      auth_enabled: false
+
+      commonConfig:
+        replication_factor: 1
+
+      storage:
+        type: filesystem
+
+      schemaConfig:
+        configs:
+          - from: "2026-11-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
+
+      # -----------------------------------------------------------------------
+      # Disk-friendly write path. The old loki-stack values never applied (wrong
+      # keys), so Loki ran with chunk_idle_period=3m and no retention: 161k chunk
+      # files in 48 days. Fewer, larger chunks = fewer files and fsyncs
+      # -----------------------------------------------------------------------
+      ingester:
+        # cut a chunk after 1h of silence or 2h of age, whichever first
+        chunk_idle_period: 1h
+        max_chunk_age: 2h
+        chunk_target_size: 1572864  # 1.5MB
+        # keep flushed chunks in memory briefly so recent queries skip the disk
+        chunk_retain_period: 1m
+        wal:
+          # WAL protects the last <=2h of logs on a crash. It is an append-only,
+          # sequential write on the SSD pool, cheap compared to the chunk files
+          enabled: true
+          # checkpoint every 15m instead of 5m
+          checkpoint_duration: 15m
+
+      limits_config:
+        retention_period: 168h  # 7 days
+        # keep a runaway pod from flooding the disk
+        ingestion_rate_mb: 4
+        ingestion_burst_size_mb: 8
+        per_stream_rate_limit: 3MB
+        per_stream_rate_limit_burst: 6MB
+        # syslog sources sometimes send old timestamps after reconnecting
+        reject_old_samples: true
+        reject_old_samples_max_age: 24h
+        max_query_lookback: 168h
+        allow_structured_metadata: true
+        volume_enabled: true
+
+      compactor:
+        retention_enabled: true
+        delete_request_store: filesystem
+        retention_delete_delay: 2h
+        compaction_interval: 30m
+        working_directory: /var/loki/compactor
+
+      # Log alert rules live in git as ConfigMaps labelled loki_rule (see ./rules-*.yaml);
+      # the rules sidecar writes them under /rules/fake (tenant "fake" = auth disabled)
+      rulerConfig:
+        storage:
+          type: local
+          local:
+            directory: /rules
+        rule_path: /var/loki/ruler-scratch
+        alertmanager_url: http://kube-prometheus-stack-alertmanager.monitoring.svc.cluster.local:9093
+        enable_alertmanager_v2: true
+        evaluation_interval: 1m
+        wal:
+          dir: /var/loki/ruler-wal
+
+    sidecar:
+      rules:
+        enabled: true
+        label: loki_rule
+        labelValue: "1"
+        folder: /rules/fake
+        searchNamespace: monitoring
+
+    singleBinary:
+      replicas: 1
+      # Logs are disposable on cluster rebuild, so not pinned. SSD pool, not the NAS:
+      # Loki's small-file chunk/index churn is the worst workload for HDDs over NFS
+      persistence:
+        enabled: true
+        storageClass: proxmox-delete
+        size: 20Gi
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 1Gi
+
+    # Scalable/microservice components off
+    read:
+      replicas: 0
+    write:
+      replicas: 0
+    backend:
+      replicas: 0
+    gateway:
+      enabled: false
+    chunksCache:
+      enabled: false
+    resultsCache:
+      enabled: false
+    lokiCanary:
+      enabled: false
+    test:
+      enabled: false
+
+    monitoring:
+      serviceMonitor:
+        enabled: true
+        interval: 60s
