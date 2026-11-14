@@ -1,0 +1,489 @@
+{
+  "uid": "homelab_logs",
+  "title": "Logs overview",
+  "description": "Who logs how much (Loki disk cost), error rates per app, and Kubernetes warning events.",
+  "tags": [
+    "homelab",
+    "logs",
+    "loki"
+  ],
+  "timezone": "browser",
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Homelab",
+      "type": "link",
+      "url": "/d/homelab_home",
+      "icon": "dashboard"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Ingest",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last 24h"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rejected 24h"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(loki_distributor_lines_received_total[5m]))",
+          "legendFormat": "Lines/s",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "expr": "sum(increase(loki_distributor_bytes_received_total[24h]))",
+          "legendFormat": "Last 24h",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "expr": "sum(loki_ingester_memory_streams)",
+          "legendFormat": "Active streams",
+          "instant": true
+        },
+        {
+          "refId": "D",
+          "expr": "sum(increase(loki_discarded_samples_total[24h])) or vector(0)",
+          "legendFormat": "Rejected 24h",
+          "instant": true
+        }
+      ],
+      "description": "Rejected = over rate limits or too old; see the Monitoring stack dashboard for reasons."
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Log volume by namespace (pods)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            },
+            "drawStyle": "bars"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (namespace) (bytes_over_time({job=\"kubernetes-pods\"} [$__auto]))",
+          "legendFormat": "{{namespace}}",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          }
+        }
+      ],
+      "description": "Bytes ingested per namespace. Chatty namespaces cost Loki disk writes."
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Log volume by source (syslog)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            },
+            "drawStyle": "bars"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (host, app) (bytes_over_time({job=\"syslog\"} [$__auto]))",
+          "legendFormat": "{{host}} {{app}}",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "Top apps by log volume (range)",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Volume"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Volume",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "namespace": true,
+              "app": true,
+              "Value #A": true
+            },
+            "renameByName": {
+              "namespace": "Namespace",
+              "app": "App",
+              "Value #A": "Volume"
+            },
+            "indexByName": {
+              "namespace": 0,
+              "app": 1,
+              "Value #A": 2
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(15, sum by (namespace, app) (bytes_over_time({job=\"kubernetes-pods\"} [$__range])))",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "queryType": "instant",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Error lines by app",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            },
+            "drawStyle": "bars"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, sum by (namespace, app) (count_over_time({job=\"kubernetes-pods\"} | level=~\"error|err|fatal|critical\" [$__auto])))",
+          "legendFormat": "{{namespace}}/{{app}}",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          }
+        }
+      ],
+      "description": "Lines whose level (parsed by Alloy into structured metadata) is error/fatal/critical."
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Kubernetes warning events by reason",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            },
+            "drawStyle": "bars"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (reason) (count_over_time({job=\"kubernetes-events\"} | logfmt | type=\"Warning\" [$__auto]))",
+          "legendFormat": "{{reason}}",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          }
+        }
+      ],
+      "description": "BackOff, Unhealthy, FailedMount, OOMKilling... A spike usually explains an alert."
+    },
+    {
+      "id": 7,
+      "type": "logs",
+      "title": "Kubernetes warning events",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{job=\"kubernetes-events\"} | logfmt | type=\"Warning\" | line_format \"{{.namespace}}/{{.name}} {{.kind}} {{.reason}}: {{.msg}}\""
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "logs",
+      "title": "Errors across the cluster",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": false,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{job=\"kubernetes-pods\"} | level=~\"error|err|fatal|critical\""
+        }
+      ]
+    }
+  ]
+}

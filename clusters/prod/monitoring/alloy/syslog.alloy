@@ -134,7 +134,7 @@ loki.process "syslog" {
     }
   }
 
-  forward_to = [loki.write.default.receiver]
+  forward_to = [loki.write.default.receiver, loki.process.geo_feed.receiver]
 }
 
 // ---------------------------------------------------------------------
@@ -152,6 +152,38 @@ loki.write "default" {
     url        = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
     batch_wait = "5s"
     batch_size = "1MiB"
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Copy of firewall "block" lines for alloy-geoip (world map). Best effort:
+// short timeouts and almost no retries, so an alloy-geoip outage drops these
+// copies quickly instead of backing up the pipeline that feeds Loki.
+// ---------------------------------------------------------------------------
+loki.process "geo_feed" {
+  stage.match {
+    selector = "{job=\"syslog\", app!=\"filterlog\"}"
+    action   = "drop"
+    drop_counter_reason = "geo_feed_not_filterlog"
+  }
+  stage.match {
+    selector = "{job=\"syslog\", action!=\"block\"}"
+    action   = "drop"
+    drop_counter_reason = "geo_feed_not_block"
+  }
+  forward_to = [loki.write.geoip.receiver]
+}
+
+loki.write "geoip" {
+  endpoint {
+    url                 = "http://alloy-geoip.monitoring.svc.cluster.local:3500/loki/api/v1/push"
+    batch_wait          = "10s"
+    batch_size          = "512KiB"
+    remote_timeout      = "3s"
+    min_backoff_period  = "250ms"
+    max_backoff_period  = "1s"
+    max_backoff_retries = 2
+    retry_on_http_429   = false
   }
 }
 

@@ -1,6 +1,7 @@
-# SNMP exporter: polls the Synology NAS over SNMPv3. Nothing is installed on the NAS.
-# Config: the image's built-in snmp.yml (if_mib, hrStorage, system) plus
-# ./snmp-synology.yml (SNMPv3 auth + trimmed synology_health module).
+# SNMP exporter: polls the Synology NAS (SNMPv3) and pfSense (SNMPv2c). Nothing is
+# installed on either device.
+# Config: the image's built-in snmp.yml (if_mib, hrStorage, hrDevice, system) plus
+# ./snmp-extra.yml (auths + trimmed synology_health module).
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -30,13 +31,15 @@ spec:
     # Only overrides are listed; see `helm show values prometheus-snmp-exporter --repo https://prometheus-community.github.io/helm-charts`
     extraArgs:
       - --config.file=/etc/snmp_exporter/snmp.yml
-      - --config.file=/etc/snmp-extra/snmp-synology.yml
-      # ${SNMP_*} in snmp-synology.yml come from the snmp-synology Secret
+      - --config.file=/etc/snmp-extra/snmp-extra.yml
+      # ${...} in snmp-extra.yml come from the Secrets below
       - --config.expand-environment-variables
 
     envFrom:
       - secretRef:
           name: snmp-synology
+      - secretRef:
+          name: snmp-pfsense
 
     extraConfigmapMounts:
       - name: snmp-extra
@@ -89,3 +92,19 @@ spec:
               replacement: synology-system
             - targetLabel: instance
               replacement: synology.shakir.cloud  # matches the chart's metric relabel
+        # pfSense: interface traffic/errors (WAN bandwidth), CPU load, memory, uptime
+        - name: pfsense
+          target: pfsense.shakir.cloud
+          auth: [pfsense_v2]
+          module:
+            - if_mib
+            - hrStorage
+            - hrDevice
+            - system
+          interval: 60s
+          scrapeTimeout: 30s
+          relabelings:
+            - targetLabel: job
+              replacement: pfsense
+            - targetLabel: instance
+              replacement: pfsense.shakir.cloud  # matches the chart's metric relabel

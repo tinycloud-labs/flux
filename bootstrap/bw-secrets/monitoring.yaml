@@ -92,3 +92,49 @@ spec:
   authToken:
     secretName: bw-auth-token
     secretKey: token
+---
+# SNMPv2c community for pfSense (bsnmpd only speaks v1/v2c), read by
+# snmp-exporter as PFSENSE_SNMP_COMMUNITY (clusters/prod/monitoring/exporters/snmp-extra.yml).
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: snmp-pfsense
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: snmp-pfsense
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: snmp-pfsense
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: 04b99a8a-434d-4f71-ac28-b502009be1aa
+      secretKeyName: PFSENSE_SNMP_COMMUNITY
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
+# MaxMind GeoLite2 (free account) for alloy-geoip's geoipupdate init container
+# (clusters/prod/monitoring/alloy/release-geoip.yaml).
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: maxmind-geoip
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: maxmind-geoip
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: maxmind-geoip
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: 0aba6460-53e3-420a-8eee-b502009c104f
+      secretKeyName: GEOIPUPDATE_ACCOUNT_ID
+    - bwSecretId: a693d69f-7fd1-46af-87b7-b502009c53fb
+      secretKeyName: GEOIPUPDATE_LICENSE_KEY
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

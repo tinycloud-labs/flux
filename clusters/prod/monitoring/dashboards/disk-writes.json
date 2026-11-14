@@ -1,0 +1,896 @@
+{
+  "uid": "homelab_disk_writes",
+  "title": "Disk writes & endurance",
+  "description": "Who writes to which disks. SSD pool = PVE `tank` (all VM disks + Proxmox CSI volumes). NAS = the Synology HDDs (NFS volumes). Guest view (node-exporter) and hypervisor view (PVE API) measure the same VM disks and should agree.",
+  "tags": [
+    "homelab",
+    "disks",
+    "storage"
+  ],
+  "timezone": "browser",
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Homelab",
+      "type": "link",
+      "url": "/d/homelab_home",
+      "icon": "dashboard"
+    }
+  ],
+  "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "At a glance (24h average rate, projected per year)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Written per day",
+      "gridPos": {
+        "h": 5,
+        "w": 14,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "legendFormat": "SSD pool (all VMs, PVE)",
+          "expr": "sum(rate(pve_disk_written_bytes_total{job=\"pve\", id=~\"(qemu|lxc)/.+\"}[24h])) * 86400"
+        },
+        {
+          "refId": "B",
+          "instant": true,
+          "legendFormat": "of which K3s VMs",
+          "expr": "sum(rate(node_disk_written_bytes_total{job=\"node-exporter\", device=~\"sd.+|vd.+|nvme.+\"}[24h])) * 86400"
+        },
+        {
+          "refId": "C",
+          "instant": true,
+          "legendFormat": "of which K3s pods",
+          "expr": "sum(max without (service) (rate(container_fs_writes_bytes_total{job=\"kubelet\", container!=\"\"}[24h]))) * 86400"
+        },
+        {
+          "refId": "D",
+          "instant": true,
+          "legendFormat": "NAS HDDs (all disks)",
+          "expr": "sum(rate(storageIONWrittenX{job=\"synology-health\", storageIODevice=~\"sata[0-9]+|sd[a-z]+\"}[24h])) * 86400"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Projected per year",
+      "description": "24h rate x 365, to compare with rated endurance. SATA SSDs are typically rated roughly 200-600 TBW per TB of capacity (check your drives' datasheet); NAS HDDs like the IronWolf ST4000VN are rated for a 180 TB/year workload (reads + writes). ZFS adds its own write amplification on top of what the VMs write.",
+      "gridPos": {
+        "h": 5,
+        "w": 10,
+        "x": 14,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "legendFormat": "SSD pool",
+          "expr": "sum(rate(pve_disk_written_bytes_total{job=\"pve\", id=~\"(qemu|lxc)/.+\"}[24h])) * 86400 * 365"
+        },
+        {
+          "refId": "B",
+          "instant": true,
+          "legendFormat": "per NAS HDD (avg)",
+          "expr": "avg(rate(storageIONWrittenX{job=\"synology-health\", storageIODevice=~\"sata[0-9]+|sd[a-z]+\"}[24h])) * 86400 * 365"
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "SSD pool (PVE tank): per VM",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "panels": []
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Writes per VM (guest view, node-exporter)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 20,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Mean",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{nodename}}",
+          "expr": "sum by (instance) (rate(node_disk_written_bytes_total{job=\"node-exporter\", device=~\"sd.+|vd.+|nvme.+\"}[$__rate_interval])) * on (instance) group_left (nodename) node_uname_info"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Writes per VM (hypervisor view, PVE API)",
+      "description": "Includes VMs outside K3s (mediaserver, mysql, ansible...).",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 20,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Mean",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "expr": "rate(pve_disk_written_bytes_total{job=\"pve\", id=~\"(qemu|lxc)/.+\"}[$__rate_interval]) * on (id) group_left (name) pve_guest_info{job=\"pve\"}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Per K3s node: pods vs everything else",
+      "description": "\"not pods\" = node disk writes minus container writes: the K3s server (SQLite datastore on prod-ctrl-0), containerd image pulls, journald, kubelet. If this dominates, the fix is on the host, not in a workload.",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 20,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*not pods"
+            },
+            "properties": [
+              {
+                "id": "custom.fillOpacity",
+                "value": 5
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    6,
+                    4
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean"
+          ],
+          "sortBy": "Mean",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{node}} pods",
+          "expr": "sum by (node) (max without (service) (rate(container_fs_writes_bytes_total{job=\"kubelet\", container!=\"\"}[$__rate_interval])))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{nodename}} not pods",
+          "expr": "clamp_min(sum by (nodename) (rate(node_disk_written_bytes_total{job=\"node-exporter\", device=~\"sd.+|vd.+|nvme.+\"}[$__rate_interval]) * on (instance) group_left (nodename) node_uname_info) - on (nodename) label_replace(sum by (node) (max without (service) (rate(container_fs_writes_bytes_total{job=\"kubelet\", container!=\"\"}[$__rate_interval]))), \"nodename\", \"$1\", \"node\", \"(.+)\"), 0)"
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "K3s workloads",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "panels": []
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Top 10 pods by writes",
+      "gridPos": {
+        "h": 9,
+        "w": 14,
+        "x": 0,
+        "y": 24
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Mean",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{namespace}}/{{pod}}",
+          "expr": "topk(10, sum by (namespace, pod) (max without (service) (rate(container_fs_writes_bytes_total{job=\"kubelet\", container!=\"\"}[$__rate_interval]))))"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Written per pod, last 24h",
+      "gridPos": {
+        "h": 9,
+        "w": 10,
+        "x": 14,
+        "y": 24
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "decimals": 1,
+          "custom": {
+            "cellOptions": {
+              "type": "gauge",
+              "mode": "basic"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pod"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Written",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "pod": true,
+              "Value": true
+            },
+            "renameByName": {
+              "pod": "Pod",
+              "Value": "Written"
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "instant": true,
+          "expr": "topk(15, label_join(sum by (namespace, pod) (max without (service) (increase(container_fs_writes_bytes_total{job=\"kubelet\", container!=\"\"}[24h]))), \"pod\", \"/\", \"namespace\", \"pod\")) > 0"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Monitoring stack: Prometheus and Loki writes",
+      "description": "Prometheus: WAL + block compaction. Loki: WAL + chunk flushes (idle 1h / max age 2h) + compactor every 30m.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{pod}}",
+          "expr": "sum by (pod) (max without (service) (rate(container_fs_writes_bytes_total{job=\"kubelet\", namespace=\"monitoring\", pod=~\"prometheus-kube-prometheus-stack-prometheus-0|loki-0|alertmanager-.+|alloy.*\", container!=\"\"}[$__rate_interval])))"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "What drives monitoring writes",
+      "description": "Prometheus writes grow with active series; Loki with ingested bytes. A jump here explains a jump in the panel on the left.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Prometheus series"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Loki ingest"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "Prometheus series",
+          "expr": "max(prometheus_tsdb_head_series)"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "Loki ingest",
+          "expr": "sum(rate(loki_distributor_bytes_received_total[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "type": "row",
+      "title": "NAS HDDs",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "panels": []
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Writes per disk",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 42
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{storageIODevice}}",
+          "expr": "rate(storageIONWrittenX{job=\"synology-health\", storageIODevice=~\"sata[0-9]+|sd[a-z]+\"}[15m])"
+        }
+      ],
+      "description": "NAS health is scraped every 3 minutes (kinder to idle HDDs), so rates use a fixed 15m window."
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Write operations per disk",
+      "description": "HDD wear and noise track operations (seeks) more than bytes: many small writes are worse than a few large ones.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 42
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "wps",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{storageIODevice}}",
+          "expr": "rate(storageIOWrites{job=\"synology-health\", storageIODevice=~\"sata[0-9]+|sd[a-z]+\"}[15m])"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Disk busy (load %)",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 50
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "custom": {
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{storageIODevice}}",
+          "expr": "storageIOLA{job=\"synology-health\", storageIODevice=~\"sata[0-9]+|sd[a-z]+\"}"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Temperature & bad sectors",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 50
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* temp"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* bad sectors"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{diskID}} temp",
+          "expr": "diskTemperature{job=\"synology-health\"}"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{diskID}} bad sectors",
+          "expr": "diskBadSector{job=\"synology-health\"}"
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "type": "row",
+      "title": "Capacity trend",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 57
+      },
+      "panels": []
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Fullest Proxmox CSI volumes (SSD pool)",
+      "description": "PVCs on proxmox-* storage classes. A steadily rising line is the Gaseous pattern.",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 58
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{namespace}}/{{persistentvolumeclaim}}",
+          "expr": "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes) * on (namespace, persistentvolumeclaim) group_left kube_persistentvolumeclaim_info{storageclass=~\"proxmox.*\"}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 # Scrapes the PVE API through pve-exporter (multi-target pattern: the exporter
 # queries `target`, Prometheus scrapes the exporter).
 # target: the PVE host directly (same endpoint as the infra repo's Terraform
-# provider), not pxmx.shakir.cloud, which goes through the reverse proxy on the
-# NAS and would take PVE monitoring down whenever the NAS is down.
+# provider), not pxmx.shakir.cloud, which goes through the reverse proxy on
+# pfSense (10.10.50.10) and would tie PVE monitoring to that proxy.
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

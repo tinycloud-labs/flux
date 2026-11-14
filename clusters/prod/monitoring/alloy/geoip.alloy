@@ -1,0 +1,63 @@
+// Alloy config for the alloy-geoip HelmRelease. Rendered into the ConfigMap
+// alloy-geoip-config by kustomization.yaml.
+//
+// Turns pfSense "block" lines into one counter per source country:
+//   homelab_pfsense_blocked_total{country_code, country, iface}
+// It stores no logs (Loki already has them from alloy-syslog).
+//
+// Why a separate instance: stage.geoip opens the MaxMind DB when the config
+// loads, and a missing/unreadable DB makes Alloy refuse to start (tested). Kept
+// apart, a MaxMind problem only breaks the world map, never syslog ingestion.
+// The DB (GeoLite2-Country, ~9 MB) is downloaded by the geoipupdate init
+// container into an emptyDir on every pod start.
+
+// alloy-syslog pushes a copy of filterlog "block" lines here (Loki push API)
+loki.source.api "feed" {
+  http {
+    listen_address = "0.0.0.0"
+    listen_port    = 3500
+  }
+  forward_to = [loki.process.geo.receiver]
+}
+
+loki.process "geo" {
+  // line is logfmt: action=block dir=in iface=igc0 proto=tcp src=1.2.3.4:5555 dst=...
+  stage.logfmt {
+    mapping = { "src" = "" }
+  }
+  // strip the port, and the brackets alloy-syslog puts around IPv6
+  stage.regex {
+    source     = "src"
+    expression = "^\\[?(?P<src_ip>[0-9a-fA-F.:]+?)\\]?(?::\\d+)?$"
+  }
+  stage.geoip {
+    db      = "/geoip/GeoLite2-Country.mmdb"
+    source  = "src_ip"
+    db_type = "country"
+  }
+  stage.labels {
+    values = { country_code = "geoip_country_code", country = "geoip_country_name" }
+  }
+  // private/LAN sources have no country: not interesting for the map
+  stage.match {
+    selector            = "{job=\"syslog\", country_code=\"\"}"
+    action              = "drop"
+    drop_counter_reason = "no_country"
+  }
+  // bounded label set: ~250 countries x a few interfaces
+  stage.label_keep {
+    values = ["country_code", "country", "iface"]
+  }
+  stage.metrics {
+    metric.counter {
+      name              = "pfsense_blocked_total"
+      prefix            = "homelab_"
+      description       = "pfSense firewall blocks by source country (GeoLite2)"
+      match_all         = true
+      action            = "inc"
+      max_idle_duration = "24h"
+    }
+  }
+  // metrics only; nothing is forwarded
+  forward_to = []
+}

@@ -1,0 +1,27 @@
+# K3s' bundled Traefik already exposes Prometheus metrics on :9100 (entrypoint
+# "metrics"); no HelmChartConfig change needed, only this scrape.
+# Kept: per-service requests/latency/response bytes (per app), entrypoint request
+# counts, open connections, config reload status. Dropped: entrypoint latency
+# histograms and request-bytes counters, go/process metrics (~1.9k -> ~1.35k series).
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: traefik
+  namespace: monitoring
+spec:
+  namespaceSelector:
+    matchNames: [kube-system]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: traefik
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 60s
+      relabelings:
+        - targetLabel: job
+          replacement: traefik
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: traefik_(service_(requests_total|request_duration_seconds_(bucket|sum|count)|responses_bytes_total)|entrypoint_requests_total|open_connections|config_last_reload_success|config_reloads_total)
+          action: keep

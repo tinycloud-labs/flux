@@ -47,6 +47,48 @@ configMapGenerator:
     options:
       annotations:
         grafana_folder: Homelab
+  - name: grafana-dashboard-homelab-home
+    files:
+      - homelab-home.json
+    options:
+      annotations:
+        grafana_folder: Homelab
+  - name: grafana-dashboard-disk-writes
+    files:
+      - disk-writes.json
+    options:
+      annotations:
+        grafana_folder: Homelab
+  - name: grafana-dashboard-alert-history
+    files:
+      - alert-history.json
+    options:
+      annotations:
+        grafana_folder: Homelab
+  - name: grafana-dashboard-logs-overview
+    files:
+      - logs-overview.json
+    options:
+      annotations:
+        grafana_folder: Homelab
+  - name: grafana-dashboard-monitoring-health
+    files:
+      - monitoring-health.json
+    options:
+      annotations:
+        grafana_folder: Homelab
+  - name: grafana-dashboard-flux
+    files:
+      - flux.json
+    options:
+      annotations:
+        grafana_folder: Homelab
+  - name: grafana-dashboard-traefik
+    files:
+      - traefik.json
+    options:
+      annotations:
+        grafana_folder: Homelab
 generatorOptions:
   disableNameSuffixHash: true
   labels:

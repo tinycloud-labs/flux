@@ -1,0 +1,469 @@
+{
+  "uid": "homelab_flux",
+  "title": "Flux GitOps",
+  "description": "Reconcile state of every Flux object. Deploy/failure events also go to Discord via Flux's own Alert.",
+  "tags": [
+    "homelab",
+    "flux",
+    "gitops"
+  ],
+  "timezone": "browser",
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "kind",
+        "label": "Kind",
+        "type": "custom",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "query": "Kustomization,HelmRelease,GitRepository,HelmRepository,HelmChart,OCIRepository",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "links": [
+    {
+      "title": "Homelab",
+      "type": "link",
+      "url": "/d/homelab_home",
+      "icon": "dashboard"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Ready",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(gotk_resource_info{customresource_kind=\"Kustomization\", ready=\"True\"}) or vector(0)",
+          "legendFormat": "Kustomizations",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "expr": "count(gotk_resource_info{customresource_kind=\"HelmRelease\", ready=\"True\"}) or vector(0)",
+          "legendFormat": "HelmReleases",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "expr": "count(gotk_resource_info{customresource_kind=~\"GitRepository|HelmRepository|HelmChart|OCIRepository\", ready=\"True\"}) or vector(0)",
+          "legendFormat": "Sources",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Needs attention",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Not ready"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Suspended"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "blue",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(gotk_resource_info{ready!=\"True\"}) or vector(0)",
+          "legendFormat": "Not ready",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "expr": "count(gotk_resource_info{suspended=\"true\"}) or vector(0)",
+          "legendFormat": "Suspended",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Objects",
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ready changed"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ready"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "True": {
+                        "color": "green"
+                      },
+                      "False": {
+                        "color": "red"
+                      },
+                      "Unknown": {
+                        "color": "orange"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Kind"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Ready",
+            "desc": false
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "customresource_kind": true,
+              "exported_namespace": true,
+              "name": true,
+              "ready": true,
+              "reason": true,
+              "revision": true,
+              "suspended": true,
+              "Value": true
+            },
+            "renameByName": {
+              "customresource_kind": "Kind",
+              "exported_namespace": "Namespace",
+              "name": "Name",
+              "ready": "Ready",
+              "reason": "Reason",
+              "revision": "Revision",
+              "suspended": "Suspended",
+              "Value": "Ready changed"
+            },
+            "indexByName": {
+              "customresource_kind": 0,
+              "exported_namespace": 1,
+              "name": 2,
+              "ready": 3,
+              "reason": 4,
+              "revision": 5,
+              "suspended": 6,
+              "Value": 7
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gotk_resource_info{customresource_kind=~\"$kind\"} * on (customresource_kind, exported_namespace, name) group_left gotk_resource_ready_transition_timestamp_seconds * 1000",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "description": "Status from kube-state-metrics (Flux custom resources). Ready changed = last flip of the Ready condition."
+    },
+    {
+      "id": 4,
+      "type": "state-timeline",
+      "title": "Not ready over time",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "custom": {
+            "fillOpacity": 80,
+            "lineWidth": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "never",
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by (customresource_kind, name) (gotk_resource_info{ready!=\"True\", customresource_kind=~\"$kind\"})",
+          "legendFormat": "{{customresource_kind}} {{name}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Ready-state changes per hour",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            },
+            "drawStyle": "bars"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (customresource_kind) (changes(gotk_resource_ready_transition_timestamp_seconds{customresource_kind=~\"$kind\"}[1h]))",
+          "legendFormat": "{{customresource_kind}}"
+        }
+      ],
+      "description": "Flapping objects show up as repeated changes."
+    }
+  ]
+}

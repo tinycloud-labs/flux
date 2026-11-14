@@ -1,33 +1,55 @@
 {
   "uid": "homelab_pfsense",
   "title": "pfSense / Firewall",
-  "tags": ["pfsense", "logs", "homelab"],
+  "tags": [
+    "geoip",
+    "homelab",
+    "logs",
+    "pfsense",
+    "snmp"
+  ],
   "timezone": "browser",
   "editable": false,
   "graphTooltip": 1,
   "refresh": "1m",
   "schemaVersion": 39,
-  "time": { "from": "now-6h", "to": "now" },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "templating": {
     "list": [
       {
         "name": "iface",
         "label": "Interface",
         "type": "query",
-        "datasource": { "type": "loki", "uid": "loki" },
-        "query": { "label": "iface", "stream": "{job=\"syslog\", app=\"filterlog\"}", "type": 1 },
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "iface",
+          "stream": "{job=\"syslog\", app=\"filterlog\"}",
+          "type": 1
+        },
         "refresh": 2,
         "includeAll": true,
         "multi": true,
         "allValue": ".+",
-        "current": { "text": "All", "value": "$__all" }
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
       },
       {
         "name": "search",
         "label": "Line contains",
         "type": "textbox",
         "query": "",
-        "current": { "text": "", "value": "" }
+        "current": {
+          "text": "",
+          "value": ""
+        }
       }
     ]
   },
@@ -36,13 +58,39 @@
       "id": 1,
       "type": "timeseries",
       "title": "Blocked connections by interface",
-      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 0 },
-      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "fieldConfig": {
-        "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 60, "stacking": { "mode": "normal" }, "showPoints": "never" } },
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            },
+            "showPoints": "never"
+          }
+        },
         "overrides": []
       },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
       "targets": [
         {
           "refId": "A",
@@ -55,10 +103,32 @@
       "id": 2,
       "type": "stat",
       "title": "Blocked vs passed (range)",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
-      "datasource": { "type": "loki", "uid": "loki" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none", "textMode": "value_and_name" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      },
       "targets": [
         {
           "refId": "A",
@@ -72,10 +142,35 @@
       "id": 3,
       "type": "table",
       "title": "Top blocked sources",
-      "gridPos": { "h": 9, "w": 8, "x": 0, "y": 8 },
-      "datasource": { "type": "loki", "uid": "loki" },
-      "options": { "sortBy": [{ "displayName": "Value", "desc": true }] },
-      "transformations": [{ "id": "reduce", "options": { "reducers": ["lastNotNull"], "labelsToFields": true } }],
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "labelsToFields": true
+          }
+        }
+      ],
       "targets": [
         {
           "refId": "A",
@@ -89,9 +184,27 @@
       "id": 4,
       "type": "table",
       "title": "Top blocked destination ports",
-      "gridPos": { "h": 9, "w": 8, "x": 8, "y": 8 },
-      "datasource": { "type": "loki", "uid": "loki" },
-      "transformations": [{ "id": "reduce", "options": { "reducers": ["lastNotNull"], "labelsToFields": true } }],
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "labelsToFields": true
+          }
+        }
+      ],
       "targets": [
         {
           "refId": "A",
@@ -105,9 +218,27 @@
       "id": 5,
       "type": "table",
       "title": "Top passed destinations",
-      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 8 },
-      "datasource": { "type": "loki", "uid": "loki" },
-      "transformations": [{ "id": "reduce", "options": { "reducers": ["lastNotNull"], "labelsToFields": true } }],
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "labelsToFields": true
+          }
+        }
+      ],
       "targets": [
         {
           "refId": "A",
@@ -121,9 +252,23 @@
       "id": 6,
       "type": "logs",
       "title": "Firewall log",
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 17 },
-      "datasource": { "type": "loki", "uid": "loki" },
-      "options": { "showTime": true, "wrapLogMessage": false, "sortOrder": "Descending", "enableLogDetails": true, "dedupStrategy": "none" },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": false,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      },
       "targets": [
         {
           "refId": "A",
@@ -135,13 +280,535 @@
       "id": 7,
       "type": "logs",
       "title": "pfSense system log (everything except filterlog)",
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 29 },
-      "datasource": { "type": "loki", "uid": "loki" },
-      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending", "enableLogDetails": true, "dedupStrategy": "none" },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      },
       "targets": [
         {
           "refId": "A",
           "expr": "{job=\"syslog\", app!=\"filterlog\"} |= \"$search\""
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "pfSense system (SNMP)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "panels": []
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "pfSense",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SNMP"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": {
+                        "text": "OK",
+                        "color": "green"
+                      },
+                      "0": {
+                        "text": "DOWN",
+                        "color": "red"
+                      }
+                    }
+                  },
+                  {
+                    "type": "special",
+                    "options": {
+                      "match": "null",
+                      "result": {
+                        "text": "no data",
+                        "color": "orange"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "orange",
+                      "value": null
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Uptime"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "CPU|Memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0.75
+                    },
+                    {
+                      "color": "red",
+                      "value": 0.9
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(up{job=\"pfsense\"})",
+          "legendFormat": "SNMP",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "expr": "max(sysUpTime{job=\"pfsense\"}) / 100",
+          "legendFormat": "Uptime",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "expr": "avg(hrProcessorLoad{job=\"pfsense\"}) / 100",
+          "legendFormat": "CPU",
+          "instant": true
+        },
+        {
+          "refId": "D",
+          "expr": "max(hrStorageUsed{job=\"pfsense\", hrStorageDescr=~\"Real Memory|Physical memory\"} / hrStorageSize{job=\"pfsense\", hrStorageDescr=~\"Real Memory|Physical memory\"})",
+          "legendFormat": "Memory",
+          "instant": true
+        }
+      ],
+      "description": "From pfSense's SNMP daemon (Services > SNMP), polled by snmp-exporter every 60s."
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Interface traffic (rx up / tx down)",
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 46
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* tx"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Mean",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(ifHCInOctets{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) * 8 > 0",
+          "legendFormat": "{{ifName}} rx"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(ifHCOutOctets{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) * 8 > 0",
+          "legendFormat": "{{ifName}} tx"
+        }
+      ],
+      "description": "WAN is the interface that carries most rx; blocked inbound traffic in the panels above shows on the same interface name."
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Interface errors / discards",
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 46
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(ifInErrors{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) + rate(ifOutErrors{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) > 0",
+          "legendFormat": "{{ifName}} errors"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(ifInDiscards{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) + rate(ifOutDiscards{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) > 0",
+          "legendFormat": "{{ifName}} discards"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "row",
+      "title": "Where blocked traffic comes from (GeoLite2)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "panels": []
+    },
+    {
+      "id": 13,
+      "type": "geomap",
+      "title": "Blocked connections by source country",
+      "description": "Counts from alloy-geoip (homelab_pfsense_blocked_total). Private/LAN sources are not counted. IP geolocation by MaxMind GeoLite2.",
+      "gridPos": {
+        "h": 12,
+        "w": 16,
+        "x": 0,
+        "y": 56
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-YlRd"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "view": {
+          "id": "zero",
+          "zoom": 1,
+          "allLayers": true
+        },
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": false,
+          "showAttribution": true
+        },
+        "basemap": {
+          "type": "default",
+          "name": "Basemap"
+        },
+        "tooltip": {
+          "mode": "details"
+        },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Blocked",
+            "tooltip": true,
+            "location": {
+              "mode": "lookup",
+              "lookup": "country_code",
+              "gazetteer": "public/gazetteer/countries.json"
+            },
+            "config": {
+              "showLegend": true,
+              "style": {
+                "size": {
+                  "field": "Value",
+                  "min": 4,
+                  "max": 30,
+                  "fixed": 5
+                },
+                "color": {
+                  "field": "Value"
+                },
+                "opacity": 0.65,
+                "symbol": {
+                  "mode": "fixed",
+                  "fixed": "img/icons/marker/circle.svg"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "labelsToFields": true
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (country_code, country) (increase(homelab_pfsense_blocked_total[$__range])) > 0",
+          "legendFormat": "{{country_code}}",
+          "instant": true,
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Top countries (range)",
+      "gridPos": {
+        "h": 12,
+        "w": 8,
+        "x": 16,
+        "y": 56
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "No GeoIP data yet"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Blocked"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Code"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Blocked",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "country": true,
+              "country_code": true,
+              "Value": true
+            },
+            "renameByName": {
+              "country": "Country",
+              "country_code": "Code",
+              "Value": "Blocked"
+            },
+            "indexByName": {
+              "country": 0,
+              "country_code": 1,
+              "Value": 2
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(20, sum by (country, country_code) (increase(homelab_pfsense_blocked_total[$__range]))) > 0",
+          "instant": true,
+          "format": "table"
         }
       ]
     }
