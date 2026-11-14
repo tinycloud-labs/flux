@@ -25,21 +25,33 @@ spec:
 
     - name: homelab.secrets
       rules:
-        # sm-operator refreshes every 3600s (bwSecretsManagerRefreshInterval), so
-        # 3h without a success means syncs are failing, not just slow.
-        - alert: BitwardenSecretSyncStale
-          expr: |
-            max by (namespace) (
-              time() - bitwarden_secret_last_successful_sync_timestamp_seconds
-            ) > 3 * 3600
-          for: 15m
+        # From sm-operator's own metrics (servicemonitor-sm-operator.yaml). A failed
+        # sync (invalid_client = expired/revoked machine-account token, API error)
+        # makes the reconcile return an error; healthy hourly syncs are
+        # "requeue_after". Note: BitwardenSecret status.lastSuccessfulSyncTime can't
+        # be used, it only moves when a value changes.
+        # The metric has no per-namespace label; the failing secret is in the
+        # operator logs (Grafana > Logs, namespace sm-operator-system).
+        - alert: BitwardenSyncFailing
+          expr: sum(increase(controller_runtime_reconcile_errors_total{job="sm-operator", controller="bitwardensecret"}[30m])) > 0
+          for: 30m
           labels:
             severity: warning
           annotations:
-            summary: "Bitwarden secrets in {{ $labels.namespace }} have not synced for {{ $value | humanizeDuration }}"
-            description: "Usually an expired/revoked machine-account token (sm-operator logs show invalid_client). Rotate it via the Terragrunt bw-k8s-secret unit for this namespace."
-        # A BitwardenSecret that has never synced has no lastSuccessfulSyncTime at
-        # all; the Flux health check on bw-secrets covers that case
+            summary: "Bitwarden secret syncs are failing ({{ $value | humanize }} errors in 30m)"
+            description: "Usually an expired/revoked machine-account token (sm-operator logs show invalid_client). Find the namespace with: kubectl -n sm-operator-system logs deploy/sm-operator-controller-manager | grep ERROR. Rotate via the Terragrunt bw-k8s-secret unit for that namespace."
+        # No reconciles at all for 3h = the operator is stuck (it requeues every
+        # secret hourly, bwSecretsManagerRefreshInterval: 3600)
+        - alert: BitwardenOperatorNotSyncing
+          expr: sum(increase(controller_runtime_reconcile_total{job="sm-operator", controller="bitwardensecret"}[3h])) == 0
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "sm-operator has not reconciled any BitwardenSecret for 3h"
+            description: "Secrets are frozen at their last value. Check the sm-operator-controller-manager pod."
+        # A BitwardenSecret that has never synced is caught by the Flux health
+        # check on the bw-secrets Kustomization
 
     - name: homelab.logs
       rules:

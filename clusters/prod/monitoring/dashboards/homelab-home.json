@@ -186,7 +186,7 @@
       "id": 2,
       "type": "stat",
       "title": "Systems",
-      "description": "Each tile is 1 = OK, 0 = problem. NAS = system, power, fans, disk status and DSM disk health all normal. Secrets = every BitwardenSecret synced within 3h. Flux = every Kustomization/HelmRelease/source Ready. Alert delivery = no failed Discord notifications in the last hour.",
+      "description": "Each tile is 1 = OK, 0 = problem. NAS = system, power, fans, disk status and DSM disk health all normal. Secrets = no failed Bitwarden syncs in the last hour. Flux = every Kustomization/HelmRelease/source Ready. Alert delivery = no failed Discord notifications in the last hour.",
       "gridPos": {
         "h": 5,
         "w": 16,
@@ -310,7 +310,7 @@
           },
           "instant": true,
           "legendFormat": "Secrets",
-          "expr": "max(time() - bitwarden_secret_last_successful_sync_timestamp_seconds) < bool 10800"
+          "expr": "(sum(increase(controller_runtime_reconcile_errors_total{job=\"sm-operator\", controller=\"bitwardensecret\"}[1h])) == bool 0)"
         },
         {
           "refId": "G",
