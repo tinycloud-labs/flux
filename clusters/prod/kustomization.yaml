@@ -13,5 +13,6 @@ resources:
   - metallb-config.yaml
   - bw-secrets.yaml
   - csi-driver-proxmox.yaml
+  - volsync.yaml
   - apps.yaml
   - monitoring.yaml
