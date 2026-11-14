@@ -147,11 +147,12 @@ spec:
                   href: https://deemix.shakir.cloud
                   siteMonitor: https://deemix.shakir.cloud
                   description: Deemix Music Manager
-              - Gaseous:
-                  icon: gaseous
-                  href: https://gaseous.shakir.cloud
-                  siteMonitor: https://gaseous.shakir.cloud
-                  description: Gaming Server
+              # Gaseous disabled: its MariaDB fills the ZFS zvol (no housekeeping)
+              # - Gaseous:
+              #     icon: gaseous
+              #     href: https://gaseous.shakir.cloud
+              #     siteMonitor: https://gaseous.shakir.cloud
+              #     description: Gaming Server
               - Photos:
                   icon: synology-photos
                   href: https://photos.shakir.cloud

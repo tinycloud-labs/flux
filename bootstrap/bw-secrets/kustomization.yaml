@@ -7,5 +7,5 @@ resources:
   - ./meilisearch.yaml
   - ./linkwarden.yaml
   - ./csi-driver-proxmox.yaml
-  - ./gaseous.yaml
+  # - ./gaseous.yaml  # Gaseous disabled: its MariaDB fills the ZFS zvol (no housekeeping)
   # - ./volsync.yaml  # VolSync disabled: worker VMs need an x86-64-v2 CPU type

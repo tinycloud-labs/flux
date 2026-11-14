@@ -11,7 +11,7 @@ resources:
   - ../../../apps/deemix
   - ../../../apps/excalidraw
   - ../../../apps/forgejo
-  - ../../../apps/gaseous
+  # - ../../../apps/gaseous  # Gaseous disabled: its MariaDB fills the ZFS zvol (no housekeeping)
   - ../../../apps/headlamp
   - ../../../apps/homepage
   - ../../../apps/jellyfin
