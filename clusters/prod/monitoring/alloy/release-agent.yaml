@@ -1,0 +1,72 @@
+# Promtail replacement: one Alloy pod per node tails that node's container logs
+# from /var/log/pods (node-local disk) and pushes them to Loki.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy
+  namespace: monitoring
+spec:
+  interval: 1h0m0s
+  releaseName: alloy
+  chart:
+    spec:
+      chart: alloy
+      version: "1.16.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 2h0m0s
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Only overrides are listed; see `helm show values alloy --repo https://grafana.github.io/helm-charts`
+    crds:
+      create: false # PodLogs CRD, unused
+    controller:
+      type: daemonset
+      # schedule on the control-plane node too
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      volumes:
+        extra:
+          # positions file survives pod restarts, so a restart does not re-ship logs.
+          # A few bytes rewritten every 10s on the node disk
+          - name: alloy-data
+            hostPath:
+              path: /var/lib/alloy-agent
+              type: DirectoryOrCreate
+    alloy:
+      enableReporting: false
+      storagePath: /var/lib/alloy/data
+      mounts:
+        varlog: true
+        extra:
+          - name: alloy-data
+            mountPath: /var/lib/alloy/data
+      # Kubernetes discovery is filtered to this node's pods
+      extraEnv:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+      resources:
+        requests:
+          cpu: 20m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+      # config lives in ./agent.alloy (ConfigMap from kustomization.yaml)
+      configMap:
+        create: false
+        name: alloy-agent-config
+        key: config.alloy
+    serviceMonitor:
+      enabled: true
+      interval: 60s

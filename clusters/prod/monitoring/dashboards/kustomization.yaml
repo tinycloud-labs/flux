@@ -1,10 +1,12 @@
 # Assembles Grafana dashboard ConfigMaps from JSON files.
-# Grafana sidecar discovers these via the grafana_dashboard label.
+# The Grafana sidecar (kube-prometheus-stack) loads every ConfigMap in monitoring
+# labelled grafana_dashboard=1, into the folder named by the grafana_folder annotation.
+# The chart's own stock dashboards land in the "Stock" folder.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: monitoring
-
 configMapGenerator:
+  # dotdc/grafana-dashboards-kubernetes
   - name: grafana-dashboard-k8s-addons-prometheus
     files:
       - k8s-addons-prometheus.json
@@ -26,10 +28,16 @@ configMapGenerator:
   - name: grafana-dashboard-k8s-views-pods
     files:
       - k8s-views-pods.json
-
+  # homelab
+  - name: grafana-dashboard-pfsense-firewall
+    files:
+      - pfsense-firewall.json
+    options:
+      annotations:
+        grafana_folder: Homelab
 generatorOptions:
   disableNameSuffixHash: true
   labels:
     grafana_dashboard: "1"
   annotations:
-    grafana_folder: "Main-Dashboards"
+    grafana_folder: Kubernetes

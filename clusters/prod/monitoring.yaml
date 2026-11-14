@@ -6,8 +6,11 @@ metadata:
   labels:
     app.kubernetes.io/part-of: monitoring
 spec:
-  # Reconciles all application HelmReleases
-  # Depends on helm-repos and bootstrap components being healthy first
+  # Applies the monitoring stack's child Flux Kustomizations (see
+  # ./monitoring/kustomization.yaml for their order).
+  # Needs: chart sources, the grafana + discord-webhook secrets (bw-secrets),
+  # proxmox-delete volumes for Prometheus/Alertmanager/Loki (csi-driver-proxmox),
+  # and the MetalLB pool for the syslog LoadBalancer IP
   interval: 10m
   path: ./clusters/prod/monitoring
   prune: true
@@ -17,5 +20,5 @@ spec:
   dependsOn:
     - name: helm-repos
     - name: metallb-config
-    - name: csi-driver-nfs
+    - name: csi-driver-proxmox
     - name: bw-secrets

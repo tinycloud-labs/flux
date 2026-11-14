@@ -1,0 +1,67 @@
+# Single-replica Alloy that receives syslog from the LAN (pfSense direct over UDP,
+# anything else over TCP) and ships Kubernetes events. One replica means UDP is
+# never load-balanced across pods, which is what dropped logs with Promtail.
+# Exposed by ./syslog-svc.yaml on a pinned MetalLB IP.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy-syslog
+  namespace: monitoring
+spec:
+  interval: 1h0m0s
+  releaseName: alloy-syslog
+  chart:
+    spec:
+      chart: alloy
+      version: "1.16.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 2h0m0s
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Only overrides are listed; see `helm show values alloy --repo https://grafana.github.io/helm-charts`
+    crds:
+      create: false
+    controller:
+      type: deployment
+      replicas: 1
+      podLabels:
+        syslog-receiver: "true"
+    alloy:
+      enableReporting: false
+      # nothing worth persisting: syslog is push, events resume from "now"
+      storagePath: /tmp/alloy
+      extraPorts:
+        - name: syslog-udp
+          port: 5514
+          targetPort: 5514
+          protocol: UDP
+        - name: syslog-bsd-udp
+          port: 5515
+          targetPort: 5515
+          protocol: UDP
+        - name: syslog-tcp
+          port: 1514
+          targetPort: 1514
+          protocol: TCP
+      resources:
+        requests:
+          cpu: 20m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+      # config lives in ./syslog.alloy (ConfigMap from kustomization.yaml)
+      configMap:
+        create: false
+        name: alloy-syslog-config
+        key: config.alloy
+    serviceMonitor:
+      enabled: true
+      interval: 60s

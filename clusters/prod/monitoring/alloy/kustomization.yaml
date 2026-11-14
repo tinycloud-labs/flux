@@ -1,0 +1,24 @@
+# Assembles the Alloy log agent (DaemonSet), the syslog receiver (Deployment),
+# its pinned LoadBalancer Service, and their config files.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+
+resources:
+  - release-agent.yaml
+  - release-syslog.yaml
+  - syslog-svc.yaml
+
+# Alloy configs are files, not Helm values (see the header of each file).
+# Stable names: the HelmReleases reference them, and the chart's config-reloader
+# hot-reloads on change without a pod restart
+configMapGenerator:
+  - name: alloy-agent-config
+    files:
+      - config.alloy=agent.alloy
+  - name: alloy-syslog-config
+    files:
+      - config.alloy=syslog.alloy
+
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,0 +1,33 @@
+# LAN entry point for syslog: logs.shakir.cloud (10.10.50.96). Senders use the
+# DNS name; the IP stays pinned here because MetalLB assigns by IP and the DNS
+# record must match it. Same IP the old promtail-syslog Service used.
+# pfSense points at logs.shakir.cloud:514 (UDP).
+# - Only the alloy-syslog pod is selected (one replica), so UDP is never split
+# - externalTrafficPolicy: Local keeps the sender's real IP (used as `host`
+#   when a message carries no hostname); MetalLB L2 announces from the pod's node
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloy-syslog-lan
+  namespace: monitoring
+  annotations:
+    metallb.io/loadBalancerIPs: 10.10.50.96
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  selector:
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/instance: alloy-syslog
+  ports:
+    - name: syslog-udp
+      port: 514
+      targetPort: 5514
+      protocol: UDP
+    - name: syslog-bsd-udp
+      port: 5515
+      targetPort: 5515
+      protocol: UDP
+    - name: syslog-tcp
+      port: 1514
+      targetPort: 1514
+      protocol: TCP
