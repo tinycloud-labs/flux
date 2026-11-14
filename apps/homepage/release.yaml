@@ -82,7 +82,7 @@ spec:
                   # Read from Prometheus' API (kube-state-metrics), not from the cluster
                   widget:
                     type: prometheusmetric
-                    url: http://prometheus-prometheus.monitoring.svc:9090
+                    url: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
                     refreshInterval: 60000
                     metrics:
                       - label: Nodes ready
@@ -108,7 +108,7 @@ spec:
                   description: Prometheus Monitoring
                   widget:
                     type: prometheus
-                    url: http://prometheus-prometheus.monitoring.svc:9090
+                    url: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
               - Alertmanager:
                   icon: alertmanager
                   href: https://alertmanager.shakir.cloud
@@ -116,11 +116,13 @@ spec:
                   description: Alertmanager for Prometheus
                   widget:
                     type: prometheusmetric
-                    url: http://prometheus-prometheus.monitoring.svc:9090
+                    url: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
                     refreshInterval: 60000
                     metrics:
                       - label: Firing alerts
-                        query: count(ALERTS{alertstate="firing"}) or vector(0)
+                        # Watchdog always fires by design (dead man's switch) and
+                        # InfoInhibitor is internal; neither ever reaches Discord
+                        query: count(ALERTS{alertstate="firing", alertname!~"Watchdog|InfoInhibitor"}) or vector(0)
               - Datadog:
                   icon: datadog
                   href: https://app.datadoghq.com
