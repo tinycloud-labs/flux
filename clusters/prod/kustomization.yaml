@@ -13,6 +13,6 @@ resources:
   - metallb-config.yaml
   - bw-secrets.yaml
   - csi-driver-proxmox.yaml
-  - volsync.yaml
+  # - volsync.yaml  # VolSync disabled: worker VMs need an x86-64-v2 CPU type
   - apps.yaml
   - monitoring.yaml

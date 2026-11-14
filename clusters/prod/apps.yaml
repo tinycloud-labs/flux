@@ -19,5 +19,5 @@ spec:
     - name: metallb-config
     - name: csi-driver-nfs
     - name: csi-driver-proxmox
-    - name: volsync
+    # - name: volsync  # VolSync disabled: worker VMs need an x86-64-v2 CPU type
     - name: bw-secrets
