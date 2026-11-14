@@ -1,13 +1,14 @@
 # Extra snmp_exporter config, loaded next to the image's built-in snmp.yml
 # (both passed as --config.file; modules/auths are merged).
 #
-# ${...} are expanded from the pod env (--config.expand-environment-variables),
-# which comes from Secrets synced by BitwardenSecrets in
-# bootstrap/bw-secrets/monitoring.yaml:
-#   auths.synology_v3: SNMPv3 authPriv      <- Secret snmp-synology
-#   auths.pfsense_v2:  SNMPv2c community    <- Secret snmp-pfsense
-#     (pfSense's built-in bsnmpd only speaks v1/v2c; it is bound to the LAN
-#      interface and read-only, and the community is kept out of git)
+# auths.synology_v3 (SNMPv3 authPriv): ${...} are expanded from the pod env
+# (--config.expand-environment-variables), from the snmp-synology Secret
+# (BitwardenSecret in bootstrap/bw-secrets/monitoring.yaml).
+#
+# auths.pfsense_v2 is NOT here: snmp_exporter (v0.31) expands env vars in the
+# SNMPv3 fields but not in a v2c `community` (tested), so it would send the
+# literal "${...}". release-snmp.yaml renders that auth into its own file from
+# the snmp-pfsense Secret with an init container instead.
 #
 # modules.synology_health: the upstream `synology` module (snmp_exporter v0.31.0)
 # trimmed to SYNOLOGY-SYSTEM/DISK/RAID/STORAGEIO/SPACEIO-MIB. Dropped on purpose:
@@ -29,9 +30,6 @@ auths:
     auth_protocol: SHA
     priv_protocol: AES
     priv_password: ${SNMP_PRIV_PASSWORD}
-  pfsense_v2:
-    version: 2
-    community: ${PFSENSE_SNMP_COMMUNITY}
 modules:
   synology_health:
     walk:
