@@ -236,7 +236,9 @@ spec:
           news_feed_enabled: false
         dashboards:
           min_refresh_interval: 30s
-          default_home_dashboard_path: /tmp/dashboards/Kubernetes/k8s-views-global.json
+          # Homelab landing page (dashboards/homelab-home.json); also the tablet kiosk:
+          # https://grafana.shakir.cloud/d/homelab_home?kiosk
+          default_home_dashboard_path: /tmp/dashboards/Homelab/homelab-home.json
 
       sidecar:
         dashboards:
@@ -344,6 +346,18 @@ spec:
           - apiGroups: ["k8s.bitwarden.com"]
             resources: ["bitwardensecrets"]
             verbs: ["list", "watch"]
+          # Flux object status (GitOps dashboard). Read from the API instead of
+          # scraping the Flux controllers: K3s' NetworkPolicy enforcement on the
+          # Flux-managed allow-scraping policy refuses cross-node scrapes
+          - apiGroups: ["kustomize.toolkit.fluxcd.io"]
+            resources: ["kustomizations"]
+            verbs: ["list", "watch"]
+          - apiGroups: ["helm.toolkit.fluxcd.io"]
+            resources: ["helmreleases"]
+            verbs: ["list", "watch"]
+          - apiGroups: ["source.toolkit.fluxcd.io"]
+            resources: ["gitrepositories", "helmrepositories", "helmcharts", "ocirepositories"]
+            verbs: ["list", "watch"]
       customResourceState:
         enabled: true
         config:
@@ -366,3 +380,129 @@ spec:
                       type: Gauge
                       gauge:
                         path: [status, lastSuccessfulSyncTime]
+
+              # Flux objects -> gotk_resource_info{customresource_kind, exported_namespace,
+              # name, ready, reason, suspended, revision} = 1 and
+              # gotk_resource_ready_transition_timestamp_seconds (when Ready last flipped).
+              # ~80 objects x 2 metrics. `exported_namespace` avoids clashing with the
+              # scrape's own namespace label
+              - groupVersionKind: {group: kustomize.toolkit.fluxcd.io, version: v1, kind: Kustomization}
+                metricNamePrefix: gotk
+                labelsFromPath: {name: [metadata, name], exported_namespace: [metadata, namespace]}
+                metrics:
+                  - name: resource_info
+                    help: Flux object state (value is always 1)
+                    each:
+                      type: Info
+                      info:
+                        labelsFromPath:
+                          ready: [status, conditions, "[type=Ready]", status]
+                          reason: [status, conditions, "[type=Ready]", reason]
+                          suspended: [spec, suspend]
+                          revision: [status, lastAppliedRevision]
+                  - name: resource_ready_transition_timestamp_seconds
+                    help: Unix time the Ready condition last changed
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, conditions, "[type=Ready]", lastTransitionTime]
+              - groupVersionKind: {group: helm.toolkit.fluxcd.io, version: v2, kind: HelmRelease}
+                metricNamePrefix: gotk
+                labelsFromPath: {name: [metadata, name], exported_namespace: [metadata, namespace]}
+                metrics:
+                  - name: resource_info
+                    help: Flux object state (value is always 1)
+                    each:
+                      type: Info
+                      info:
+                        labelsFromPath:
+                          ready: [status, conditions, "[type=Ready]", status]
+                          reason: [status, conditions, "[type=Ready]", reason]
+                          suspended: [spec, suspend]
+                          revision: [status, lastAttemptedRevision]
+                  - name: resource_ready_transition_timestamp_seconds
+                    help: Unix time the Ready condition last changed
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, conditions, "[type=Ready]", lastTransitionTime]
+              - groupVersionKind: {group: source.toolkit.fluxcd.io, version: v1, kind: GitRepository}
+                metricNamePrefix: gotk
+                labelsFromPath: {name: [metadata, name], exported_namespace: [metadata, namespace]}
+                metrics:
+                  - name: resource_info
+                    help: Flux object state (value is always 1)
+                    each:
+                      type: Info
+                      info:
+                        labelsFromPath:
+                          ready: [status, conditions, "[type=Ready]", status]
+                          reason: [status, conditions, "[type=Ready]", reason]
+                          suspended: [spec, suspend]
+                          revision: [status, artifact, revision]
+                  - name: resource_ready_transition_timestamp_seconds
+                    help: Unix time the Ready condition last changed
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, conditions, "[type=Ready]", lastTransitionTime]
+              - groupVersionKind: {group: source.toolkit.fluxcd.io, version: v1, kind: HelmRepository}
+                metricNamePrefix: gotk
+                labelsFromPath: {name: [metadata, name], exported_namespace: [metadata, namespace]}
+                metrics:
+                  - name: resource_info
+                    help: Flux object state (value is always 1)
+                    each:
+                      type: Info
+                      info:
+                        labelsFromPath:
+                          ready: [status, conditions, "[type=Ready]", status]
+                          reason: [status, conditions, "[type=Ready]", reason]
+                          suspended: [spec, suspend]
+                          revision: [status, artifact, revision]
+                  - name: resource_ready_transition_timestamp_seconds
+                    help: Unix time the Ready condition last changed
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, conditions, "[type=Ready]", lastTransitionTime]
+              - groupVersionKind: {group: source.toolkit.fluxcd.io, version: v1, kind: HelmChart}
+                metricNamePrefix: gotk
+                labelsFromPath: {name: [metadata, name], exported_namespace: [metadata, namespace]}
+                metrics:
+                  - name: resource_info
+                    help: Flux object state (value is always 1)
+                    each:
+                      type: Info
+                      info:
+                        labelsFromPath:
+                          ready: [status, conditions, "[type=Ready]", status]
+                          reason: [status, conditions, "[type=Ready]", reason]
+                          suspended: [spec, suspend]
+                          revision: [status, artifact, revision]
+                  - name: resource_ready_transition_timestamp_seconds
+                    help: Unix time the Ready condition last changed
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, conditions, "[type=Ready]", lastTransitionTime]
+              - groupVersionKind: {group: source.toolkit.fluxcd.io, version: v1, kind: OCIRepository}
+                metricNamePrefix: gotk
+                labelsFromPath: {name: [metadata, name], exported_namespace: [metadata, namespace]}
+                metrics:
+                  - name: resource_info
+                    help: Flux object state (value is always 1)
+                    each:
+                      type: Info
+                      info:
+                        labelsFromPath:
+                          ready: [status, conditions, "[type=Ready]", status]
+                          reason: [status, conditions, "[type=Ready]", reason]
+                          suspended: [spec, suspend]
+                          revision: [status, artifact, revision]
+                  - name: resource_ready_transition_timestamp_seconds
+                    help: Unix time the Ready condition last changed
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, conditions, "[type=Ready]", lastTransitionTime]

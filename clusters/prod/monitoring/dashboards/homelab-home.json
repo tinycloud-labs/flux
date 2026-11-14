@@ -1,0 +1,848 @@
+{
+  "uid": "homelab_home",
+  "title": "Homelab",
+  "description": "Landing page. Built for a portrait tablet in kiosk mode: /d/homelab_home?kiosk. Panels are ordered top-to-bottom so they also read well when Grafana stacks them on narrow screens.",
+  "tags": [
+    "homelab",
+    "overview"
+  ],
+  "timezone": "browser",
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Disk writes",
+      "type": "link",
+      "url": "/d/homelab_disk_writes",
+      "icon": "dashboard"
+    },
+    {
+      "title": "NAS",
+      "type": "link",
+      "url": "/d/homelab_synology",
+      "icon": "dashboard"
+    },
+    {
+      "title": "Proxmox",
+      "type": "link",
+      "url": "/d/homelab_pve",
+      "icon": "dashboard"
+    },
+    {
+      "title": "pfSense",
+      "type": "link",
+      "url": "/d/homelab_pfsense",
+      "icon": "dashboard"
+    },
+    {
+      "title": "Flux",
+      "type": "link",
+      "url": "/d/homelab_flux",
+      "icon": "dashboard"
+    },
+    {
+      "title": "Alerts",
+      "type": "link",
+      "url": "/d/homelab_alert_history",
+      "icon": "dashboard"
+    },
+    {
+      "title": "Logs",
+      "type": "link",
+      "url": "/d/homelab_logs",
+      "icon": "dashboard"
+    },
+    {
+      "title": "Ingress",
+      "type": "link",
+      "url": "/d/homelab_traefik",
+      "icon": "dashboard"
+    },
+    {
+      "title": "Monitoring",
+      "type": "link",
+      "url": "/d/homelab_monitoring_health",
+      "icon": "dashboard"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Alerts",
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Critical"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Warning"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(ALERTS{alertstate=\"firing\", severity=\"critical\"}) or vector(0)",
+          "legendFormat": "Critical",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "expr": "count(ALERTS{alertstate=\"firing\", severity=\"warning\"}) or vector(0)",
+          "legendFormat": "Warning",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Systems",
+      "description": "Each tile is 1 = OK, 0 = problem. NAS = system, power, fans, disk status and DSM disk health all normal. Secrets = every BitwardenSecret synced within 3h. Flux = every Kustomization/HelmRelease/source Ready. Alert delivery = no failed Discord notifications in the last hour.",
+      "gridPos": {
+        "h": 5,
+        "w": 16,
+        "x": 8,
+        "y": 0
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Mixed --"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "OK",
+                  "color": "green"
+                },
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                }
+              }
+            },
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "no data",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "legendFormat": "K3s",
+          "expr": "min(kube_node_status_condition{condition=\"Ready\", status=\"true\"})"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "legendFormat": "NAS",
+          "expr": "max({__name__=~\"systemStatus|powerStatus|systemFanStatus|cpuFanStatus|diskStatus|diskHealthStatus\", job=\"synology-health\"}) == bool 1"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "legendFormat": "PVE",
+          "expr": "min(up{job=\"pve\"}) * min(pve_up{job=\"pve\", id=~\"node/.+\"})"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "queryType": "instant",
+          "legendFormat": "pfSense",
+          "expr": "(sum(count_over_time({job=\"syslog\", app=\"filterlog\"} [15m])) > bool 0) or vector(0)"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "legendFormat": "Logs",
+          "expr": "(sum(rate(loki_distributor_lines_received_total[10m])) > bool 0) or vector(0)"
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "legendFormat": "Secrets",
+          "expr": "max(time() - bitwarden_secret_last_successful_sync_timestamp_seconds) < bool 10800"
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "legendFormat": "Alert delivery",
+          "expr": "(sum(increase(alertmanager_notifications_failed_total[1h])) == bool 0) or vector(1)"
+        },
+        {
+          "refId": "H",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "legendFormat": "Flux",
+          "expr": "(count(gotk_resource_info{ready!=\"True\"}) or vector(0)) == bool 0"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Firing now",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "Nothing firing"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Since"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 95
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "critical": {
+                        "color": "red"
+                      },
+                      "warning": {
+                        "color": "orange"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Since",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "alertname": true,
+              "severity": true,
+              "where": true,
+              "Value": true
+            },
+            "renameByName": {
+              "alertname": "Alert",
+              "severity": "Severity",
+              "where": "Where",
+              "Value": "Since"
+            },
+            "indexByName": {
+              "alertname": 0,
+              "severity": 1,
+              "where": 2,
+              "Value": 3
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "instant": true,
+          "expr": "label_join(ALERTS_FOR_STATE{alertname!~\"Watchdog|InfoInhibitor\"} and ignoring (alertstate) ALERTS{alertstate=\"firing\"}, \"where\", \" \", \"namespace\", \"pod\", \"persistentvolumeclaim\", \"name\", \"host\", \"diskID\", \"raidName\", \"hrStorageDescr\") * 1000"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "bargauge",
+      "title": "Storage",
+      "description": "NAS volumes (HDD), PVE storages (tank = SSD pool for VMs and Proxmox CSI volumes), and each K3s node's root disk.",
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.8
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "lcd",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "sizing": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "legendFormat": "NAS {{hrStorageDescr}}",
+          "expr": "max by (hrStorageDescr) (hrStorageUsed{job=\"synology-system\", hrStorageDescr=~\"/volume[0-9]+\"} / hrStorageSize{job=\"synology-system\", hrStorageDescr=~\"/volume[0-9]+\"})"
+        },
+        {
+          "refId": "B",
+          "instant": true,
+          "legendFormat": "PVE {{storage}}",
+          "expr": "label_replace(max by (id) (pve_disk_usage_bytes{job=\"pve\", id=~\"storage/.+\", id!~\"storage/[^/]+/synology\"} / (pve_disk_size_bytes{job=\"pve\", id=~\"storage/.+\"} > 0)), \"storage\", \"$1\", \"id\", \"storage/[^/]+/(.+)\")"
+        },
+        {
+          "refId": "C",
+          "instant": true,
+          "legendFormat": "{{nodename}} /",
+          "expr": "max by (nodename) ((1 - node_filesystem_avail_bytes{job=\"node-exporter\", mountpoint=\"/\"} / node_filesystem_size_bytes{job=\"node-exporter\", mountpoint=\"/\"}) * on (instance) group_left (nodename) node_uname_info)"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Disk writes (last 24h)",
+      "description": "Bytes written per layer over the last 24 hours. Details: Disk writes dashboard.",
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "links": [
+        {
+          "title": "Disk writes",
+          "url": "/d/homelab_disk_writes"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "SSD pool (all VMs)",
+          "instant": true,
+          "expr": "sum(increase(pve_disk_written_bytes_total{job=\"pve\", id=~\"(qemu|lxc)/.+\"}[24h]))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "NAS HDDs",
+          "instant": true,
+          "expr": "sum(increase(storageIONWrittenX{job=\"synology-health\", storageIODevice=~\"sata[0-9]+|sd[a-z]+\"}[24h]))"
+        },
+        {
+          "refId": "C",
+          "legendFormat": "Prometheus + Loki",
+          "instant": true,
+          "expr": "sum(max without (service) (increase(container_fs_writes_bytes_total{namespace=\"monitoring\", pod=~\"prometheus-kube-prometheus-stack-prometheus-0|loki-0\", container!=\"\"}[24h])))"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "bargauge",
+      "title": "Node memory",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.8
+              },
+              {
+                "color": "red",
+                "value": 0.92
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "namePlacement": "left",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "legendFormat": "{{nodename}}",
+          "expr": "(1 - node_memory_MemAvailable_bytes{job=\"node-exporter\"} / node_memory_MemTotal_bytes{job=\"node-exporter\"}) * on (instance) group_left (nodename) node_uname_info"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "bargauge",
+      "title": "Node CPU (5m)",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.75
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "namePlacement": "left",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "legendFormat": "{{nodename}}",
+          "expr": "(1 - avg by (instance) (rate(node_cpu_seconds_total{job=\"node-exporter\", mode=\"idle\"}[5m]))) * on (instance) group_left (nodename) node_uname_info"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Firewall: blocked connections",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "links": [
+        {
+          "title": "pfSense",
+          "url": "/d/homelab_pfsense"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            },
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{iface}}",
+          "expr": "sum by (iface) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\"} [$__auto]))"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "NAS network & log ingest",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "showPoints": "never",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Log lines/s"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NAS.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "NAS rx",
+          "expr": "sum(rate(ifHCInOctets{job=\"synology-system\", ifName=~\"eth[0-9]+|bond[0-9]+|ovs_eth[0-9]+\"}[$__rate_interval])) * 8"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "NAS tx",
+          "expr": "sum(rate(ifHCOutOctets{job=\"synology-system\", ifName=~\"eth[0-9]+|bond[0-9]+|ovs_eth[0-9]+\"}[$__rate_interval])) * 8"
+        },
+        {
+          "refId": "C",
+          "legendFormat": "Log lines/s",
+          "expr": "sum(rate(loki_distributor_lines_received_total[$__rate_interval]))"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+# Small, separate Alloy that maps pfSense blocks to countries for the world map
+# (see ./geoip.alloy for why it is separate from alloy-syslog).
+# Needs a free MaxMind GeoLite2 account: Secret maxmind-geoip (BitwardenSecret in
+# bootstrap/bw-secrets/monitoring.yaml) with GEOIPUPDATE_ACCOUNT_ID and
+# GEOIPUPDATE_LICENSE_KEY. Without it the init container fails and only this pod
+# stays down; syslog ingestion is unaffected.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy-geoip
+  namespace: monitoring
+spec:
+  interval: 1h0m0s
+  releaseName: alloy-geoip
+  chart:
+    spec:
+      chart: alloy
+      version: "1.16.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 2h0m0s
+
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+
+  values:
+    # Only overrides are listed; see `helm show values alloy --repo https://grafana.github.io/helm-charts`
+    crds:
+      create: false
+
+    controller:
+      type: deployment
+      replicas: 1
+      # Downloads GeoLite2-Country into the shared emptyDir before Alloy starts.
+      # Re-downloaded on each pod start (~9 MB), so the DB stays current without a
+      # PVC or a cron job
+      initContainers:
+        - name: geoipupdate
+          image: ghcr.io/maxmind/geoipupdate:v8.0.0@sha256:51e70dd6f16cd3e4d845ac02d09940b10772a75b9d741427d235a78570923c1d # renovate: depName=ghcr.io/maxmind/geoipupdate
+          env:
+            - name: GEOIPUPDATE_EDITION_IDS
+              value: GeoLite2-Country
+            - name: GEOIPUPDATE_DB_DIR
+              value: /geoip
+          envFrom:
+            - secretRef:
+                name: maxmind-geoip
+          volumeMounts:
+            - name: geoip
+              mountPath: /geoip
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        extra:
+          - name: geoip
+            emptyDir:
+              sizeLimit: 64Mi
+
+    alloy:
+      enableReporting: false
+      storagePath: /tmp/alloy
+      extraPorts:
+        - name: loki-push
+          port: 3500
+          targetPort: 3500
+          protocol: TCP
+      mounts:
+        extra:
+          - name: geoip
+            mountPath: /geoip
+            readOnly: true
+      resources:
+        requests:
+          cpu: 10m
+          memory: 48Mi
+        limits:
+          memory: 192Mi
+      # config lives in ./geoip.alloy (ConfigMap from kustomization.yaml)
+      configMap:
+        create: false
+        name: alloy-geoip-config
+        key: config.alloy
+
+    # exposes homelab_pfsense_blocked_total
+    serviceMonitor:
+      enabled: true
+      interval: 60s

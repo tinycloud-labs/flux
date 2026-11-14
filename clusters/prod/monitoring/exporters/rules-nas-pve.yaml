@@ -202,3 +202,17 @@ spec:
             severity: warning
           annotations:
             summary: "PVE guest {{ $labels.name }} ({{ $labels.id }}) is not running"
+
+    # -------------------------------------------------------------------------
+    # pfSense (SNMP). Gateway/interface/login alerts are log-based (loki/rules-pfsense.yaml)
+    # -------------------------------------------------------------------------
+    - name: pfsense.snmp
+      rules:
+        - alert: PfSenseSnmpUnreachable
+          expr: up{job="pfsense"} == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "pfSense SNMP is not answering"
+            description: "pfSense down, SNMP service off or not bound to LAN, or the community changed (Bitwarden: pfsense-snmp-community)."
