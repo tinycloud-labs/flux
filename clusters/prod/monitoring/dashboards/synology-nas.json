@@ -1,0 +1,222 @@
+{
+  "uid": "homelab_synology",
+  "title": "Synology / NAS",
+  "tags": ["synology", "nas", "snmp", "homelab"],
+  "timezone": "browser",
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    { "id": 100, "type": "row", "title": "Health", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "panels": [] },
+    {
+      "id": 1, "type": "stat", "title": "System",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "Normal", "color": "green" }, "2": { "text": "FAILED", "color": "red" } } },
+            { "type": "special", "options": { "match": "null", "result": { "text": "No data", "color": "orange" } } }
+          ],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "orange", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name" },
+      "targets": [
+        { "refId": "A", "expr": "max(systemStatus{job=\"synology-health\"})", "legendFormat": "System" },
+        { "refId": "B", "expr": "max(powerStatus{job=\"synology-health\"})", "legendFormat": "Power" },
+        { "refId": "C", "expr": "max(systemFanStatus{job=\"synology-health\"})", "legendFormat": "Fans" }
+      ]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Storage pools",
+      "gridPos": { "h": 4, "w": 5, "x": 4, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": {
+              "1": { "text": "Normal", "color": "green" },
+              "2": { "text": "Repairing", "color": "yellow" },
+              "7": { "text": "Syncing", "color": "yellow" },
+              "8": { "text": "Parity check", "color": "blue" },
+              "11": { "text": "DEGRADED", "color": "red" },
+              "12": { "text": "CRASHED", "color": "dark-red" },
+              "13": { "text": "Scrubbing", "color": "blue" }
+            } }
+          ],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name" },
+      "targets": [{ "refId": "A", "expr": "raidStatus{job=\"synology-health\"}", "legendFormat": "{{raidName}}" }]
+    },
+    {
+      "id": 3, "type": "bargauge", "title": "Volume usage",
+      "gridPos": { "h": 4, "w": 7, "x": 9, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit", "min": 0, "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.85 }, { "color": "red", "value": 0.95 }] }
+        },
+        "overrides": []
+      },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "refId": "A", "expr": "hrStorageUsed{job=\"synology-system\", hrStorageDescr=~\"/volume[0-9]+\"} / hrStorageSize{job=\"synology-system\", hrStorageDescr=~\"/volume[0-9]+\"}", "legendFormat": "{{hrStorageDescr}}" }]
+    },
+    {
+      "id": 4, "type": "stat", "title": "System temp",
+      "gridPos": { "h": 4, "w": 3, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "celsius", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 55 }, { "color": "red", "value": 60 }] } },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "refId": "A", "expr": "temperature{job=\"synology-health\"}" }]
+    },
+    {
+      "id": 5, "type": "stat", "title": "Uptime / DSM update",
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Uptime" }, "properties": [{ "id": "unit", "value": "s" }] },
+          { "matcher": { "id": "byName", "options": "DSM update" }, "properties": [{ "id": "mappings", "value": [{ "type": "value", "options": { "1": { "text": "Available", "color": "blue" }, "2": { "text": "Up to date", "color": "green" } } }] }] }
+        ]
+      },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name" },
+      "targets": [
+        { "refId": "A", "expr": "max(sysUpTime{job=\"synology-system\"}) / 100", "legendFormat": "Uptime" },
+        { "refId": "B", "expr": "max(upgradeAvailable{job=\"synology-health\"})", "legendFormat": "DSM update" }
+      ]
+    },
+
+    { "id": 101, "type": "row", "title": "Disks", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }, "panels": [] },
+    {
+      "id": 6, "type": "stat", "title": "Disk status",
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": {
+            "1": { "text": "Normal", "color": "green" },
+            "2": { "text": "Initialized", "color": "blue" },
+            "3": { "text": "Not initialized", "color": "blue" },
+            "4": { "text": "SYS PARTITION FAILED", "color": "red" },
+            "5": { "text": "CRASHED", "color": "dark-red" }
+          } }],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name" },
+      "targets": [{ "refId": "A", "expr": "diskStatus{job=\"synology-health\"}", "legendFormat": "{{diskID}}" }]
+    },
+    {
+      "id": 7, "type": "stat", "title": "Disk health (DSM assessment)",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": {
+            "1": { "text": "Normal", "color": "green" },
+            "2": { "text": "Warning", "color": "orange" },
+            "3": { "text": "CRITICAL", "color": "red" },
+            "4": { "text": "FAILING", "color": "dark-red" }
+          } }],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name" },
+      "targets": [{ "refId": "A", "expr": "diskHealthStatus{job=\"synology-health\"}", "legendFormat": "{{diskID}}" }]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Disk temperature",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius", "custom": { "showPoints": "never", "lineWidth": 2, "thresholdsStyle": { "mode": "dashed" } },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "transparent", "value": null }, { "color": "red", "value": 50 }] }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"] }, "tooltip": { "mode": "multi" } },
+      "targets": [{ "refId": "A", "expr": "diskTemperature{job=\"synology-health\"}", "legendFormat": "{{diskID}}" }]
+    },
+    {
+      "id": 9, "type": "stat", "title": "Bad sectors / SSD life left",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } },
+        "overrides": [
+          { "matcher": { "id": "byFrameRefID", "options": "B" }, "properties": [
+            { "id": "unit", "value": "percent" },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 20 }, { "color": "green", "value": 50 }] } }
+          ] }
+        ]
+      },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name" },
+      "targets": [
+        { "refId": "A", "expr": "diskBadSector{job=\"synology-health\"}", "legendFormat": "{{diskID}} bad sectors" },
+        { "refId": "B", "expr": "diskRemainLife{job=\"synology-health\"} > 0", "legendFormat": "{{diskID}} life left" }
+      ]
+    },
+
+    { "id": 102, "type": "row", "title": "Throughput", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 }, "panels": [] },
+    {
+      "id": 10, "type": "timeseries", "title": "Disk I/O (per disk)",
+      "description": "Writes shown negative. Constant writes keep HDDs from idling.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "Bps", "custom": { "showPoints": "never", "fillOpacity": 10 } },
+        "overrides": [{ "matcher": { "id": "byRegexp", "options": ".*write.*" }, "properties": [{ "id": "custom.transform", "value": "negative-Y" }] }]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "expr": "rate(storageIONReadX{job=\"synology-health\"}[$__rate_interval])", "legendFormat": "{{storageIODevice}} read" },
+        { "refId": "B", "expr": "rate(storageIONWrittenX{job=\"synology-health\"}[$__rate_interval])", "legendFormat": "{{storageIODevice}} write" }
+      ]
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "Network",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "bps", "custom": { "showPoints": "never", "fillOpacity": 10 } },
+        "overrides": [{ "matcher": { "id": "byRegexp", "options": ".* tx" }, "properties": [{ "id": "custom.transform", "value": "negative-Y" }] }]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "expr": "rate(ifHCInOctets{job=\"synology-system\", ifName=~\"eth[0-9]+|bond[0-9]+|ovs_eth[0-9]+\"}[$__rate_interval]) * 8", "legendFormat": "{{ifName}} rx" },
+        { "refId": "B", "expr": "rate(ifHCOutOctets{job=\"synology-system\", ifName=~\"eth[0-9]+|bond[0-9]+|ovs_eth[0-9]+\"}[$__rate_interval]) * 8", "legendFormat": "{{ifName}} tx" }
+      ]
+    },
+    {
+      "id": 12, "type": "timeseries", "title": "Volume used",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 27 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "showPoints": "never", "fillOpacity": 15 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "expr": "hrStorageUsed{job=\"synology-system\", hrStorageDescr=~\"/volume[0-9]+\"} * on (hrStorageIndex) group_left hrStorageAllocationUnits{job=\"synology-system\"}", "legendFormat": "{{hrStorageDescr}} used" },
+        { "refId": "B", "expr": "hrStorageSize{job=\"synology-system\", hrStorageDescr=~\"/volume[0-9]+\"} * on (hrStorageIndex) group_left hrStorageAllocationUnits{job=\"synology-system\"}", "legendFormat": "{{hrStorageDescr}} size" }
+      ]
+    }
+  ]
+}

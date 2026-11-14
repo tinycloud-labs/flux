@@ -41,3 +41,54 @@ spec:
   authToken:
     secretName: bw-auth-token
     secretKey: token
+---
+# SNMPv3 credentials for the Synology NAS, read by snmp-exporter as env vars
+# (clusters/prod/monitoring/exporters/snmp-synology.yml expands ${SNMP_*}).
+# A BitwardenSecret that never syncs fails the bw-secrets health check, which
+# holds back every Kustomization that depends on bw-secrets
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: snmp-synology
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: snmp-synology
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: snmp-synology
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: 1d94d5f8-31ed-4bb5-9ea0-b502008a1e0a
+      secretKeyName: SNMP_USERNAME
+    - bwSecretId: b1161c60-b4a5-4865-8a35-b502008a3f83
+      secretKeyName: SNMP_AUTH_PASSWORD
+    - bwSecretId: 1652098a-3dc1-4b1a-9283-b502008a6df2
+      secretKeyName: SNMP_PRIV_PASSWORD
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
+# Proxmox VE API token secret for pve-exporter (user monitoring@pve, token
+# "prometheus", role PVEAuditor). The user and token name are plain env in
+# clusters/prod/monitoring/exporters/release-pve.yaml; only the value is secret.
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: pve-exporter
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: pve-exporter
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: pve-exporter
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: c9266ebb-05ff-428b-a6ae-b502008a8ffb
+      secretKeyName: PVE_TOKEN_VALUE
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

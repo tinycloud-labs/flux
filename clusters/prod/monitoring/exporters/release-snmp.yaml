@@ -1,0 +1,91 @@
+# SNMP exporter: polls the Synology NAS over SNMPv3. Nothing is installed on the NAS.
+# Config: the image's built-in snmp.yml (if_mib, hrStorage, system) plus
+# ./snmp-synology.yml (SNMPv3 auth + trimmed synology_health module).
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: snmp-exporter
+  namespace: monitoring
+spec:
+  interval: 1h0m0s
+  releaseName: snmp-exporter
+  chart:
+    spec:
+      chart: prometheus-snmp-exporter
+      version: "9.21.1"
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+      interval: 2h0m0s
+
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+
+  values:
+    # Only overrides are listed; see `helm show values prometheus-snmp-exporter --repo https://prometheus-community.github.io/helm-charts`
+    extraArgs:
+      - --config.file=/etc/snmp_exporter/snmp.yml
+      - --config.file=/etc/snmp-extra/snmp-synology.yml
+      # ${SNMP_*} in snmp-synology.yml come from the snmp-synology Secret
+      - --config.expand-environment-variables
+
+    envFrom:
+      - secretRef:
+          name: snmp-synology
+
+    extraConfigmapMounts:
+      - name: snmp-extra
+        mountPath: /etc/snmp-extra
+        configMap: snmp-exporter-extra
+        readOnly: true
+
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
+
+    serviceMonitor:
+      enabled: true
+      # chart default selector (prometheus: kube-prometheus) is irrelevant: Prometheus
+      # selects every ServiceMonitor (serviceMonitorSelectorNilUsesHelmValues: false)
+      selector: {}
+      auth:
+        - synology_v3
+      scrapeTimeout: 50s
+      params:
+        # Health (system/fans/PSU/disks/RAID/IO). Every 3 minutes, not 60s: lighter on
+        # the NAS and less likely to keep idle HDDs from hibernating. 3m stays under
+        # Prometheus' 5m staleness window, so series never go stale between scrapes
+        - name: synology-health
+          target: synology.shakir.cloud
+          module:
+            - synology_health
+          interval: 3m
+          # Both scrapes hit the same Service; without distinct job labels their
+          # `up` series would be identical and collide
+          relabelings:
+            - targetLabel: job
+              replacement: synology-health
+            - targetLabel: instance
+              replacement: synology.shakir.cloud  # matches the chart's metric relabel
+        # Interfaces, volume/memory usage (filesystem stats, no disk access), uptime
+        - name: synology-system
+          target: synology.shakir.cloud
+          module:
+            - if_mib
+            - hrStorage
+            - system
+          interval: 60s
+          scrapeTimeout: 30s
+          relabelings:
+            - targetLabel: job
+              replacement: synology-system
+            - targetLabel: instance
+              replacement: synology.shakir.cloud  # matches the chart's metric relabel

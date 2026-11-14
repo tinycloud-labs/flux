@@ -35,6 +35,18 @@ configMapGenerator:
     options:
       annotations:
         grafana_folder: Homelab
+  - name: grafana-dashboard-synology-nas
+    files:
+      - synology-nas.json
+    options:
+      annotations:
+        grafana_folder: Homelab
+  - name: grafana-dashboard-proxmox-ve
+    files:
+      - proxmox-ve.json
+    options:
+      annotations:
+        grafana_folder: Homelab
 generatorOptions:
   disableNameSuffixHash: true
   labels:

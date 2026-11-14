@@ -4,7 +4,8 @@
 # Each file below is a child Flux Kustomization; dependsOn orders them:
 #
 #   monitoring-prometheus ─┬─> monitoring-loki ──> monitoring-alloy
-#                          └─> monitoring-dashboards
+#                          ├─> monitoring-dashboards
+#                          └─> monitoring-exporters
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -13,3 +14,4 @@ resources:
   - monitoring-loki.yaml
   - monitoring-alloy.yaml
   - monitoring-dashboards.yaml
+  - monitoring-exporters.yaml

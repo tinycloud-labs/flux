@@ -1,0 +1,24 @@
+# Assembles the exporters for things outside the cluster:
+#   - snmp-exporter: Synology NAS over SNMPv3
+#   - pve-exporter:  Proxmox VE API (read-only token)
+# plus their scrape config and alert rules. Credentials come from the
+# snmp-synology and pve-exporter Secrets (bootstrap/bw-secrets/monitoring.yaml).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+
+resources:
+  - release-snmp.yaml
+  - release-pve.yaml
+  - servicemonitor-pve.yaml
+  - rules-nas-pve.yaml
+
+# snmp_exporter config is a file, not Helm values: it is ~700 lines generated
+# from upstream (see its header), and it is mounted next to the built-in snmp.yml
+configMapGenerator:
+  - name: snmp-exporter-extra
+    files:
+      - snmp-synology.yml
+
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,0 +1,75 @@
+# Proxmox VE exporter: reads the PVE API with a read-only token (PVEAuditor) and
+# exposes node, guest and storage metrics (incl. the `tank` ZFS pool). Nothing is
+# installed on the PVE host. Scraped by ./servicemonitor-pve.yaml.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pve-exporter
+  namespace: monitoring
+spec:
+  interval: 1h0m0s
+  releaseName: pve-exporter
+  chart:
+    spec:
+      chart: unichart
+      version: "1.0.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+
+  values:
+    app:
+      name: pve-exporter
+      replicaCount: 1
+      image:
+        repository: docker.io/prompve/prometheus-pve-exporter
+        tag: "3.11.0@sha256:290756c34fd13e1d9972b8e64344d49a15ab99dd0053b29d9716f1ca4ae4c069" # renovate: depName=prompve/prometheus-pve-exporter
+        pullPolicy: IfNotPresent
+
+      ports:
+        - containerPort: 9221
+      service:
+        ports:
+          - port: 9221
+            targetPort: 9221
+
+      # The exporter reads its credentials from env when PVE_USER is set
+      # (no pve.yml). PVE_TOKEN_VALUE comes from the pve-exporter Secret.
+      env:
+        - name: PVE_USER
+          value: monitoring@pve
+        - name: PVE_TOKEN_NAME
+          value: prometheus
+        # PVE's API uses its self-signed certificate (same as the Terraform
+        # provider's `insecure = true`); traffic stays on the LAN
+        - name: PVE_VERIFY_SSL
+          value: "false"
+      envFromSecrets:
+        enabled: true
+        secretRefNames:
+          - pve-exporter
+
+      volumeMounts: []
+
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          memory: 192Mi
+
+    persistence:
+      app:
+        enabled: false
+
+    ingress:
+      enabled: false
