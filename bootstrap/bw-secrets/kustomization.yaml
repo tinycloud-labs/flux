@@ -8,4 +8,4 @@ resources:
   - ./linkwarden.yaml
   - ./csi-driver-proxmox.yaml
   - ./gaseous.yaml
-  - ./volsync.yaml
+  # - ./volsync.yaml  # VolSync disabled: worker VMs need an x86-64-v2 CPU type

@@ -1,3 +1,3 @@
 resources:
   - release.yaml
-  - backup.yaml
+  # - backup.yaml  # VolSync disabled: worker VMs need an x86-64-v2 CPU type

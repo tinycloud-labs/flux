@@ -20,7 +20,7 @@ resources:
   - ../../../apps/metube
   - ../../../apps/omni-tools
   - ../../../apps/paperless-ngx
-  - ../../../apps/volsync-repo
+  # - ../../../apps/volsync-repo  # VolSync disabled: worker VMs need an x86-64-v2 CPU type
   - ../notifications
 
 patches:
