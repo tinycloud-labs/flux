@@ -23,6 +23,24 @@ spec:
             summary: "{{ $labels.instance }} is writing {{ $value | humanize1024 }}B/day to disk"
             description: "6h average write rate is above 50 GB/day. Check container_fs_writes_bytes_total to find the pod."
 
+    - name: homelab.secrets
+      rules:
+        # sm-operator refreshes every 3600s (bwSecretsManagerRefreshInterval), so
+        # 3h without a success means syncs are failing, not just slow.
+        - alert: BitwardenSecretSyncStale
+          expr: |
+            max by (namespace) (
+              time() - bitwarden_secret_last_successful_sync_timestamp_seconds
+            ) > 3 * 3600
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Bitwarden secrets in {{ $labels.namespace }} have not synced for {{ $value | humanizeDuration }}"
+            description: "Usually an expired/revoked machine-account token (sm-operator logs show invalid_client). Rotate it via the Terragrunt bw-k8s-secret unit for this namespace."
+        # A BitwardenSecret that has never synced has no lastSuccessfulSyncTime at
+        # all; the Flux health check on bw-secrets covers that case
+
     - name: homelab.logs
       rules:
         # Nothing reached Loki for 30 minutes: Alloy, the syslog receiver or Loki itself is broken

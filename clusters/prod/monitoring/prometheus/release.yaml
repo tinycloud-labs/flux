@@ -91,8 +91,10 @@ spec:
 
     kubelet:
       serviceMonitor:
-        # chart default is 10s for cAdvisor; 6x the samples for no homelab benefit
-        cAdvisorInterval: ""
+        # chart default is 10s for cAdvisor; 6x the samples for no homelab benefit.
+        # Must be a real duration: the chart renders this key unconditionally, and ""
+        # becomes `interval: null`, which the ServiceMonitor CRD rejects
+        cAdvisorInterval: 60s
         metricRelabelings:
           # chart default
           - action: drop
@@ -333,3 +335,34 @@ spec:
           memory: 64Mi
         limits:
           memory: 256Mi
+      # Export BitwardenSecret sync freshness, so a dead BW token (invalid_client)
+      # alerts instead of silently freezing every secret. The operator's
+      # conditions are sticky and can't tell "failing now" from "failed once";
+      # status.lastSuccessfulSyncTime is the only reliable signal
+      rbac:
+        extraRules:
+          - apiGroups: ["k8s.bitwarden.com"]
+            resources: ["bitwardensecrets"]
+            verbs: ["list", "watch"]
+      customResourceState:
+        enabled: true
+        config:
+          kind: CustomResourceStateMetrics
+          spec:
+            resources:
+              - groupVersionKind:
+                  group: k8s.bitwarden.com
+                  version: v1
+                  kind: BitwardenSecret
+                metricNamePrefix: bitwarden_secret
+                labelsFromPath:
+                  namespace: [metadata, namespace]
+                  name: [metadata, name]
+                metrics:
+                  # -> bitwarden_secret_last_successful_sync_timestamp_seconds
+                  - name: last_successful_sync_timestamp_seconds
+                    help: Unix time of the BitwardenSecret's last successful sync
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, lastSuccessfulSyncTime]
