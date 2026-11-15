@@ -6,7 +6,8 @@ metadata:
   labels:
     app.kubernetes.io/part-of: monitoring
 spec:
-  # Prometheus, Alertmanager, Grafana, exporters + CRDs (installed/upgraded by the HelmRelease)
+  # Prometheus, Alertmanager, Grafana, exporters + CRDs (installed/upgraded by the HelmRelease).
+  # Only the HelmRelease: objects of its CRD kinds are in monitoring-prometheus-config
   interval: 10m
   retryInterval: 2m
   timeout: 15m

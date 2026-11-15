@@ -1,9 +1,10 @@
-# Assembles kube-prometheus-stack (Prometheus, Alertmanager, Grafana, exporters)
-# and the homelab alert rules.
+# Assembles kube-prometheus-stack (Prometheus, Alertmanager, Grafana, exporters).
+# Objects of the chart's CRD kinds (ServiceMonitor, PrometheusRule...) live in
+# ../prometheus-config: Flux dry-runs a Kustomization's objects together before
+# applying any, so on a fresh cluster they would block the HelmRelease that
+# installs their CRDs.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: monitoring
 resources:
   - release.yaml
-  - rules-homelab.yaml
-  - servicemonitor-sm-operator.yaml
