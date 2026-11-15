@@ -692,17 +692,6 @@
           }
         ]
       },
-      "transformations": [
-        {
-          "id": "reduce",
-          "options": {
-            "reducers": [
-              "lastNotNull"
-            ],
-            "labelsToFields": true
-          }
-        }
-      ],
       "targets": [
         {
           "refId": "A",

@@ -89,6 +89,18 @@ configMapGenerator:
     options:
       annotations:
         grafana_folder: Homelab
+  - name: grafana-dashboard-weather
+    files:
+      - weather.json
+    options:
+      annotations:
+        grafana_folder: Homelab
+  - name: grafana-dashboard-daily
+    files:
+      - daily.json
+    options:
+      annotations:
+        grafana_folder: Homelab
 generatorOptions:
   disableNameSuffixHash: true
   labels:
