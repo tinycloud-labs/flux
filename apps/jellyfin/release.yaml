@@ -134,18 +134,14 @@ spec:
       size: 5Gi
       accessMode: ReadWriteOnce
       storageClassName: proxmox-retain
-      # After the first install, capture the disk and pin it here so a rebuild rebinds it:
-      # existingVolume:
-      #   handle: ""
-      #   fsType: xfs
-      #   volumeAttributes: {}
-#      existingVolume:
-#        handle: "homelab/pve1/tank/vm-9999-pvc-324a7d7b-714f-4d8a-ad74-f96b4a31d055"
-#        fsType: xfs
-#        volumeAttributes:
-#          backup: "0"
-#          discard: "on"
-#          iothread: "1"
-#          replicate: "0"
-#          ssd: "1"
-#          storage: tank
+      # Pinned to the existing disk, so a rebuild rebinds it instead of provisioning a new one
+      existingVolume:
+        handle: "homelab/pve1/tank/vm-9999-pvc-b92bbdd3-cfbc-413b-81fa-7bf2a6472633"
+        fsType: xfs
+        volumeAttributes:
+          backup: "0"
+          discard: "on"
+          iothread: "1"
+          replicate: "0"
+          ssd: "1"
+          storage: "tank"
