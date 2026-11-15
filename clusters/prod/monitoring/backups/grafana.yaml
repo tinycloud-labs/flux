@@ -1,0 +1,43 @@
+# Nightly restic backup of Grafana's database disk (Proxmox CSI) into the Synology repo.
+# Restore steps: apps/volsync-repo/RESTORE.md (same procedure, namespace monitoring,
+# PVC grafana-data-csi, repository volsync-grafana-data, claimName volsync-repo-monitoring)
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: grafana-data
+  namespace: monitoring
+spec:
+  sourcePVC: grafana-data-csi
+  trigger:
+    # 03:15 daily, after Jellyfin. SQLite is copied live, so this relies on
+    # nobody editing Grafana at that moment
+    schedule: "15 3 * * *"
+  restic:
+    repository: volsync-grafana-data
+    # The Proxmox CSI driver has no snapshot support, so the mover reads the PVC directly
+    copyMethod: Direct
+    pruneIntervalDays: 14
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 6
+    moverVolumes:
+      - mountPath: repo   # appears at /mnt/repo
+        volumeSource:
+          persistentVolumeClaim:
+            claimName: volsync-repo-monitoring
+    # The disk is ReadWriteOnce and attached to one worker VM,
+    # so the mover must run on the same node as Grafana
+    moverAffinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: grafana
+            topologyKey: kubernetes.io/hostname
+    # Grafana runs as 472:472 (fsGroup 472). Root writes to the NFS repo like the
+    # Jellyfin mover; group 472 lets it read grafana.db (mode 0640)
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      supplementalGroups: [472]

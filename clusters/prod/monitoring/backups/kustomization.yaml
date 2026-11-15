@@ -1,0 +1,9 @@
+# VolSync backups of the monitoring stack's Proxmox CSI disks. ReplicationSource
+# is a VolSync kind, so this is applied after the volsync Kustomization
+# (../monitoring-backups.yaml).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+resources:
+  - volsync-repo.yaml
+  - grafana.yaml

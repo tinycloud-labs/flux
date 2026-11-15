@@ -6,7 +6,8 @@
 #   monitoring-prometheus ─┬─> monitoring-prometheus-config
 #                          ├─> monitoring-loki ──> monitoring-alloy
 #                          ├─> monitoring-dashboards
-#                          └─> monitoring-exporters
+#                          ├─> monitoring-exporters
+#                          └─> monitoring-backups (also waits for volsync)
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -17,3 +18,4 @@ resources:
   - monitoring-alloy.yaml
   - monitoring-dashboards.yaml
   - monitoring-exporters.yaml
+  - monitoring-backups.yaml
