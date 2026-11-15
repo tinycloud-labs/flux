@@ -72,7 +72,7 @@ spec:
       image:
         repository: postgres
         tag: "16-alpine@sha256:f4610795587492cd4fb887c2dc3de301b813278bb6f616992061141b5f15ac36"
-        
+
       volumeMounts:
         - mountPath: /var/lib/postgresql/data
           subPath: pgdata
@@ -96,13 +96,13 @@ spec:
         size: 512Mi
         accessMode: ReadWriteOnce
         storageClassName: proxmox-retain
-        existingVolume:
-          handle: "homelab/pve1/tank/vm-9999-pvc-c80e4058-3d8b-424a-9699-acb65c18560e"
-          fsType: xfs
-          volumeAttributes:
-            backup: "0"
-            discard: "on"
-            iothread: "1"
-            replicate: "0"
-            ssd: "1"
-            storage: tank
+#        existingVolume:
+#          handle: "homelab/pve1/tank/vm-9999-pvc-c80e4058-3d8b-424a-9699-acb65c18560e"
+#          fsType: xfs
+#          volumeAttributes:
+#            backup: "0"
+#            discard: "on"
+#            iothread: "1"
+#            replicate: "0"
+#            ssd: "1"
+#            storage: tank
