@@ -1,0 +1,64 @@
+# Backup alerts for VolSync (Proxmox CSI volumes -> restic repo on the Synology).
+# Two sources, because neither covers everything on its own:
+#   - kube-state-metrics reads each ReplicationSource's status
+#     (volsync_source_*, prometheus/release.yaml): catches a failed backup within
+#     minutes, and a backup that hasn't completed in time.
+#   - the VolSync controller's own metrics (volsync_*, servicemonitor-volsync.yaml):
+#     catches a PVC that has never been backed up, and the controller being down.
+# Severity critical: a broken backup is silent until the day it's needed.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: volsync
+  namespace: monitoring
+spec:
+  groups:
+    - name: homelab.backups
+      rules:
+        # The mover Job failed every retry (restic error, NFS repo unreachable,
+        # wrong password...). VolSync sets latestMoverStatus.result=Failed and
+        # retries on the next reconcile; resolves on the next successful backup
+        - alert: VolSyncBackupFailed
+          expr: volsync_source_info{result="Failed"} == 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backup of {{ $labels.exported_namespace }}/{{ $labels.name }} failed"
+            description: "The VolSync mover gave up after its retries. Last mover logs: kubectl -n {{ $labels.exported_namespace }} get replicationsource {{ $labels.name }} -o jsonpath='{.status.latestMoverStatus.logs}'"
+
+        # No completed backup for 26h. Backups are daily, so this means at least
+        # one was missed: a mover stuck Pending (affinity, repo PVC missing),
+        # still retrying, or the controller not running
+        - alert: VolSyncBackupStale
+          expr: time() - volsync_source_last_sync_timestamp_seconds > 26 * 3600
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $labels.exported_namespace }}/{{ $labels.name }} has not been backed up for {{ $value | humanizeDuration }}"
+            description: "Check the ReplicationSource status and its mover pod: kubectl -n {{ $labels.exported_namespace }} describe replicationsource {{ $labels.name }}"
+
+        # Covers what VolSyncBackupStale can't see: a ReplicationSource that has
+        # never completed a backup (no lastSyncTime yet). VolSync sets the gauge to
+        # 1 until the first backup completes, and again once a backup is two
+        # schedule periods late. A first backup normally finishes in minutes
+        - alert: VolSyncVolumeOutOfSync
+          expr: max by (obj_namespace, obj_name) (volsync_volume_out_of_sync{role="source"}) == 1
+          for: 2h
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $labels.obj_namespace }}/{{ $labels.obj_name }} is not backed up"
+            description: "VolSync reports the volume out of sync: no backup has completed yet, or the last one is more than two schedule periods old. kubectl -n {{ $labels.obj_namespace }} describe replicationsource {{ $labels.obj_name }}"
+
+        # The controller is down or its metrics can't be scraped. No backups run
+        # while it's down, and the controller-side alert above goes quiet
+        - alert: VolSyncControllerDown
+          expr: absent(up{job="volsync"} == 1)
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: "VolSync controller is down or not scraped"
+            description: "No backups run without it. kubectl -n volsync-system get pods; check the volsync HelmRelease and the volsync ServiceMonitor target in Prometheus."

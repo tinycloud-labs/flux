@@ -1,4 +1,4 @@
-# The homelab alert rules and the sm-operator scrape config. Both are
+# The homelab alert rules and the sm-operator and VolSync scrape configs. All are
 # monitoring.coreos.com kinds whose CRDs come from kube-prometheus-stack, so
 # they are applied after monitoring-prometheus (see ../prometheus).
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -7,3 +7,5 @@ namespace: monitoring
 resources:
   - rules-homelab.yaml
   - servicemonitor-sm-operator.yaml
+  - rules-volsync.yaml
+  - servicemonitor-volsync.yaml

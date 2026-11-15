@@ -1,0 +1,37 @@
+# VolSync controller metrics (HTTPS :8443, needs a bearer token allowed to GET
+# /metrics: Prometheus' own service account token, as for sm-operator).
+# Replaces the chart's ServiceMonitor, which has no token (dropped by a
+# postRenderer in bootstrap/volsync/helmrelease.yaml).
+# Only volsync_* series are kept; they drive rules-volsync.yaml.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: volsync
+  namespace: monitoring
+spec:
+  namespaceSelector:
+    matchNames: [volsync-system]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: volsync
+      control-plane: volsync-controller
+  endpoints:
+    - port: https
+      scheme: https
+      path: /metrics
+      interval: 60s
+      authorization:
+        type: Bearer
+        credentials:
+          name: kube-prometheus-stack-prometheus-token
+          key: token
+      # the controller serves a self-signed certificate
+      tlsConfig:
+        insecureSkipVerify: true
+      relabelings:
+        - targetLabel: job
+          replacement: volsync
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: volsync_.*
+          action: keep
