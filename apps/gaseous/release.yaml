@@ -98,7 +98,10 @@ spec:
         size: 4Gi
         accessMode: ReadWriteOnce
         storageClassName: proxmox-retain
-        # Binds to an existing disk
+        # Empty handle = new disk. unichart reads existingVolume.handle, so the key must stay
+        existingVolume:
+          handle: ""
+        # Previous pinned disk (destroyed cluster):
 #        existingVolume:
 #          handle: "homelab/pve1/tank/vm-9999-pvc-686ff75e-0907-4423-86a8-b8e043bd33c3"
 #          fsType: xfs
