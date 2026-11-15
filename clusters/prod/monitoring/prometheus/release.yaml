@@ -240,8 +240,11 @@ spec:
           news_feed_enabled: false
         dashboards:
           min_refresh_interval: 30s
-          # Homelab landing page (dashboards/homelab-home.json); also the tablet kiosk:
-          # https://grafana.shakir.cloud/d/homelab_home?kiosk
+          # Homelab landing page (dashboards/homelab-home.json).
+          # Tablet kiosk: a Grafana playlist rotating homelab_home, homelab_pve,
+          # homelab_weather and homelab_flux every 1m, opened at
+          # https://grafana.shakir.cloud/playlists/play/<uid>?kiosk. Playlists can't be
+          # provisioned from files; it lives in grafana.db (storage-grafana.yaml, VolSync-backed)
           default_home_dashboard_path: /tmp/dashboards/Homelab/homelab-home.json
 
       sidecar:
@@ -269,6 +272,23 @@ spec:
           url: http://loki.monitoring.svc.cluster.local:3100
           jsonData:
             maxLines: 1000
+        # Calls public JSON APIs from the Grafana server (weather and daily
+        # dashboards; all free, no API keys). Limited to the hosts listed here
+        - name: Infinity
+          uid: infinity
+          type: yesoreyeram-infinity-datasource
+          access: proxy
+          jsonData:
+            allowedHosts:
+              - https://api.open-meteo.com              # forecast, sunrise/sunset
+              - https://air-quality-api.open-meteo.com  # US AQI, PM2.5, ozone
+              - https://date.nager.at                   # US public holidays
+              - https://api.aladhan.com                 # Hijri calendar (Saudi holidays)
+
+      # Installed at startup into the Grafana disk (GF_PLUGINS_PREINSTALL_SYNC, id@version)
+      plugins:
+        - yesoreyeram-infinity-datasource@4.1.6   # Infinity: JSON APIs as a datasource
+        - grafana-clock-panel@3.2.5               # world clocks on the weather dashboard
 
       resources:
         requests:

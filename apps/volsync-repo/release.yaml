@@ -1,5 +1,5 @@
 # Restic repository share on the Synology, mounted into every VolSync mover pod at /mnt/repo.
-# Each backed-up PVC keeps its own restic repository in a subfolder (see bootstrap/bw-secrets/volsync.yaml).
+# Each backed-up PVC keeps its own restic repository in a subfolder (see the volsync-* secrets in bootstrap/bw-secrets/apps.yaml).
 # The folder must exist on the NAS before the first backup.
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease

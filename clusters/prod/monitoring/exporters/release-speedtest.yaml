@@ -1,0 +1,68 @@
+# Internet speed (download, upload, ping, jitter) via the Ookla speedtest CLI.
+# The image runs the CLI with --accept-license --accept-gdpr (Ookla's terms).
+# A test runs on a scrape only when the cached result is older than
+# SPEEDTEST_CACHE_FOR, so Prometheus can scrape every 5m while a real test
+# (hundreds of MB on a fast line) runs only every 4h. Scraped by ./servicemonitor-speedtest.yaml.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: speedtest-exporter
+  namespace: monitoring
+spec:
+  interval: 1h0m0s
+  releaseName: speedtest-exporter
+  chart:
+    spec:
+      chart: unichart
+      version: "1.0.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+
+  values:
+    app:
+      name: speedtest-exporter
+      replicaCount: 1
+      image:
+        repository: ghcr.io/miguelndecarvalho/speedtest-exporter
+        tag: "v3.5.4@sha256:f1064d49124c7fc45faabb87c6c876a2fd04e92b3dc14d4b871301217ba30fed" # renovate: depName=ghcr.io/miguelndecarvalho/speedtest-exporter
+        pullPolicy: IfNotPresent
+
+      ports:
+        - containerPort: 9798
+      service:
+        ports:
+          - port: 9798
+            targetPort: 9798
+
+      env:
+        # seconds between real tests (4h)
+        - name: SPEEDTEST_CACHE_FOR
+          value: "14400"
+        - name: SPEEDTEST_TIMEOUT
+          value: "90"
+
+      volumeMounts: []
+
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+
+    persistence:
+      app:
+        enabled: false
+
+    ingress:
+      enabled: false
