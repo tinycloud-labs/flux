@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/part-of: monitoring
 spec:
-  # Homelab alert rules and the sm-operator ServiceMonitor. Needs the
+  # Homelab alert rules and the sm-operator and VolSync ServiceMonitors. Needs the
   # ServiceMonitor/PrometheusRule CRDs from monitoring-prometheus
   interval: 10m
   retryInterval: 2m

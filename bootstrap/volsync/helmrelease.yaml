@@ -24,3 +24,19 @@ spec:
     crds: CreateReplace
   upgrade:
     crds: CreateReplace
+  # The chart ships a ServiceMonitor without a bearer token (Prometheus gets 401 ->
+  # TargetDown), rendered only if its CRD already exists, so it's missing after a
+  # fresh rebuild. It's dropped here; the scrape lives in
+  # clusters/prod/monitoring/prometheus-config/servicemonitor-volsync.yaml instead.
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: ServiceMonitor
+              name: volsync
+            patch: |
+              $patch: delete
+              apiVersion: monitoring.coreos.com/v1
+              kind: ServiceMonitor
+              metadata:
+                name: volsync

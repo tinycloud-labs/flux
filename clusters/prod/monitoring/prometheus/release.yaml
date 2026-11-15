@@ -355,6 +355,10 @@ spec:
           - apiGroups: ["source.toolkit.fluxcd.io"]
             resources: ["gitrepositories", "helmrepositories", "helmcharts", "ocirepositories"]
             verbs: ["list", "watch"]
+          # VolSync backup status (rules-volsync.yaml)
+          - apiGroups: ["volsync.backube"]
+            resources: ["replicationsources"]
+            verbs: ["list", "watch"]
       customResourceState:
         enabled: true
         config:
@@ -486,3 +490,23 @@ spec:
                       type: Gauge
                       gauge:
                         path: [status, conditions, "[type=Ready]", lastTransitionTime]
+              # VolSync backups -> volsync_source_info{exported_namespace, name, result} = 1
+              # (result = latestMoverStatus.result: Successful / Failed) and
+              # volsync_source_last_sync_timestamp_seconds. One series pair per backed-up PVC
+              - groupVersionKind: {group: volsync.backube, version: v1alpha1, kind: ReplicationSource}
+                metricNamePrefix: volsync_source
+                labelsFromPath: {name: [metadata, name], exported_namespace: [metadata, namespace]}
+                metrics:
+                  - name: info
+                    help: VolSync ReplicationSource state (value is always 1)
+                    each:
+                      type: Info
+                      info:
+                        labelsFromPath:
+                          result: [status, latestMoverStatus, result]
+                  - name: last_sync_timestamp_seconds
+                    help: Unix time of the last completed backup
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, lastSyncTime]
