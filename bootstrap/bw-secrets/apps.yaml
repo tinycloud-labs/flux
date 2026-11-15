@@ -1,3 +1,4 @@
+# Bitwarden secrets for the apps namespace, one BitwardenSecret per consumer.
 apiVersion: k8s.bitwarden.com/v1
 kind: BitwardenSecret
 metadata:
@@ -20,6 +21,126 @@ spec:
       secretKeyName: username
     - bwSecretId: 7f4daff6-c6cd-488f-8b75-b432018282b2
       secretKeyName: password
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: discord-webhook
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: discord-webhook
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: discord-webhook
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: a677efc5-c46b-41bc-a638-b48d00883466
+      secretKeyName: address
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: gaseous
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: gaseous
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: gaseous-server
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: 2ec3f887-8a39-471b-ad3c-b407002bb848
+      secretKeyName: igdbclientsecret
+    - bwSecretId: ffa2815d-e88f-4e4e-8ad4-b4e0004ee6d4
+      secretKeyName: igdbclientid
+    - bwSecretId: 284b8ece-942c-43b0-9033-b4e0004ff6ad
+      secretKeyName: dbuser
+    - bwSecretId: 97203d02-b7b3-4ce2-899d-b4e0004f5d7c
+      secretKeyName: dbpass
+
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: linkwarden
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: linkwarden
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: linkwarden
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: dfa98e9c-9934-45d2-8eee-b4cb011ef406
+      secretKeyName: DATABASE_URL
+    - bwSecretId: d054459b-6e62-4bfd-b5aa-b4d3000a7059
+      secretKeyName: NEXTAUTH_SECRET
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: meilisearch
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: meilisearch
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: meilisearch
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: b8df1e5b-b298-4090-b694-b4cb002d5113
+      secretKeyName: MEILI_MASTER_KEY
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
+# Restic credentials for VolSync, one Secret per backed-up PVC.
+# VolSync reads the restic environment variables from the Secret named in
+# ReplicationSource.spec.restic.repository.
+#   RESTIC_REPOSITORY: local path inside the mover pod, unique per PVC
+#                      (the NAS repo share is mounted at /mnt/repo)
+#   RESTIC_PASSWORD:   encrypts the repository. Shared by all PVCs.
+#                      Losing it makes every backup unreadable.
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: volsync-jellyfin-config
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: volsync-jellyfin-config
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: volsync-jellyfin-config
+  onlyMappedSecrets: true
+  map:
+    # A convenient way to pass the repo path. It's not a real secret, it's just how volsync pass paths to restic via K8s Secrets
+    - bwSecretId: 910ab8d0-4f47-4523-9f86-b502002c04fa
+      secretKeyName: RESTIC_REPOSITORY
+    # value: a long random password, reused for every PVC
+    - bwSecretId: dd4e9a66-a9d3-49fc-84d1-b502002cb6c2
+      secretKeyName: RESTIC_PASSWORD
   authToken:
     secretName: bw-auth-token
     secretKey: token

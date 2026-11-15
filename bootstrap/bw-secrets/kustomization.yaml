@@ -1,11 +1,7 @@
+# One file per namespace, holding every BitwardenSecret for that namespace.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ./monitoring.yaml
   - ./apps.yaml
-  - ./discord-webhook.yaml
-  - ./meilisearch.yaml
-  - ./linkwarden.yaml
-  - ./csi-driver-proxmox.yaml
-  - ./gaseous.yaml
-  - ./volsync.yaml
+  - ./csi-proxmox.yaml
+  - ./monitoring.yaml
