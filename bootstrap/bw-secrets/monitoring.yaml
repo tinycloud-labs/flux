@@ -161,7 +161,7 @@ spec:
     # then this secret never syncs and fails the bw-secrets health check
     - bwSecretId: 00000000-0000-0000-0000-000000000003
       secretKeyName: RESTIC_REPOSITORY
-    # the shared restic password, same entry as volsync-jellyfin-config (bootstrap/bw-secrets/volsync.yaml)
+    # the shared restic password, same entry as volsync-jellyfin-config (apps namespace)
     - bwSecretId: dd4e9a66-a9d3-49fc-84d1-b502002cb6c2
       secretKeyName: RESTIC_PASSWORD
   authToken:
