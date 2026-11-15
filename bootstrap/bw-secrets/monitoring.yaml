@@ -159,7 +159,7 @@ spec:
     # value: /mnt/repo/grafana-data
     # TODO: create this entry in Bitwarden and replace the placeholder ID. Until
     # then this secret never syncs and fails the bw-secrets health check
-    - bwSecretId: 00000000-0000-0000-0000-000000000003
+    - bwSecretId: 255655ec-e9e3-4e75-964d-b503006161eb
       secretKeyName: RESTIC_REPOSITORY
     # the shared restic password, same entry as volsync-jellyfin-config (apps namespace)
     - bwSecretId: dd4e9a66-a9d3-49fc-84d1-b502002cb6c2
