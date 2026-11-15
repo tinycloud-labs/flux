@@ -96,6 +96,9 @@ spec:
         size: 512Mi
         accessMode: ReadWriteOnce
         storageClassName: proxmox-retain
+        # Empty handle = new disk. unichart reads existingVolume.handle, so the key must stay
+        existingVolume:
+          handle: ""
 #        existingVolume:
 #          handle: "homelab/pve1/tank/vm-9999-pvc-c80e4058-3d8b-424a-9699-acb65c18560e"
 #          fsType: xfs
