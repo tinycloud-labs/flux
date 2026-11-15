@@ -55,6 +55,215 @@
   },
   "panels": [
     {
+      "id": 12,
+      "type": "row",
+      "title": "Where blocked traffic comes from (GeoLite2)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "id": 13,
+      "type": "geomap",
+      "title": "Blocked connections by source country",
+      "description": "Counts from alloy-geoip (homelab_pfsense_blocked_total). Private/LAN sources are not counted. IP geolocation by MaxMind GeoLite2.",
+      "gridPos": {
+        "h": 12,
+        "w": 16,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-YlRd"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "view": {
+          "id": "zero",
+          "zoom": 1,
+          "allLayers": true
+        },
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": false,
+          "showAttribution": true
+        },
+        "basemap": {
+          "type": "default",
+          "name": "Basemap"
+        },
+        "tooltip": {
+          "mode": "details"
+        },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Blocked",
+            "tooltip": true,
+            "location": {
+              "mode": "lookup",
+              "lookup": "country_code",
+              "gazetteer": "public/gazetteer/countries.json"
+            },
+            "config": {
+              "showLegend": true,
+              "style": {
+                "size": {
+                  "field": "Value",
+                  "min": 4,
+                  "max": 30,
+                  "fixed": 5
+                },
+                "color": {
+                  "field": "Value"
+                },
+                "opacity": 0.65,
+                "symbol": {
+                  "mode": "fixed",
+                  "fixed": "img/icons/marker/circle.svg"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (country_code, country) (increase(homelab_pfsense_blocked_total[$__range])) > 0",
+          "legendFormat": "{{country_code}}",
+          "instant": true,
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Top countries (range)",
+      "gridPos": {
+        "h": 12,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "No GeoIP data yet"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Blocked"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Code"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Blocked",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "country": true,
+              "country_code": true,
+              "Value": true
+            },
+            "renameByName": {
+              "country": "Country",
+              "country_code": "Code",
+              "Value": "Blocked"
+            },
+            "indexByName": {
+              "country": 0,
+              "country_code": 1,
+              "Value": 2
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(20, sum by (country, country_code) (increase(homelab_pfsense_blocked_total[$__range]))) > 0",
+          "instant": true,
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "row",
+      "title": "Firewall blocks and passes",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      }
+    },
+    {
       "id": 1,
       "type": "timeseries",
       "title": "Blocked connections by interface",
@@ -62,7 +271,7 @@
         "h": 8,
         "w": 16,
         "x": 0,
-        "y": 0
+        "y": 14
       },
       "datasource": {
         "type": "loki",
@@ -107,7 +316,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 0
+        "y": 14
       },
       "datasource": {
         "type": "loki",
@@ -146,7 +355,7 @@
         "h": 9,
         "w": 8,
         "x": 0,
-        "y": 8
+        "y": 22
       },
       "datasource": {
         "type": "loki",
@@ -188,7 +397,7 @@
         "h": 9,
         "w": 8,
         "x": 8,
-        "y": 8
+        "y": 22
       },
       "datasource": {
         "type": "loki",
@@ -222,7 +431,7 @@
         "h": 9,
         "w": 8,
         "x": 16,
-        "y": 8
+        "y": 22
       },
       "datasource": {
         "type": "loki",
@@ -249,62 +458,6 @@
       ]
     },
     {
-      "id": 6,
-      "type": "logs",
-      "title": "Firewall log",
-      "gridPos": {
-        "h": 12,
-        "w": 24,
-        "x": 0,
-        "y": 17
-      },
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "options": {
-        "showTime": true,
-        "wrapLogMessage": false,
-        "sortOrder": "Descending",
-        "enableLogDetails": true,
-        "dedupStrategy": "none"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "{job=\"syslog\", app=\"filterlog\", iface=~\"$iface\"} |= \"$search\""
-        }
-      ]
-    },
-    {
-      "id": 7,
-      "type": "logs",
-      "title": "pfSense system log (everything except filterlog)",
-      "gridPos": {
-        "h": 12,
-        "w": 24,
-        "x": 0,
-        "y": 29
-      },
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "options": {
-        "showTime": true,
-        "wrapLogMessage": true,
-        "sortOrder": "Descending",
-        "enableLogDetails": true,
-        "dedupStrategy": "none"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "{job=\"syslog\", app!=\"filterlog\"} |= \"$search\""
-        }
-      ]
-    },
-    {
       "id": 8,
       "type": "row",
       "title": "pfSense system (SNMP)",
@@ -313,7 +466,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 31
       },
       "panels": []
     },
@@ -325,7 +478,7 @@
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 32
       },
       "datasource": {
         "type": "prometheus",
@@ -499,7 +652,7 @@
         "h": 9,
         "w": 16,
         "x": 0,
-        "y": 46
+        "y": 36
       },
       "datasource": {
         "type": "prometheus",
@@ -566,7 +719,7 @@
         "h": 9,
         "w": 8,
         "x": 16,
-        "y": 46
+        "y": 36
       },
       "datasource": {
         "type": "prometheus",
@@ -606,198 +759,71 @@
       ]
     },
     {
-      "id": 12,
+      "id": 16,
       "type": "row",
-      "title": "Where blocked traffic comes from (GeoLite2)",
+      "title": "Logs",
       "collapsed": false,
+      "panels": [],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 55
-      },
-      "panels": []
+        "y": 45
+      }
     },
     {
-      "id": 13,
-      "type": "geomap",
-      "title": "Blocked connections by source country",
-      "description": "Counts from alloy-geoip (homelab_pfsense_blocked_total). Private/LAN sources are not counted. IP geolocation by MaxMind GeoLite2.",
+      "id": 6,
+      "type": "logs",
+      "title": "Firewall log",
       "gridPos": {
         "h": 12,
-        "w": 16,
+        "w": 24,
         "x": 0,
-        "y": 56
+        "y": 46
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "continuous-YlRd"
-          },
-          "unit": "short"
-        },
-        "overrides": []
+        "type": "loki",
+        "uid": "loki"
       },
       "options": {
-        "view": {
-          "id": "zero",
-          "zoom": 1,
-          "allLayers": true
-        },
-        "controls": {
-          "showZoom": true,
-          "mouseWheelZoom": false,
-          "showAttribution": true
-        },
-        "basemap": {
-          "type": "default",
-          "name": "Basemap"
-        },
-        "tooltip": {
-          "mode": "details"
-        },
-        "layers": [
-          {
-            "type": "markers",
-            "name": "Blocked",
-            "tooltip": true,
-            "location": {
-              "mode": "lookup",
-              "lookup": "country_code",
-              "gazetteer": "public/gazetteer/countries.json"
-            },
-            "config": {
-              "showLegend": true,
-              "style": {
-                "size": {
-                  "field": "Value",
-                  "min": 4,
-                  "max": 30,
-                  "fixed": 5
-                },
-                "color": {
-                  "field": "Value"
-                },
-                "opacity": 0.65,
-                "symbol": {
-                  "mode": "fixed",
-                  "fixed": "img/icons/marker/circle.svg"
-                }
-              }
-            }
-          }
-        ]
+        "showTime": true,
+        "wrapLogMessage": false,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (country_code, country) (increase(homelab_pfsense_blocked_total[$__range])) > 0",
-          "legendFormat": "{{country_code}}",
-          "instant": true,
-          "format": "table"
+          "expr": "{job=\"syslog\", app=\"filterlog\", iface=~\"$iface\"} |= \"$search\""
         }
       ]
     },
     {
-      "id": 14,
-      "type": "table",
-      "title": "Top countries (range)",
+      "id": 7,
+      "type": "logs",
+      "title": "pfSense system log (everything except filterlog)",
       "gridPos": {
         "h": 12,
-        "w": 8,
-        "x": 16,
-        "y": 56
+        "w": 24,
+        "x": 0,
+        "y": 58
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "left",
-            "cellOptions": {
-              "type": "auto"
-            }
-          },
-          "noValue": "No GeoIP data yet"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Blocked"
-            },
-            "properties": [
-              {
-                "id": "decimals",
-                "value": 0
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "gauge",
-                  "mode": "basic"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Code"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 60
-              }
-            ]
-          }
-        ]
+        "type": "loki",
+        "uid": "loki"
       },
       "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "sortBy": [
-          {
-            "displayName": "Blocked",
-            "desc": true
-          }
-        ]
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
       },
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "includeByName": {
-              "country": true,
-              "country_code": true,
-              "Value": true
-            },
-            "renameByName": {
-              "country": "Country",
-              "country_code": "Code",
-              "Value": "Blocked"
-            },
-            "indexByName": {
-              "country": 0,
-              "country_code": 1,
-              "Value": 2
-            }
-          }
-        }
-      ],
       "targets": [
         {
           "refId": "A",
-          "expr": "topk(20, sum by (country, country_code) (increase(homelab_pfsense_blocked_total[$__range]))) > 0",
-          "instant": true,
-          "format": "table"
+          "expr": "{job=\"syslog\", app!=\"filterlog\"} |= \"$search\""
         }
       ]
     }

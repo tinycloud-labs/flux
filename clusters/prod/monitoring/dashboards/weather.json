@@ -487,14 +487,15 @@
       },
       "options": {
         "mode": "time",
-        "clockType": "12 hour",
+        "clockType": "custom",
         "timezone": "America/New_York",
         "refresh": "sec",
         "fontMono": false,
         "bgColor": "",
         "timeSettings": {
           "fontSize": "44px",
-          "fontWeight": "bold"
+          "fontWeight": "bold",
+          "customFormat": "HH:mm"
         },
         "dateSettings": {
           "showDate": true,
@@ -524,14 +525,15 @@
       },
       "options": {
         "mode": "time",
-        "clockType": "12 hour",
+        "clockType": "custom",
         "timezone": "America/Chicago",
         "refresh": "sec",
         "fontMono": false,
         "bgColor": "",
         "timeSettings": {
           "fontSize": "44px",
-          "fontWeight": "bold"
+          "fontWeight": "bold",
+          "customFormat": "HH:mm"
         },
         "dateSettings": {
           "showDate": true,
@@ -833,14 +835,15 @@
       },
       "options": {
         "mode": "time",
-        "clockType": "12 hour",
+        "clockType": "custom",
         "timezone": "Asia/Riyadh",
         "refresh": "sec",
         "fontMono": false,
         "bgColor": "",
         "timeSettings": {
           "fontSize": "44px",
-          "fontWeight": "bold"
+          "fontWeight": "bold",
+          "customFormat": "HH:mm"
         },
         "dateSettings": {
           "showDate": true,
