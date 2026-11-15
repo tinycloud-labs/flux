@@ -1,0 +1,1530 @@
+{
+  "uid": "homelab_weather",
+  "title": "Weather",
+  "tags": [
+    "homelab",
+    "kiosk"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "editable": false,
+  "graphTooltip": 0,
+  "refresh": "10m",
+  "time": {
+    "from": "now",
+    "to": "now+24h"
+  },
+  "timepicker": {
+    "hidden": true
+  },
+  "description": "Current weather and 7-day forecast for Redlands, CA (Open-Meteo, via the Infinity datasource), plus world clocks. Part of the kiosk rotation.",
+  "templating": {
+    "list": [
+      {
+        "type": "constant",
+        "name": "lat",
+        "label": "Latitude",
+        "query": "34.06",
+        "hide": 2
+      },
+      {
+        "type": "constant",
+        "name": "lon",
+        "label": "Longitude",
+        "query": "-117.18",
+        "hide": 2
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Now",
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "infinity"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "infinity"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "jsonata",
+          "format": "table",
+          "url": "https://api.open-meteo.com/v1/forecast",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "latitude",
+                "value": "${lat}"
+              },
+              {
+                "key": "longitude",
+                "value": "${lon}"
+              },
+              {
+                "key": "temperature_unit",
+                "value": "fahrenheit"
+              },
+              {
+                "key": "wind_speed_unit",
+                "value": "mph"
+              },
+              {
+                "key": "precipitation_unit",
+                "value": "inch"
+              },
+              {
+                "key": "timezone",
+                "value": "auto"
+              },
+              {
+                "key": "timeformat",
+                "value": "unixtime"
+              },
+              {
+                "key": "current",
+                "value": "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,is_day"
+              }
+            ]
+          },
+          "root_selector": "[current.{\"time\": time * 1000, \"temp\": temperature_2m, \"feels\": apparent_temperature, \"humidity\": relative_humidity_2m, \"wind\": wind_speed_10m, \"gusts\": wind_gusts_10m, \"condition\": weather_code + ((is_day = 0 and weather_code <= 2) ? 100 : 0)}]",
+          "columns": [
+            {
+              "selector": "time",
+              "text": "Updated",
+              "type": "timestamp_epoch"
+            },
+            {
+              "selector": "condition",
+              "text": "Condition",
+              "type": "number"
+            },
+            {
+              "selector": "temp",
+              "text": "Temperature",
+              "type": "number"
+            },
+            {
+              "selector": "feels",
+              "text": "Feels like",
+              "type": "number"
+            },
+            {
+              "selector": "humidity",
+              "text": "Humidity",
+              "type": "number"
+            },
+            {
+              "selector": "wind",
+              "text": "Wind",
+              "type": "number"
+            },
+            {
+              "selector": "gusts",
+              "text": "Gusts",
+              "type": "number"
+            }
+          ],
+          "filters": []
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Condition$/"
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "☀️ Clear",
+                  "index": 0
+                },
+                "1": {
+                  "text": "🌤️ Mostly clear",
+                  "index": 1
+                },
+                "2": {
+                  "text": "⛅ Partly cloudy",
+                  "index": 2
+                },
+                "3": {
+                  "text": "☁️ Overcast",
+                  "index": 3
+                },
+                "45": {
+                  "text": "🌫️ Fog",
+                  "index": 4
+                },
+                "48": {
+                  "text": "🌫️ Freezing fog",
+                  "index": 5
+                },
+                "51": {
+                  "text": "🌦️ Light drizzle",
+                  "index": 6
+                },
+                "53": {
+                  "text": "🌦️ Drizzle",
+                  "index": 7
+                },
+                "55": {
+                  "text": "🌧️ Heavy drizzle",
+                  "index": 8
+                },
+                "56": {
+                  "text": "🧊 Freezing drizzle",
+                  "index": 9
+                },
+                "57": {
+                  "text": "🧊 Freezing drizzle",
+                  "index": 10
+                },
+                "61": {
+                  "text": "🌦️ Light rain",
+                  "index": 11
+                },
+                "63": {
+                  "text": "🌧️ Rain",
+                  "index": 12
+                },
+                "65": {
+                  "text": "🌧️ Heavy rain",
+                  "index": 13
+                },
+                "66": {
+                  "text": "🧊 Freezing rain",
+                  "index": 14
+                },
+                "67": {
+                  "text": "🧊 Freezing rain",
+                  "index": 15
+                },
+                "71": {
+                  "text": "🌨️ Light snow",
+                  "index": 16
+                },
+                "73": {
+                  "text": "🌨️ Snow",
+                  "index": 17
+                },
+                "75": {
+                  "text": "❄️ Heavy snow",
+                  "index": 18
+                },
+                "77": {
+                  "text": "🌨️ Snow grains",
+                  "index": 19
+                },
+                "80": {
+                  "text": "🌦️ Showers",
+                  "index": 20
+                },
+                "81": {
+                  "text": "🌧️ Showers",
+                  "index": 21
+                },
+                "82": {
+                  "text": "⛈️ Violent showers",
+                  "index": 22
+                },
+                "85": {
+                  "text": "🌨️ Snow showers",
+                  "index": 23
+                },
+                "86": {
+                  "text": "❄️ Heavy snow showers",
+                  "index": 24
+                },
+                "95": {
+                  "text": "⛈️ Thunderstorm",
+                  "index": 25
+                },
+                "96": {
+                  "text": "⛈️ Thunderstorm, hail",
+                  "index": 26
+                },
+                "99": {
+                  "text": "⛈️ Thunderstorm, hail",
+                  "index": 27
+                },
+                "100": {
+                  "text": "🌙 Clear",
+                  "index": 28
+                },
+                "101": {
+                  "text": "🌙 Mostly clear",
+                  "index": 29
+                },
+                "102": {
+                  "text": "☁️ Partly cloudy",
+                  "index": 30
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "transparent": false
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Temperature",
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 6,
+        "y": 0
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "withTransforms": false
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Temperature$/"
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              },
+              {
+                "color": "#73BF69",
+                "value": 50
+              },
+              {
+                "color": "#FADE2A",
+                "value": 75
+              },
+              {
+                "color": "#FF9830",
+                "value": 85
+              },
+              {
+                "color": "#F2495C",
+                "value": 95
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "transparent": false
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Feels like",
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 11,
+        "y": 0
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "withTransforms": false
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Feels like$/"
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              },
+              {
+                "color": "#73BF69",
+                "value": 50
+              },
+              {
+                "color": "#FADE2A",
+                "value": 75
+              },
+              {
+                "color": "#FF9830",
+                "value": 85
+              },
+              {
+                "color": "#F2495C",
+                "value": 95
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "transparent": false
+    },
+    {
+      "id": 11,
+      "type": "grafana-clock-panel",
+      "title": "New York",
+      "gridPos": {
+        "h": 4,
+        "w": 9,
+        "x": 15,
+        "y": 0
+      },
+      "options": {
+        "mode": "time",
+        "clockType": "12 hour",
+        "timezone": "America/New_York",
+        "refresh": "sec",
+        "fontMono": false,
+        "bgColor": "",
+        "timeSettings": {
+          "fontSize": "44px",
+          "fontWeight": "bold"
+        },
+        "dateSettings": {
+          "showDate": true,
+          "dateFormat": "ddd, MMM D",
+          "locale": "",
+          "fontSize": "18px",
+          "fontWeight": "normal"
+        },
+        "timezoneSettings": {
+          "showTimezone": true,
+          "zoneFormat": "abbv",
+          "fontSize": "14px",
+          "fontWeight": "normal"
+        }
+      },
+      "transparent": false
+    },
+    {
+      "id": 12,
+      "type": "grafana-clock-panel",
+      "title": "Chicago",
+      "gridPos": {
+        "h": 4,
+        "w": 9,
+        "x": 15,
+        "y": 4
+      },
+      "options": {
+        "mode": "time",
+        "clockType": "12 hour",
+        "timezone": "America/Chicago",
+        "refresh": "sec",
+        "fontMono": false,
+        "bgColor": "",
+        "timeSettings": {
+          "fontSize": "44px",
+          "fontWeight": "bold"
+        },
+        "dateSettings": {
+          "showDate": true,
+          "dateFormat": "ddd, MMM D",
+          "locale": "",
+          "fontSize": "18px",
+          "fontWeight": "normal"
+        },
+        "timezoneSettings": {
+          "showTimezone": true,
+          "zoneFormat": "abbv",
+          "fontSize": "14px",
+          "fontWeight": "normal"
+        }
+      },
+      "transparent": false
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Humidity",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 7
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "withTransforms": false
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Humidity$/"
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8AB8FF"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "transparent": false
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Wind",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 7
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "withTransforms": false
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Wind$/"
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#B877D9"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#B877D9",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "transparent": false
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Gusts",
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 8,
+        "y": 7
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "withTransforms": false
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Gusts$/"
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#B877D9"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#B877D9",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "transparent": false
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "UV index today",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 11,
+        "y": 7
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 10,
+          "withTransforms": false
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "firstNotNull"
+          ],
+          "fields": "/^UV$/"
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#73BF69",
+                "value": null
+              },
+              {
+                "color": "#FADE2A",
+                "value": 3
+              },
+              {
+                "color": "#FF9830",
+                "value": 6
+              },
+              {
+                "color": "#F2495C",
+                "value": 8
+              },
+              {
+                "color": "#B877D9",
+                "value": 11
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "transparent": false
+    },
+    {
+      "id": 13,
+      "type": "grafana-clock-panel",
+      "title": "Riyadh",
+      "gridPos": {
+        "h": 4,
+        "w": 9,
+        "x": 15,
+        "y": 8
+      },
+      "options": {
+        "mode": "time",
+        "clockType": "12 hour",
+        "timezone": "Asia/Riyadh",
+        "refresh": "sec",
+        "fontMono": false,
+        "bgColor": "",
+        "timeSettings": {
+          "fontSize": "44px",
+          "fontWeight": "bold"
+        },
+        "dateSettings": {
+          "showDate": true,
+          "dateFormat": "ddd, MMM D",
+          "locale": "",
+          "fontSize": "18px",
+          "fontWeight": "normal"
+        },
+        "timezoneSettings": {
+          "showTimezone": true,
+          "zoneFormat": "abbv",
+          "fontSize": "14px",
+          "fontWeight": "normal"
+        }
+      },
+      "transparent": false
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Sunrise · Sunset",
+      "gridPos": {
+        "h": 4,
+        "w": 15,
+        "x": 0,
+        "y": 12
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 10,
+          "withTransforms": false
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "firstNotNull"
+          ],
+          "fields": "/^(Sunrise|Sunset)$/"
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "time:h:mm A",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#FF9830"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF9830",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "transparent": false
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "7-day forecast",
+      "gridPos": {
+        "h": 13,
+        "w": 9,
+        "x": 15,
+        "y": 12
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "infinity"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "infinity"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "jsonata",
+          "format": "table",
+          "url": "https://api.open-meteo.com/v1/forecast",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "latitude",
+                "value": "${lat}"
+              },
+              {
+                "key": "longitude",
+                "value": "${lon}"
+              },
+              {
+                "key": "temperature_unit",
+                "value": "fahrenheit"
+              },
+              {
+                "key": "wind_speed_unit",
+                "value": "mph"
+              },
+              {
+                "key": "precipitation_unit",
+                "value": "inch"
+              },
+              {
+                "key": "timezone",
+                "value": "auto"
+              },
+              {
+                "key": "timeformat",
+                "value": "unixtime"
+              },
+              {
+                "key": "daily",
+                "value": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset"
+              },
+              {
+                "key": "forecast_days",
+                "value": "7"
+              }
+            ]
+          },
+          "root_selector": "daily.time#$i.{\"day\": $ * 1000, \"condition\": $$.daily.weather_code[$i], \"high\": $$.daily.temperature_2m_max[$i], \"low\": $$.daily.temperature_2m_min[$i], \"rain\": $$.daily.precipitation_probability_max[$i], \"uv\": $$.daily.uv_index_max[$i], \"sunrise\": $$.daily.sunrise[$i] * 1000, \"sunset\": $$.daily.sunset[$i] * 1000}",
+          "columns": [
+            {
+              "selector": "day",
+              "text": "Day",
+              "type": "number"
+            },
+            {
+              "selector": "condition",
+              "text": "Forecast",
+              "type": "number"
+            },
+            {
+              "selector": "high",
+              "text": "High",
+              "type": "number"
+            },
+            {
+              "selector": "low",
+              "text": "Low",
+              "type": "number"
+            },
+            {
+              "selector": "rain",
+              "text": "Rain",
+              "type": "number"
+            },
+            {
+              "selector": "uv",
+              "text": "UV",
+              "type": "number"
+            },
+            {
+              "selector": "sunrise",
+              "text": "Sunrise",
+              "type": "number"
+            },
+            {
+              "selector": "sunset",
+              "text": "Sunset",
+              "type": "number"
+            }
+          ],
+          "filters": []
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "md",
+        "footer": {
+          "show": false
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Sunrise": true,
+              "Sunset": true,
+              "UV": true
+            },
+            "indexByName": {
+              "Day": 0,
+              "Forecast": 1,
+              "High": 2,
+              "Low": 3,
+              "Rain": 4
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Day"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "time:ddd D"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Forecast"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "☀️ Clear",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "🌤️ Mostly clear",
+                        "index": 1
+                      },
+                      "2": {
+                        "text": "⛅ Partly cloudy",
+                        "index": 2
+                      },
+                      "3": {
+                        "text": "☁️ Overcast",
+                        "index": 3
+                      },
+                      "45": {
+                        "text": "🌫️ Fog",
+                        "index": 4
+                      },
+                      "48": {
+                        "text": "🌫️ Freezing fog",
+                        "index": 5
+                      },
+                      "51": {
+                        "text": "🌦️ Light drizzle",
+                        "index": 6
+                      },
+                      "53": {
+                        "text": "🌦️ Drizzle",
+                        "index": 7
+                      },
+                      "55": {
+                        "text": "🌧️ Heavy drizzle",
+                        "index": 8
+                      },
+                      "56": {
+                        "text": "🧊 Freezing drizzle",
+                        "index": 9
+                      },
+                      "57": {
+                        "text": "🧊 Freezing drizzle",
+                        "index": 10
+                      },
+                      "61": {
+                        "text": "🌦️ Light rain",
+                        "index": 11
+                      },
+                      "63": {
+                        "text": "🌧️ Rain",
+                        "index": 12
+                      },
+                      "65": {
+                        "text": "🌧️ Heavy rain",
+                        "index": 13
+                      },
+                      "66": {
+                        "text": "🧊 Freezing rain",
+                        "index": 14
+                      },
+                      "67": {
+                        "text": "🧊 Freezing rain",
+                        "index": 15
+                      },
+                      "71": {
+                        "text": "🌨️ Light snow",
+                        "index": 16
+                      },
+                      "73": {
+                        "text": "🌨️ Snow",
+                        "index": 17
+                      },
+                      "75": {
+                        "text": "❄️ Heavy snow",
+                        "index": 18
+                      },
+                      "77": {
+                        "text": "🌨️ Snow grains",
+                        "index": 19
+                      },
+                      "80": {
+                        "text": "🌦️ Showers",
+                        "index": 20
+                      },
+                      "81": {
+                        "text": "🌧️ Showers",
+                        "index": 21
+                      },
+                      "82": {
+                        "text": "⛈️ Violent showers",
+                        "index": 22
+                      },
+                      "85": {
+                        "text": "🌨️ Snow showers",
+                        "index": 23
+                      },
+                      "86": {
+                        "text": "❄️ Heavy snow showers",
+                        "index": 24
+                      },
+                      "95": {
+                        "text": "⛈️ Thunderstorm",
+                        "index": 25
+                      },
+                      "96": {
+                        "text": "⛈️ Thunderstorm, hail",
+                        "index": 26
+                      },
+                      "99": {
+                        "text": "⛈️ Thunderstorm, hail",
+                        "index": 27
+                      },
+                      "100": {
+                        "text": "🌙 Clear",
+                        "index": 28
+                      },
+                      "101": {
+                        "text": "🌙 Mostly clear",
+                        "index": 29
+                      },
+                      "102": {
+                        "text": "☁️ Partly cloudy",
+                        "index": 30
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 190
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "High"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "fahrenheit"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#5794F2",
+                      "value": null
+                    },
+                    {
+                      "color": "#73BF69",
+                      "value": 50
+                    },
+                    {
+                      "color": "#FADE2A",
+                      "value": 75
+                    },
+                    {
+                      "color": "#FF9830",
+                      "value": 85
+                    },
+                    {
+                      "color": "#F2495C",
+                      "value": 95
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Low"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "fahrenheit"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#5794F2",
+                      "value": null
+                    },
+                    {
+                      "color": "#73BF69",
+                      "value": 50
+                    },
+                    {
+                      "color": "#FADE2A",
+                      "value": 75
+                    },
+                    {
+                      "color": "#FF9830",
+                      "value": 85
+                    },
+                    {
+                      "color": "#F2495C",
+                      "value": 95
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rain"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "transparent": false
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Next 24 hours",
+      "gridPos": {
+        "h": 9,
+        "w": 15,
+        "x": 0,
+        "y": 16
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "infinity"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "infinity"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "jsonata",
+          "format": "table",
+          "url": "https://api.open-meteo.com/v1/forecast",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "latitude",
+                "value": "${lat}"
+              },
+              {
+                "key": "longitude",
+                "value": "${lon}"
+              },
+              {
+                "key": "temperature_unit",
+                "value": "fahrenheit"
+              },
+              {
+                "key": "wind_speed_unit",
+                "value": "mph"
+              },
+              {
+                "key": "precipitation_unit",
+                "value": "inch"
+              },
+              {
+                "key": "timezone",
+                "value": "auto"
+              },
+              {
+                "key": "timeformat",
+                "value": "unixtime"
+              },
+              {
+                "key": "hourly",
+                "value": "temperature_2m,precipitation_probability"
+              },
+              {
+                "key": "forecast_hours",
+                "value": "24"
+              }
+            ]
+          },
+          "root_selector": "hourly.time#$i.{\"time\": $ * 1000, \"temp\": $$.hourly.temperature_2m[$i], \"rain\": $$.hourly.precipitation_probability[$i]}",
+          "columns": [
+            {
+              "selector": "time",
+              "text": "Time",
+              "type": "timestamp_epoch"
+            },
+            {
+              "selector": "temp",
+              "text": "Temperature",
+              "type": "number"
+            },
+            {
+              "selector": "rain",
+              "text": "Chance of rain",
+              "type": "number"
+            }
+          ],
+          "filters": []
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 3,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "showPoints": "never",
+            "axisPlacement": "auto"
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#FF9830"
+          },
+          "unit": "fahrenheit",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Chance of rain"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 40
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 0
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "transparent": false
+    }
+  ]
+}
