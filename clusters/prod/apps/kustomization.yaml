@@ -11,7 +11,7 @@ resources:
   - ../../../apps/deemix
   - ../../../apps/excalidraw
   - ../../../apps/forgejo
-  # - ../../../apps/gaseous  # Gaseous disabled: its MariaDB fills the ZFS zvol (no housekeeping)
+  - ../../../apps/gaseous  # must enable vacuuming and house keeping in the UI
   - ../../../apps/headlamp
   - ../../../apps/homepage
   - ../../../apps/jellyfin
@@ -20,7 +20,7 @@ resources:
   - ../../../apps/metube
   - ../../../apps/omni-tools
   - ../../../apps/paperless-ngx
-  # - ../../../apps/volsync-repo  # VolSync disabled: worker VMs need an x86-64-v2 CPU type
+  - ../../../apps/volsync-repo
   - ../notifications
 
 patches:

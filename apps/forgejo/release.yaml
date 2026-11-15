@@ -121,7 +121,7 @@ spec:
         accessMode: ReadWriteOnce
         storageClassName: proxmox-retain
         # Empty handle = new disk. After the first install, capture the disk and pin it here so a rebuild rebinds it
-        existingVolume:
-          handle: ""
-          # fsType: xfs
-          # volumeAttributes: {}
+#        existingVolume:
+#          handle: ""
+#          # fsType: xfs
+#          # volumeAttributes: {}
