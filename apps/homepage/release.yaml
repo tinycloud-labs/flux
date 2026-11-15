@@ -149,11 +149,11 @@ spec:
                   href: https://deemix.shakir.cloud
                   siteMonitor: https://deemix.shakir.cloud
                   description: Deemix Music Manager
-              - Gaseous:
-                  icon: gaseous
-                  href: https://gaseous.shakir.cloud
-                  siteMonitor: https://gaseous.shakir.cloud
-                  description: Gaming Server
+              - RomM:
+                  icon: romm
+                  href: https://romm.shakir.cloud
+                  siteMonitor: https://romm.shakir.cloud
+                  description: Retro Gaming Server
               - Photos:
                   icon: synology-photos
                   href: https://photos.shakir.cloud

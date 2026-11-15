@@ -76,6 +76,32 @@ apiVersion: k8s.bitwarden.com/v1
 kind: BitwardenSecret
 metadata:
   labels:
+    app.kubernetes.io/name: romm
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: romm
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: romm
+  onlyMappedSecrets: true
+  map:
+    # Same IGDB (Twitch) app credentials Gaseous uses
+    - bwSecretId: ffa2815d-e88f-4e4e-8ad4-b4e0004ee6d4
+      secretKeyName: IGDB_CLIENT_ID
+    - bwSecretId: 2ec3f887-8a39-471b-ad3c-b407002bb848
+      secretKeyName: IGDB_CLIENT_SECRET
+    # value generated with `openssl rand -hex 32`
+    - bwSecretId: 6b8229e7-9ce6-4b80-a713-b50300971f21
+      secretKeyName: ROMM_AUTH_SECRET_KEY
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
     app.kubernetes.io/name: linkwarden
     app.kubernetes.io/part-of: sm-operator
     app.kubernetes.io/managed-by: flux

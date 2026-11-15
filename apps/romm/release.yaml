@@ -1,0 +1,147 @@
+# RomM: ROM library manager with in-browser play (EmulatorJS / RuffleRS).
+# Replaces Gaseous. Everything the app writes (library, metadata, saves, Valkey
+# snapshots, temp files) goes to the NFS share, so node disks only see MariaDB.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: romm
+  namespace: apps
+
+spec:
+  interval: 1h0m0s
+  releaseName: romm
+
+  chart:
+    spec:
+      chart: unichart
+      version: "1.0.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    app:
+      name: romm
+      replicaCount: 1
+      image:
+        repository: rommapp/romm
+        tag: "5.4.1@sha256:8677fb7b81b1d3db20b849e989a1dadc2a11159e51eb34a2acdcb01102274edf" # renovate: depName=rommapp/romm
+        pullPolicy: IfNotPresent
+
+      ports:
+        - containerPort: 8080
+      service:
+        ports:
+          - port: 80
+            targetPort: 8080
+
+      # One NFS share, one subPath per RomM folder. Library layout:
+      # https://docs.romm.app/latest/Getting-Started/Folder-Structure/
+      volumeMounts:
+        - mountPath: /romm/library      # ROMs (library/roms/<platform>/...) and BIOS
+          subPath: library
+        - mountPath: /romm/resources    # covers/screenshots fetched from metadata providers
+          subPath: resources
+        - mountPath: /romm/assets       # uploaded saves, states, screenshots
+          subPath: assets
+        - mountPath: /romm/config       # optional config.yml
+          subPath: config
+        - mountPath: /redis-data        # bundled Valkey snapshots (task queue)
+          subPath: redis-data
+        - mountPath: /romm/tmp          # upload staging and download caches, off the node disk
+          subPath: tmp
+
+      # Injects DB_HOST=<headless DB service>
+      dbHostname: DB_HOST
+
+      env:
+        - name: ROMM_BASE_URL
+          value: https://romm.shakir.cloud
+        - name: ROMM_TMP_PATH
+          value: /romm/tmp
+        - name: ROMM_SESSION_SECURE_COOKIE
+          value: "true"
+        - name: TZ
+          value: America/Los_Angeles
+        - name: ROMM_DB_DRIVER
+          value: mariadb
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: romm
+        # unichart's StatefulSet only takes plain env values, so the DB
+        # credentials are inline on both sides (same as Gaseous)
+        - name: DB_USER
+          value: romm
+        - name: DB_PASSWD
+          value: romm
+        # Hash-based ROM matching, no API key needed
+        - name: HASHEOUS_API_ENABLED
+          value: "true"
+
+      # ROMM_AUTH_SECRET_KEY, IGDB_CLIENT_ID, IGDB_CLIENT_SECRET
+      # (BitwardenSecret "romm" in bootstrap/bw-secrets/apps.yaml)
+      envFromSecrets:
+        enabled: true
+        secretRefNames:
+          - romm
+
+    ingress:
+      enabled: true
+      host: romm.shakir.cloud
+      port: 80
+      ingressClassName: traefik
+
+    ## ------------ StatefulSet Specifications ------------ ##
+    database:
+      replicaCount: 1
+      enabled: true
+      host: rommdb
+      port: 3306
+      env:
+        - name: MARIADB_ROOT_PASSWORD
+          value: romm
+        - name: MARIADB_DATABASE
+          value: romm
+        - name: MARIADB_USER
+          value: romm
+        - name: MARIADB_PASSWORD
+          value: romm
+        - name: MARIADB_DISABLE_CHOWN
+          value: "yes"
+        - name: MARIADB_AUTO_UPGRADE
+          value: "1"
+
+      image:
+        repository: mariadb
+        tag: "13.0.2@sha256:f4054da26e3a9dd6c8b5cc97363e544408b15c0fb369d7359c25dc04826eb6e1" # renovate: depName=mariadb
+
+      volumeMounts:
+        - mountPath: /var/lib/mysql
+          subPath: rommdb
+
+    ## ------------ Persistence ------------ ##
+    persistence:
+      # -- App (Deployment): CSI-NFS, static PV/subPath pattern --
+      app:
+        enabled: true
+        size: 200Mi
+        accessMode: ReadWriteMany
+        reclaimPolicy: Retain
+        storageClassName: ""   # empty = static NFS PV, no dynamic provisioner
+        nfs:
+          server: synology.shakir.cloud
+          path: /volume1/k3s-main/romm
+      # -- Database (StatefulSet): Proxmox CSI, one disk per replica via volumeClaimTemplates --
+      database:
+        size: 5Gi
+        accessMode: ReadWriteOnce
+        storageClassName: proxmox-retain
+        # Empty handle = new disk. unichart reads existingVolume.handle, so the key must stay.
+        # After the first install, capture the disk and pin it here so a rebuild rebinds it
+        existingVolume:
+          handle: ""
+          # fsType: xfs
+          # volumeAttributes: {}

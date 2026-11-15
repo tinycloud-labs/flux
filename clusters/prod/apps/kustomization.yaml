@@ -11,7 +11,7 @@ resources:
   - ../../../apps/deemix
   - ../../../apps/excalidraw
   - ../../../apps/forgejo
-  - ../../../apps/gaseous  # must enable vacuuming and house keeping in the UI
+  # - ../../../apps/gaseous  # replaced by RomM: ~78 GiB/day of node disk writes
   - ../../../apps/headlamp
   - ../../../apps/homepage
   - ../../../apps/jellyfin
@@ -20,6 +20,7 @@ resources:
   - ../../../apps/metube
   - ../../../apps/omni-tools
   - ../../../apps/paperless-ngx
+  - ../../../apps/romm
   - ../../../apps/volsync-repo
   - ../notifications
 
