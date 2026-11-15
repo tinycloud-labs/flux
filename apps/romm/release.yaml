@@ -139,9 +139,14 @@ spec:
         size: 5Gi
         accessMode: ReadWriteOnce
         storageClassName: proxmox-retain
-        # Empty handle = new disk. unichart reads existingVolume.handle, so the key must stay.
-        # After the first install, capture the disk and pin it here so a rebuild rebinds it
+        # Pinned to the existing disk, so a rebuild rebinds it instead of provisioning a new one
         existingVolume:
-          handle: ""
-          # fsType: xfs
-          # volumeAttributes: {}
+          handle: "homelab/pve1/tank/vm-9999-pvc-6c830142-d8c1-4534-a208-5817c6215c68"
+          fsType: xfs
+          volumeAttributes:
+            backup: "0"
+            discard: "on"
+            iothread: "1"
+            replicate: "0"
+            ssd: "1"
+            storage: "tank"

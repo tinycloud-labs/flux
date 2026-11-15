@@ -37,9 +37,15 @@ spec:
       size: 1Gi
       accessMode: ReadWriteOnce
       storageClassName: proxmox-retain
-      # Empty handle = new disk. After the first install, capture the disk and pin it here so a rebuild rebinds it:
+      # Pinned to the existing disk, so a rebuild rebinds it instead of provisioning a new one. Handle from:
       #   kubectl get pv $(kubectl -n monitoring get pvc grafana-data-csi -o jsonpath='{.spec.volumeName}') -o jsonpath='{.spec.csi.volumeHandle}'
       existingVolume:
-        handle: ""
-        # fsType: xfs
-        # volumeAttributes: {}
+        handle: "homelab/pve1/tank/vm-9999-pvc-51e003e3-d07b-47a8-b6c1-e8038c5b8c70"
+        fsType: xfs
+        volumeAttributes:
+          backup: "0"
+          discard: "on"
+          iothread: "1"
+          replicate: "0"
+          ssd: "1"
+          storage: "tank"
