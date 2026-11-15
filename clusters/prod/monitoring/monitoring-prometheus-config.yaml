@@ -1,0 +1,21 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: monitoring-prometheus-config
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/part-of: monitoring
+spec:
+  # Homelab alert rules and the sm-operator ServiceMonitor. Needs the
+  # ServiceMonitor/PrometheusRule CRDs from monitoring-prometheus
+  interval: 10m
+  retryInterval: 2m
+  timeout: 5m
+  path: ./clusters/prod/monitoring/prometheus-config
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: monitoring-prometheus
