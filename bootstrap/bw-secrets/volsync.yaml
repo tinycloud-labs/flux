@@ -28,3 +28,29 @@ spec:
   authToken:
     secretName: bw-auth-token
     secretKey: token
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: volsync-grafana-data
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: volsync-grafana-data
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: volsync-grafana-data
+  onlyMappedSecrets: true
+  map:
+    # value: /mnt/repo/grafana-data
+    # TODO: create this entry in Bitwarden and replace the placeholder ID. Until
+    # then this secret never syncs and fails the bw-secrets health check
+    - bwSecretId: 00000000-0000-0000-0000-000000000003
+      secretKeyName: RESTIC_REPOSITORY
+    # the shared password, same entry as volsync-jellyfin-config
+    - bwSecretId: dd4e9a66-a9d3-49fc-84d1-b502002cb6c2
+      secretKeyName: RESTIC_PASSWORD
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

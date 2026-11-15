@@ -1,0 +1,45 @@
+# Grafana's database (grafana.db: playlists, users, preferences, anything made in
+# the UI) on a Proxmox CSI disk. Was an emptyDir, wiped on every pod restart.
+# Backed up nightly by VolSync (../backups/grafana.yaml).
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: grafana-data-csi
+  namespace: monitoring
+spec:
+  interval: 1h0m0s
+  releaseName: grafana-data-csi
+  chart:
+    spec:
+      chart: storage
+      version: "0.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  # The PVC only binds once Grafana's pod uses it (WaitForFirstConsumer).
+  # Waiting here would deadlock with the dependsOn on kube-prometheus-stack.
+  install:
+    disableWait: true
+  upgrade:
+    disableWait: true
+
+  values:
+    labels:
+      app: grafana
+    annotations:
+      volume.kubernetes.io/description: "Grafana database (playlists, users, UI changes)"
+
+    persistence:
+      name: grafana-data-csi
+      size: 1Gi
+      accessMode: ReadWriteOnce
+      storageClassName: proxmox-retain
+      # Empty handle = new disk. After the first install, capture the disk and pin it here so a rebuild rebinds it:
+      #   kubectl get pv $(kubectl -n monitoring get pvc grafana-data-csi -o jsonpath='{.spec.volumeName}') -o jsonpath='{.spec.csi.volumeHandle}'
+      existingVolume:
+        handle: ""
+        # fsType: xfs
+        # volumeAttributes: {}

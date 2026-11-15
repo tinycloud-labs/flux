@@ -8,3 +8,4 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - release.yaml
+  - storage-grafana.yaml
