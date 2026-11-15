@@ -1,0 +1,24 @@
+# Scrapes speedtest-exporter. Most scrapes return the cached result instantly;
+# the one that triggers a new test (every SPEEDTEST_CACHE_FOR) takes up to ~60s,
+# hence the long timeout.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: speedtest-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: speedtest-exporter
+  endpoints:
+    - port: port-9798
+      path: /metrics
+      interval: 5m
+      scrapeTimeout: 2m
+      relabelings:
+        - targetLabel: job
+          replacement: speedtest
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: speedtest_.*
+          action: keep
