@@ -19,4 +19,4 @@ for that component.
 
 ## Dependency order
 
-flux-system -> helm-repos -> bootstrap components (csi-driver-nfs, metallb, metallb-config) -> apps & monitoring
+FluxInstance (Terraform) -> helm-repos -> bootstrap components (csi-driver-nfs, metallb, metallb-config) -> apps & monitoring
