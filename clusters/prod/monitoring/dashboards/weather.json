@@ -64,7 +64,7 @@
           },
           "type": "json",
           "source": "url",
-          "parser": "jsonata",
+          "parser": "backend",
           "format": "table",
           "url": "https://api.open-meteo.com/v1/forecast",
           "url_options": {
@@ -105,7 +105,7 @@
               }
             ]
           },
-          "root_selector": "[current.{\"time\": time * 1000, \"temp\": temperature_2m, \"feels\": apparent_temperature, \"humidity\": relative_humidity_2m, \"wind\": wind_speed_10m, \"gusts\": wind_gusts_10m, \"condition\": weather_code + ((is_day = 0 and weather_code <= 2) ? 100 : 0)}]",
+          "root_selector": "([current.{\"time\": time * 1000, \"temp\": temperature_2m, \"feels\": apparent_temperature, \"humidity\": relative_humidity_2m, \"wind\": wind_speed_10m, \"gusts\": wind_gusts_10m, \"condition\": weather_code + ((is_day = 0 and weather_code <= 2) ? 100 : 0)}])",
           "columns": [
             {
               "selector": "time",
@@ -945,7 +945,7 @@
           },
           "type": "json",
           "source": "url",
-          "parser": "jsonata",
+          "parser": "backend",
           "format": "table",
           "url": "https://api.open-meteo.com/v1/forecast",
           "url_options": {
@@ -990,7 +990,7 @@
               }
             ]
           },
-          "root_selector": "daily.time#$i.{\"day\": $ * 1000, \"condition\": $$.daily.weather_code[$i], \"high\": $$.daily.temperature_2m_max[$i], \"low\": $$.daily.temperature_2m_min[$i], \"rain\": $$.daily.precipitation_probability_max[$i], \"uv\": $$.daily.uv_index_max[$i], \"sunrise\": $$.daily.sunrise[$i] * 1000, \"sunset\": $$.daily.sunset[$i] * 1000}",
+          "root_selector": "($map(daily.time, function($v, $i) {{\"day\": $v * 1000, \"condition\": $$.daily.weather_code[$i], \"high\": $$.daily.temperature_2m_max[$i], \"low\": $$.daily.temperature_2m_min[$i], \"rain\": $$.daily.precipitation_probability_max[$i], \"uv\": $$.daily.uv_index_max[$i], \"sunrise\": $$.daily.sunrise[$i] * 1000, \"sunset\": $$.daily.sunset[$i] * 1000}}))",
           "columns": [
             {
               "selector": "day",
@@ -1383,7 +1383,7 @@
           },
           "type": "json",
           "source": "url",
-          "parser": "jsonata",
+          "parser": "backend",
           "format": "table",
           "url": "https://api.open-meteo.com/v1/forecast",
           "url_options": {
@@ -1428,7 +1428,7 @@
               }
             ]
           },
-          "root_selector": "hourly.time#$i.{\"time\": $ * 1000, \"temp\": $$.hourly.temperature_2m[$i], \"rain\": $$.hourly.precipitation_probability[$i]}",
+          "root_selector": "($map(hourly.time, function($v, $i) {{\"time\": $v * 1000, \"temp\": $$.hourly.temperature_2m[$i], \"rain\": $$.hourly.precipitation_probability[$i]}}))",
           "columns": [
             {
               "selector": "time",

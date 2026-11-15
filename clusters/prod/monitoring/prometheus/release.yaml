@@ -228,7 +228,10 @@ spec:
         auth.anonymous:
           enabled: true
           org_role: Viewer
-          hide_version: true
+          # Must stay false: with the version hidden, anonymous viewers (the kiosk)
+          # get an empty buildInfo.version and grafana-clock-panel fails to load
+          # ("Invalid Version: ")
+          hide_version: false
         users:
           default_theme: dark
           viewers_can_edit: false
