@@ -6,6 +6,10 @@ metadata:
 spec:
   interval: 1h0m0s
   releaseName: kube-prometheus-stack
+  # Grafana's disk must exist before Grafana starts (storage-grafana.yaml)
+  dependsOn:
+    - name: grafana-data-csi
+      namespace: monitoring
   # First install pulls many images; give it room before Flux calls it failed
   timeout: 15m
   chart:
@@ -292,6 +296,16 @@ spec:
           memory: 192Mi
         limits:
           memory: 512Mi
+
+      # grafana.db on a Proxmox CSI disk (storage-grafana.yaml), so playlists and
+      # other UI changes survive restarts and rebuilds
+      persistence:
+        enabled: true
+        type: pvc
+        existingClaim: grafana-data-csi
+      # The disk is ReadWriteOnce, so the old pod must release it before the new one starts
+      deploymentStrategy:
+        type: Recreate
 
     # ---------------------------------------------------------------------------
     # Prometheus

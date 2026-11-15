@@ -1,0 +1,22 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: monitoring-backups
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/part-of: monitoring
+spec:
+  # VolSync backups of Grafana's disk. Needs the VolSync CRDs, and the Grafana PVC
+  # from monitoring-prometheus
+  interval: 10m
+  retryInterval: 2m
+  timeout: 5m
+  path: ./clusters/prod/monitoring/backups
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: monitoring-prometheus
+    - name: volsync
