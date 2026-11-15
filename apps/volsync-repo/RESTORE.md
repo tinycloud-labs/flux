@@ -55,7 +55,7 @@ Nightly backups continue into the same repository; older snapshots are kept per 
 
 ## Adding another PVC
 
-1. Add a `BitwardenSecret` in `bootstrap/bw-secrets/volsync.yaml` with `RESTIC_REPOSITORY=/mnt/repo/<pvc>`
+1. Add a `BitwardenSecret` to the namespace's file in `bootstrap/bw-secrets/` (e.g. `apps.yaml`) with `RESTIC_REPOSITORY=/mnt/repo/<pvc>`
    and the shared `RESTIC_PASSWORD` (note: without this password, backups can't be restored).
 2. Copy `apps/jellyfin/backup.yaml` next to the app, and change `sourcePVC`, `repository` and the
    `moverAffinity` label selector to match the pod that mounts the PVC.
