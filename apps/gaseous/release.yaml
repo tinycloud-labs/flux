@@ -94,7 +94,8 @@ spec:
           path: /volume1/k3s-main/gaseous
       # -- Database (StatefulSet): moves to Proxmox CSI, one disk per replica via volumeClaimTemplates --
       database:
-        size: 2Gi
+        # must enable vacuuming and house keeping in the UI
+        size: 4Gi
         accessMode: ReadWriteOnce
         storageClassName: proxmox-retain
         # Binds to an existing disk

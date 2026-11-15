@@ -11,7 +11,7 @@ resources:
   - ../../../apps/deemix
   - ../../../apps/excalidraw
   - ../../../apps/forgejo
-  - ../../../apps/gaseous
+  - ../../../apps/gaseous  # must enable vacuuming and house keeping in the UI
   - ../../../apps/headlamp
   - ../../../apps/homepage
   - ../../../apps/jellyfin
