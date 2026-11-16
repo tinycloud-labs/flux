@@ -25,7 +25,7 @@ spec:
       image:
         repository: getmeili/meilisearch
         pullPolicy: IfNotPresent
-        tag: v1.37.0@sha256:9cde2774864e6c19cdd09fcd2950bc01ac9a0454b6f343fffafa14faae6eb7ea
+        tag: v1.57.0@sha256:91bf09897482c17205c8faeca8daa8d57999fb9de20d862763cdfa92ba4ec790
 
       ports:
         - containerPort: 7700
