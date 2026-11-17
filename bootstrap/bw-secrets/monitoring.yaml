@@ -42,6 +42,30 @@ spec:
     secretName: bw-auth-token
     secretKey: token
 ---
+# Dead Man's Snitch check-in URL (https://nosnch.in/<token>) for the Watchdog
+# heartbeat; Alertmanager reads it from /etc/alertmanager/secrets/deadmanssnitch/url
+# (clusters/prod/monitoring/prometheus/release.yaml)
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: deadmanssnitch
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: deadmanssnitch
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: deadmanssnitch
+  onlyMappedSecrets: true
+  map:
+    # Bitwarden secret "DEAD_MAN_URL"
+    - bwSecretId: b5d58315-c126-4f43-a86c-b505002fb98e
+      secretKeyName: url
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+---
 # SNMPv3 credentials for the Synology NAS, read by snmp-exporter as env vars
 # (clusters/prod/monitoring/exporters/snmp-synology.yml expands ${SNMP_*}).
 # A BitwardenSecret that never syncs fails the bw-secrets health check, which
