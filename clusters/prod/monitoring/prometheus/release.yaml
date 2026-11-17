@@ -121,9 +121,11 @@ spec:
           - alertmanager.shakir.cloud
 
       alertmanagerSpec:
-        # Mounted at /etc/alertmanager/secrets/discord-webhook/address (BitwardenSecret)
+        # Mounted at /etc/alertmanager/secrets/<name>/<key> (BitwardenSecrets in
+        # bootstrap/bw-secrets/monitoring.yaml). The pod can't start until both exist
         secrets:
-          - discord-webhook
+          - discord-webhook   # .../discord-webhook/address
+          - deadmanssnitch    # .../deadmanssnitch/url
         # The notification log must outlive repeat_interval, otherwise a still-firing
         # alert is re-sent when its log entry expires
         retention: 720h
@@ -156,10 +158,21 @@ spec:
           # effectively "never repeat" (must stay <= alertmanagerSpec.retention)
           repeat_interval: 720h
           routes:
-            # Watchdog goes to a dead man's switch later; info is dashboard-only
+            # Heartbeat: Watchdog always fires, so each send is a check-in at Dead
+            # Man's Snitch, which alerts (outside the homelab) when they stop:
+            # Prometheus, Alertmanager, the cluster or the internet link is down.
+            # Overrides the root's 720h repeat, or there'd be one check-in a month.
+            # repeat_interval is rounded up to a multiple of group_interval: ~5m
+            - receiver: deadmanssnitch
+              matchers:
+                - alertname = "Watchdog"
+              group_wait: 0s
+              group_interval: 1m
+              repeat_interval: 5m
+            # info is dashboard-only
             - receiver: "null"
               matchers:
-                - alertname =~ "Watchdog|InfoInhibitor"
+                - alertname = "InfoInhibitor"
             - receiver: "null"
               matchers:
                 - severity = "info"
@@ -181,6 +194,13 @@ spec:
             target_matchers: ['alertname =~ TargetDown|KubePodNotReady|KubeDeploymentReplicasMismatch|KubeStatefulSetReplicasMismatch|KubeDaemonSetRolloutStuck']
         receivers:
           - name: "null"
+          - name: deadmanssnitch
+            webhook_configs:
+              # the check-in URL (https://nosnch.in/<token>) is the credential
+              - url_file: /etc/alertmanager/secrets/deadmanssnitch/url
+                # A "resolved" POST would count as a check-in at the moment
+                # Prometheus stops, delaying the DMS alarm by a whole interval
+                send_resolved: false
           - name: discord
             discord_configs:
               - webhook_url_file: /etc/alertmanager/secrets/discord-webhook/address
