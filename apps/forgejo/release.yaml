@@ -24,7 +24,7 @@ spec:
       replicaCount: 1
       image:
         repository: codeberg.org/forgejo/forgejo
-        tag: "15.0.11@sha256:5d050e6d623e540923ff54b1c0c7acf41c3f9174a6c7ad515cc0c63d703fcd22" # renovate: depName=codeberg.org/forgejo/forgejo
+        tag: "17.0.2@sha256:879f4f10a98e3e167b32cde5f7ae3af0163d50bfacf567559a27a0e95a95670c" # renovate: depName=codeberg.org/forgejo/forgejo
         pullPolicy: IfNotPresent
 
       ports:
