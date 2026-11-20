@@ -253,7 +253,7 @@
     {
       "id": 15,
       "type": "row",
-      "title": "Firewall blocks and passes",
+      "title": "Firewall blocks",
       "collapsed": false,
       "panels": [],
       "gridPos": {
@@ -309,11 +309,12 @@
       ]
     },
     {
-      "id": 2,
+      "id": 17,
       "type": "stat",
-      "title": "Blocked vs passed (range)",
+      "title": "Blocked (range)",
+      "description": "Blocked connections in the selected range. pfSense logs blocks only: passed traffic is not logged, so there is nothing to compare against.",
       "gridPos": {
-        "h": 8,
+        "h": 4,
         "w": 8,
         "x": 16,
         "y": 14
@@ -322,30 +323,90 @@
         "type": "loki",
         "uid": "loki"
       },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "instant",
+          "expr": "sum(count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} [$__range]))"
+        }
+      ],
       "options": {
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
-          ]
+          ],
+          "fields": ""
         },
-        "colorMode": "background",
+        "textMode": "value",
+        "colorMode": "value",
         "graphMode": "none",
-        "textMode": "value_and_name"
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "Blocked per minute (now)",
+      "description": "Average blocks per minute over the last 5 minutes.",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 18
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
       },
       "targets": [
         {
           "refId": "A",
           "queryType": "instant",
-          "expr": "sum by (action) (count_over_time({job=\"syslog\", app=\"filterlog\", iface=~\"$iface\"} [$__range]))",
-          "legendFormat": "{{action}}"
+          "expr": "sum(count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} [5m])) / 5"
         }
-      ]
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      }
     },
     {
       "id": 3,
@@ -384,10 +445,11 @@
         {
           "refId": "A",
           "queryType": "instant",
-          "expr": "topk(15, sum by (src_ip) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} [$__range])))",
+          "expr": "approx_topk(15, sum by (src_ip) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} [$__range])))",
           "legendFormat": "{{src_ip}}"
         }
-      ]
+      ],
+      "description": "Addresses that were blocked most often in the selected range (approx_topk: exact for the leaders, approximate further down)."
     },
     {
       "id": 4,
@@ -418,15 +480,16 @@
         {
           "refId": "A",
           "queryType": "instant",
-          "expr": "topk(15, sum by (dst_port, proto) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} | dst_port != \"\" [$__range])))",
+          "expr": "approx_topk(15, sum by (dst_port, proto) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} | dst_port != \"\" [$__range])))",
           "legendFormat": "{{proto}}/{{dst_port}}"
         }
-      ]
+      ],
+      "description": "Destination ports blocked most often in the selected range (approx_topk)."
     },
     {
       "id": 5,
       "type": "table",
-      "title": "Top passed destinations",
+      "title": "Top blocked destinations",
       "gridPos": {
         "h": 9,
         "w": 8,
@@ -452,10 +515,11 @@
         {
           "refId": "A",
           "queryType": "instant",
-          "expr": "topk(15, sum by (dst_ip) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"pass\", iface=~\"$iface\"} [$__range])))",
+          "expr": "approx_topk(15, sum by (dst_ip) (count_over_time({job=\"syslog\", app=\"filterlog\", action=\"block\", iface=~\"$iface\"} [$__range])))",
           "legendFormat": "{{dst_ip}}"
         }
-      ]
+      ],
+      "description": "Addresses that blocked traffic was aimed at most often (approx_topk). Replaces 'Top passed destinations': pfSense does not log passed traffic."
     },
     {
       "id": 8,
@@ -473,10 +537,11 @@
     {
       "id": 9,
       "type": "stat",
-      "title": "pfSense",
+      "title": "SNMP",
+      "description": "Whether Prometheus can reach pfSense over SNMP.",
       "gridPos": {
         "h": 4,
-        "w": 24,
+        "w": 3,
         "x": 0,
         "y": 32
       },
@@ -484,9 +549,30 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(up{job=\"pfsense\"})",
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
           "color": {
             "mode": "thresholds"
           },
@@ -494,155 +580,431 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
+                "color": "orange",
                 "value": null
               }
             ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "SNMP"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "1": {
-                        "text": "OK",
-                        "color": "green"
-                      },
-                      "0": {
-                        "text": "DOWN",
-                        "color": "red"
-                      }
-                    }
-                  },
-                  {
-                    "type": "special",
-                    "options": {
-                      "match": "null",
-                      "result": {
-                        "text": "no data",
-                        "color": "orange"
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "orange",
-                      "value": null
-                    }
-                  ]
-                }
-              }
-            ]
           },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Uptime"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "s"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "CPU|Memory"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percentunit"
-              },
-              {
-                "id": "decimals",
-                "value": 0
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "orange",
-                      "value": 0.75
-                    },
-                    {
-                      "color": "red",
-                      "value": 0.9
-                    }
-                  ]
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "OK",
+                  "color": "green"
+                },
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
                 }
               }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "textMode": "value_and_name",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+            },
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "no data",
+                  "color": "orange"
+                }
+              }
+            }
           ]
-        }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 19,
+      "type": "stat",
+      "title": "Version",
+      "description": "pfSense edition and release, from the SNMP system description.",
+      "gridPos": {
+        "h": 4,
+        "w": 7,
+        "x": 3,
+        "y": 32
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "max(up{job=\"pfsense\"})",
-          "legendFormat": "SNMP",
-          "instant": true
+          "instant": true,
+          "legendFormat": "{{version}}",
+          "expr": "max by (version) (label_replace(sysDescr{job=\"pfsense\"}, \"version\", \"$1 $2\", \"sysDescr\", \"Netgate (.+?) \\\\S+ (\\\\S+) FreeBSD.*\"))"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
         },
+        "textMode": "name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Uptime",
+      "description": "Time since pfSense's SNMP agent started, normally since boot.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 10,
+        "y": 32
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
         {
-          "refId": "B",
+          "refId": "A",
           "expr": "max(sysUpTime{job=\"pfsense\"}) / 100",
-          "legendFormat": "Uptime",
-          "instant": true
-        },
-        {
-          "refId": "C",
-          "expr": "avg(hrProcessorLoad{job=\"pfsense\"}) / 100",
-          "legendFormat": "CPU",
-          "instant": true
-        },
-        {
-          "refId": "D",
-          "expr": "max(hrStorageUsed{job=\"pfsense\", hrStorageDescr=~\"Real Memory|Physical memory\"} / hrStorageSize{job=\"pfsense\", hrStorageDescr=~\"Real Memory|Physical memory\"})",
-          "legendFormat": "Memory",
           "instant": true
         }
       ],
-      "description": "From pfSense's SNMP daemon (Services > SNMP), polled by snmp-exporter every 60s."
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "CPU",
+      "description": "Average load across all CPU cores.",
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 14,
+        "y": 32
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg(hrProcessorLoad{job=\"pfsense\"})"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "min": 0,
+          "max": 100,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "Memory",
+      "description": "Memory used by processes, as a share of installed RAM. Excludes kernel and ZFS cache, so it reads lower than pfSense's own dashboard.",
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 19,
+        "y": 32
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(hrStorageSize{job=\"pfsense\", hrStorageDescr=\"Real Memory Metrics\"} * hrStorageAllocationUnits{job=\"pfsense\", hrStorageDescr=\"Real Memory Metrics\"}) / max(hrMemorySize{job=\"pfsense\"} * 1024) * 100"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "min": 0,
+          "max": 100,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 23,
+      "type": "row",
+      "title": "Resources",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "panels": []
+    },
+    {
+      "id": 24,
+      "type": "timeseries",
+      "title": "CPU",
+      "description": "CPU load, average and per core (HOST-RESOURCES-MIB). Dashed line: 90%, the alert threshold.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 37
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg(hrProcessorLoad{job=\"pfsense\"})",
+          "legendFormat": "average"
+        },
+        {
+          "refId": "B",
+          "expr": "hrProcessorLoad{job=\"pfsense\"}",
+          "legendFormat": "{{hrDeviceDescr}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "Memory",
+      "description": "Memory used by processes as a share of installed RAM (excludes kernel and ZFS cache). Dashed line: 90%, the alert threshold.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 37
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(hrStorageSize{job=\"pfsense\", hrStorageDescr=\"Real Memory Metrics\"} * hrStorageAllocationUnits{job=\"pfsense\", hrStorageDescr=\"Real Memory Metrics\"}) / max(hrMemorySize{job=\"pfsense\"} * 1024) * 100",
+          "legendFormat": "process memory"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "type": "row",
+      "title": "Interfaces",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 45
+      },
+      "panels": []
     },
     {
       "id": 10,
@@ -652,7 +1014,7 @@
         "h": 9,
         "w": 16,
         "x": 0,
-        "y": 36
+        "y": 46
       },
       "datasource": {
         "type": "prometheus",
@@ -713,13 +1075,13 @@
     },
     {
       "id": 11,
-      "type": "timeseries",
-      "title": "Interface errors / discards",
+      "type": "bargauge",
+      "title": "Interface errors + discards (range)",
       "gridPos": {
         "h": 9,
         "w": 8,
         "x": 16,
-        "y": 36
+        "y": 46
       },
       "datasource": {
         "type": "prometheus",
@@ -727,36 +1089,53 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "pps",
-          "custom": {
-            "showPoints": "never",
-            "fillOpacity": 10
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
           }
         },
         "overrides": []
       },
       "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
+        "minVizHeight": 10,
+        "maxVizHeight": 24
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(ifInErrors{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) + rate(ifOutErrors{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) > 0",
-          "legendFormat": "{{ifName}} errors"
-        },
-        {
-          "refId": "B",
-          "expr": "rate(ifInDiscards{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) + rate(ifOutDiscards{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__rate_interval]) > 0",
-          "legendFormat": "{{ifName}} discards"
+          "instant": true,
+          "legendFormat": "{{ifName}}",
+          "expr": "sum by (ifName) (increase(ifInErrors{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__range]) + increase(ifOutErrors{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__range]) + increase(ifInDiscards{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__range]) + increase(ifOutDiscards{job=\"pfsense\", ifName!~\"lo[0-9]*|enc[0-9]*|pflog[0-9]*|pfsync[0-9]*|ovpn.*|gif[0-9]*|gre[0-9]*\"}[$__range])) and on (ifName) (ifOperStatus{job=\"pfsense\"} == 1)"
         }
-      ]
+      ],
+      "description": "In and out errors plus discards per interface that is up, over the selected range. 0 everywhere is the normal state."
     },
     {
       "id": 16,
@@ -768,7 +1147,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 55
       }
     },
     {
@@ -779,7 +1158,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 56
       },
       "datasource": {
         "type": "loki",
@@ -807,7 +1186,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 58
+        "y": 68
       },
       "datasource": {
         "type": "loki",
