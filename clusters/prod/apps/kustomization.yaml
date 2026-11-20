@@ -17,6 +17,7 @@ resources:
   - ../../../apps/linkwarden
   - ../../../apps/meilisearch
   - ../../../apps/metube
+  - ../../../apps/netalertx
   - ../../../apps/omni-tools
   - ../../../apps/paperless-ngx
   - ../../../apps/plex

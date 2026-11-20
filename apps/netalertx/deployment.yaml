@@ -1,0 +1,102 @@
+# NetAlertX: scans the LAN (arp-scan and friends) for devices, keeps their
+# history and flags new or missing ones. Upstream ships no Helm chart, and it
+# needs host networking, so these are plain manifests.
+#
+# Host network: arp-scan has to sit on the LAN itself (10.10.50.0/24 via the
+# node's eth0), not on the pod network. It runs on whichever node holds its
+# disk; every K3s node is on the same LAN, so any node sees the same devices.
+# Upstream also sets net.ipv4.conf.all.arp_ignore/arp_announce, but on a host
+# network pod those would change the node's own ARP behaviour, and they only
+# matter for hosts with several NICs on one subnet. Left out on purpose.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netalertx
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: netalertx
+spec:
+  replicas: 1
+  # The data disk is ReadWriteOnce, and two scanners on one LAN would fight
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: netalertx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: netalertx
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: netalertx
+          image: ghcr.io/netalertx/netalertx:26.10.28@sha256:ebce55cdbccc0f71544e6997541fe81db803b8c8bec3079435b8cd0a40d49b7e # renovate: depName=ghcr.io/netalertx/netalertx
+          env:
+            # Web UI. With host networking it also answers on <node IP>:20211
+            - name: PORT
+              value: "20211"
+            - name: LISTEN_ADDR
+              value: "0.0.0.0"
+            # Bearer token for the API and /metrics, shared with the ServiceMonitor
+            - name: NETALERTX_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: netalertx-api-token
+                  key: token
+            # Applied over app.conf on every start, so git wins over UI edits of these:
+            # - SCAN_SUBNETS: the LAN, scanned from the node's NIC
+            # - BACKEND_API_URL: the UI reaches its API through its own /server proxy,
+            #   so only the UI port needs the ingress
+            - name: APP_CONF_OVERRIDE
+              value: >-
+                {"SCAN_SUBNETS": "['10.10.50.0/24 --interface=eth0']",
+                "BACKEND_API_URL": "/server",
+                "TIMEZONE": "America/Los_Angeles",
+                "API_TOKEN": "$(NETALERTX_API_TOKEN)"}
+          ports:
+            - name: ui
+              containerPort: 20211
+            - name: api
+              containerPort: 20212
+          securityContext:
+            readOnlyRootFilesystem: true
+            # The entrypoint starts as root to set ownership, then drops to uid 20211.
+            # arp-scan/nmap need raw sockets; nothing else is granted.
+            # allowPrivilegeEscalation stays default: with it off, the scanners'
+            # file capabilities are ignored and scans find almost nothing
+            capabilities:
+              drop: ["ALL"]
+              add: ["NET_ADMIN", "NET_RAW", "NET_BIND_SERVICE", "CHOWN", "SETUID", "SETGID"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          startupProbe:
+            tcpSocket:
+              port: ui
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket:
+              port: ui
+            periodSeconds: 60
+            failureThreshold: 3
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: netalertx-data-csi
+        # Logs, API JSON and nginx/php scratch: in memory, never on a disk.
+        # Lost on restart by design (the database on /data is what persists)
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi

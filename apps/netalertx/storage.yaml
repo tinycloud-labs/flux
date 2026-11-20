@@ -1,0 +1,46 @@
+# NetAlertX config (app.conf) and SQLite database, on a Proxmox CSI disk.
+# Not NFS: SQLite relies on file locking that NFS doesn't provide reliably
+# (corruption risk), and it would put steady small writes on the NAS HDDs.
+#
+# proxmox-delete, not pinned: the disk goes away with the PVC, so a cluster
+# rebuild starts NetAlertX fresh. It rediscovers the LAN within one scan; only
+# device names/notes set in the UI and the history are lost.
+#
+# Writes are small: a few database updates per scan cycle (every 5 minutes).
+# Logs, API JSON and scratch files stay in memory (the /tmp emptyDir in
+# deployment.yaml), so they never reach this disk
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: netalertx-data-csi
+  namespace: apps
+spec:
+  interval: 1h0m0s
+  releaseName: netalertx-data-csi
+  chart:
+    spec:
+      chart: storage
+      version: "0.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  # The PVC only binds once NetAlertX's pod uses it (WaitForFirstConsumer)
+  install:
+    disableWait: true
+  upgrade:
+    disableWait: true
+
+  values:
+    labels:
+      app: netalertx
+    annotations:
+      volume.kubernetes.io/description: "NetAlertX config and SQLite database"
+
+    persistence:
+      name: netalertx-data-csi
+      size: 2Gi
+      accessMode: ReadWriteOnce
+      storageClassName: proxmox-delete

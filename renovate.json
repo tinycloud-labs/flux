@@ -9,6 +9,12 @@
       "/^(apps|bootstrap|clusters)/.+\\.ya?ml$/"
     ]
   },
+  "kubernetes": {
+    "description": "Images in plain Kubernetes manifests, for apps without a Helm chart (NetAlertX)",
+    "managerFilePatterns": [
+      "/^apps/netalertx/.+\\.ya?ml$/"
+    ]
+  },
   "packageRules": [
     {
       "matchPackageNames": ["*"],

@@ -66,3 +66,29 @@ data:
             annotations:
               summary: "No pfSense firewall logs for 45 minutes"
               description: "pfSense is not shipping syslog to logs.shakir.cloud udp/514, or the syslog receiver is down."
+
+      # LAN devices, from pfSense's arpwatch (one line per ARP event, a few a day;
+      # its frequent "bogon 0.0.0.0" lines are DHCP probes and are ignored here)
+      - name: lan-devices
+        interval: 1m
+        rules:
+          # A MAC address arpwatch has never seen before: a new or unknown device
+          - alert: LanNewDevice
+            expr: |
+              sum by (ip, mac) (count_over_time({job="syslog", app="arpwatch"} |= "new station" | regexp `new station (?P<ip>\S+) (?P<mac>\S+)` [10m])) > 0
+            labels:
+              severity: warning
+            annotations:
+              summary: "New device on the LAN: {{ $labels.ip }} ({{ $labels.mac }})"
+              description: "arpwatch saw this MAC address for the first time. If you don't recognise it, look it up in pfSense (Status > DHCP Leases) or NetAlertX."
+
+          # The same IP keeps switching between two MAC addresses: two devices
+          # fighting over one address, or ARP spoofing
+          - alert: LanArpFlipFlop
+            expr: |
+              sum by (ip, mac) (count_over_time({job="syslog", app="arpwatch"} |= "flip flop" | regexp `flip flop (?P<ip>\S+) (?P<mac>\S+)` [30m])) > 2
+            labels:
+              severity: warning
+            annotations:
+              summary: "IP {{ $labels.ip }} is flipping between MAC addresses"
+              description: "arpwatch saw {{ $labels.ip }} switch MAC address more than twice in 30 minutes (latest {{ $labels.mac }}). Two devices may share the address, or something is spoofing ARP."

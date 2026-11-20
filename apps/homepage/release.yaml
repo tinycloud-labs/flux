@@ -74,6 +74,23 @@ spec:
                   icon: sh-pfsense
                   href: https://pfsense.shakir.cloud:10443
                   description: Pfsense Firewall
+              - NetAlertX:
+                  icon: sh-netalertx
+                  href: https://netalertx.shakir.cloud
+                  siteMonitor: https://netalertx.shakir.cloud
+                  description: LAN device scanner
+                  # Read from Prometheus (NetAlertX /metrics), like Headlamp: no API token here
+                  widget:
+                    type: prometheusmetric
+                    url: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
+                    refreshInterval: 60000
+                    metrics:
+                      - label: Online
+                        query: max(netalertx_connected_devices)
+                      - label: Offline
+                        query: max(netalertx_offline_devices)
+                      - label: New
+                        query: max(netalertx_new_devices)
               - Headlamp:
                   icon: headlamp
                   href: https://headlamp.shakir.cloud
@@ -245,7 +262,8 @@ spec:
           Infrastructure:
             icon: mdi-server-network
             style: row
-            columns: 4
+            # one full row: Proxmox, pfSense, NetAlertX, Headlamp, DSM
+            columns: 5
           Monitoring:
             icon: mdi-chart-line
             style: row
