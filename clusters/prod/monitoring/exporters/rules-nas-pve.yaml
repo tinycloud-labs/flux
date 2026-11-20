@@ -216,3 +216,29 @@ spec:
           annotations:
             summary: "pfSense SNMP is not answering"
             description: "pfSense down, SNMP service off or not bound to LAN, or the community changed (Bitwarden: pfsense-snmp-community)."
+
+        # Same expressions and 90% lines as the pfSense dashboard's Resources row.
+        # No temperature alert: pfSense's SNMP agent (bsnmpd) does not export
+        # CPU temperatures, so there is no metric to alert on
+        - alert: PfSenseCpuHigh
+          expr: avg(hrProcessorLoad{job="pfsense"}) > 90
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "pfSense CPU at {{ $value | printf \"%.0f\" }}% for 15 minutes"
+            description: "Average load across all cores. Check Diagnostics > System Activity on pfSense; common causes are pfBlockerNG list updates, a traffic spike or a runaway package."
+
+        # Memory used by processes (FreeBSD "Real Memory Metrics") as a share of
+        # installed RAM. Leaves out kernel and ZFS cache, which FreeBSD frees under
+        # pressure, so 90% here means processes themselves are short of memory
+        - alert: PfSenseMemoryHigh
+          expr: |
+            max(hrStorageSize{job="pfsense", hrStorageDescr="Real Memory Metrics"} * hrStorageAllocationUnits{job="pfsense", hrStorageDescr="Real Memory Metrics"})
+              / max(hrMemorySize{job="pfsense"} * 1024) * 100 > 90
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "pfSense process memory at {{ $value | printf \"%.0f\" }}% of RAM for 15 minutes"
+            description: "Processes are using most of pfSense's RAM; it may start swapping or killing processes. Check Diagnostics > System Activity (sort by RES); pfBlockerNG DNSBL and Suricata/Snort are the usual heavy users."

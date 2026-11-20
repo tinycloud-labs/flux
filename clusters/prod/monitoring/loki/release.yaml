@@ -80,6 +80,12 @@ spec:
         max_query_lookback: 168h
         allow_structured_metadata: true
         volume_enabled: true
+        # Lets the pfSense dashboard's "Top blocked ..." tables use approx_topk.
+        # A plain topk over src_ip/dst_port first builds one series per address or
+        # port (480+ sources an hour) and hits max_query_series (500); approx_topk
+        # keeps a fixed-size sketch instead. A list here (a plain string fails to parse)
+        shard_aggregations:
+          - approx_topk
 
       compactor:
         retention_enabled: true

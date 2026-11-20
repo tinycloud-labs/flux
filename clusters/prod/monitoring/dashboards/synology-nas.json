@@ -712,6 +712,161 @@
       ]
     },
     {
+      "id": 103,
+      "type": "row",
+      "title": "Resources",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "panels": []
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "CPU",
+      "description": "CPU utilisation reported by DSM (SYNOLOGY-SYSTEM-MIB). Dashed line: 90%.",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#5794F2"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(cpuUtilization{job=\"synology-health\"})",
+          "legendFormat": "CPU"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Memory",
+      "description": "Memory utilisation reported by DSM, excluding cache. Dashed line: 90%.",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#5794F2"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(memUtilization{job=\"synology-health\"})",
+          "legendFormat": "Memory"
+        }
+      ]
+    },
+    {
       "id": 102,
       "type": "row",
       "title": "Throughput",
@@ -720,7 +875,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 26
       },
       "panels": []
     },
@@ -733,7 +888,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 19
+        "y": 27
       },
       "datasource": {
         "type": "prometheus",
@@ -792,7 +947,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 27
       },
       "datasource": {
         "type": "prometheus",
@@ -851,7 +1006,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 35
       },
       "datasource": {
         "type": "prometheus",
@@ -891,6 +1046,167 @@
           "legendFormat": "{{hrStorageDescr}} size"
         }
       ]
+    },
+    {
+      "id": 104,
+      "type": "row",
+      "title": "Connections",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "panels": []
+    },
+    {
+      "id": 15,
+      "type": "bargauge",
+      "title": "Connected users by service",
+      "description": "Users connected right now, per service, as DSM counts them (SYNOLOGY-SERVICES-MIB). Same numbers as DSM's Connected Users, without the per-user list.",
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 44
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by (serviceName) (serviceUsers{job=\"synology-health\"})",
+          "legendFormat": "{{serviceName}}",
+          "instant": true
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "minVizHeight": 10,
+        "maxVizHeight": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#5794F2"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 16,
+      "type": "table",
+      "title": "Connections (range)",
+      "description": "Who connected, from where and to what, from DSM's Connection log (Log Center > Log Sending to logs.shakir.cloud). Events = how many times in the selected range.",
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 8,
+        "y": 44
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "instant",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (user, client, service, event, target) (count_over_time({job=\"syslog\", host=\"synology\", app=\"Connection\"} | regexp `User \\[(?P<user>[^\\]]+)\\] from \\[(?P<client>[^\\]]+)\\](?: via \\[(?P<service>[^\\]]+)\\])? (?P<event>accessed shared folder|signed in to|failed to sign in to|signed out of)(?: \\[(?P<target>[^\\]]+)\\])?` [$__range]))"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "user": 0,
+              "client": 1,
+              "service": 2,
+              "event": 3,
+              "target": 4,
+              "Value #A": 5
+            },
+            "renameByName": {
+              "user": "User",
+              "client": "Client",
+              "service": "Service",
+              "event": "Event",
+              "target": "Target",
+              "Value #A": "Events"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Events",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No connections in range",
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Events"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
