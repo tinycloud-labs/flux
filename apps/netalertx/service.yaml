@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: netalertx
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: netalertx
+spec:
+  selector:
+    app.kubernetes.io/name: netalertx
+  ports:
+    - name: ui
+      port: 20211
+      targetPort: ui
+    # API and /metrics; reached in-cluster only (Prometheus)
+    - name: api
+      port: 20212
+      targetPort: api
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: netalertx
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: netalertx
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: netalertx.shakir.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: netalertx
+                port:
+                  name: ui
+---
+# Device counts and per-device status (docs: API_METRICS.md). Every 2 minutes:
+# device state changes on a 5-minute scan cycle, so faster adds nothing
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: netalertx
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: netalertx
+  endpoints:
+    - port: api
+      path: /metrics
+      interval: 2m
+      authorization:
+        type: Bearer
+        credentials:
+          name: netalertx-api-token
+          key: token
+      relabelings:
+        - targetLabel: job
+          replacement: netalertx
+      metricRelabelings:
+        # last_connection changes on every scan, which would start a new series
+        # per device every 5 minutes (churn = extra TSDB writes); first_connection
+        # is history, not state
+        - action: labeldrop
+          regex: first_connection|last_connection
