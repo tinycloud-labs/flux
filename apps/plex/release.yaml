@@ -48,6 +48,16 @@ spec:
       ingressClassName: traefik
       url: plex-green.shakir.cloud
 
+    # Direct LAN address, Plex clients connect here instead of falling back to the relay.
+    # - 10.10.50.97 is taken from the MetalLB pool (I need to expand it later, this is the last IP)
+    # - Local keeps the client's real IP, so "LAN Networks" and "allowed without
+    #   auth" (10.10.50.0/24) still match; MetalLB announces from Plex's node
+    service:
+      type: LoadBalancer
+      externalTrafficPolicy: Local
+      annotations:
+        metallb.io/loadBalancerIPs: 10.10.50.97
+
     pms:
       # Config and SQLite database on a Proxmox CSI disk (plex-config-csi below)
       configExistingClaim: plex-config-csi
@@ -85,8 +95,9 @@ spec:
       TZ: America/Los_Angeles
       # Server name shown in Plex apps, so it can't be confused with the VM
       HOSTNAME: plex-green
-      # TLS ends at HAProxy, so clients must be told https on 443
-      ADVERTISE_IP: https://plex-green.shakir.cloud:443
+      # Published to plex.tv as the server's addresses ("Custom server access URLs"):
+      # the LAN address first, then the ingress (TLS ends at HAProxy, hence https on 443)
+      ADVERTISE_IP: http://10.10.50.97:32400/,https://plex-green.shakir.cloud:443
 
     # Same container paths as on the VM, so library paths carry over unchanged.
     # /transcode is an emptyDir the chart always adds
