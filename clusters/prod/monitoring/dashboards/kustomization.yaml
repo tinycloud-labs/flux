@@ -101,6 +101,12 @@ configMapGenerator:
     options:
       annotations:
         grafana_folder: Homelab
+  - name: grafana-dashboard-plex
+    files:
+      - plex.json
+    options:
+      annotations:
+        grafana_folder: Homelab
 generatorOptions:
   disableNameSuffixHash: true
   labels:

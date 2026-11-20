@@ -238,6 +238,14 @@ spec:
         userKey: grafana-user
         passwordKey: grafana-secret
 
+      # Plex token for the "Plex" data source below (BitwardenSecret plex-token,
+      # bootstrap/bw-secrets/monitoring.yaml)
+      envValueFrom:
+        PLEX_TOKEN:
+          secretKeyRef:
+            name: plex-token
+            key: token
+
       ingress:
         enabled: true
         ingressClassName: traefik
@@ -307,6 +315,22 @@ spec:
               - https://air-quality-api.open-meteo.com  # US AQI, PM2.5, ozone
               - https://date.nager.at                   # US public holidays
               - https://api.aladhan.com                 # Hijri calendar (Saudi holidays)
+        # Plex's own API, for the Plex dashboard (library counts, recently added,
+        # now playing). Separate from Infinity above, which stays key-free: this one
+        # sends the token and may only call Plex. Grafana fills $__env{PLEX_TOKEN}
+        # from the env var above when it provisions the data source
+        - name: Plex
+          uid: plex
+          type: yesoreyeram-infinity-datasource
+          access: proxy
+          jsonData:
+            allowedHosts:
+              - http://plex.apps.svc.cluster.local:32400
+            httpHeaderName1: X-Plex-Token
+            httpHeaderName2: Accept
+          secureJsonData:
+            httpHeaderValue1: $__env{PLEX_TOKEN}
+            httpHeaderValue2: application/json
 
       # Installed at startup into the Grafana disk (GF_PLUGINS_PREINSTALL_SYNC, id@version)
       plugins:
