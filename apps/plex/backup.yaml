@@ -36,8 +36,9 @@ spec:
                 app.kubernetes.io/name: plex-media-server
                 app.kubernetes.io/instance: plex
             topologyKey: kubernetes.io/hostname
-    # pms-docker starts as root and drops to the plex user, so files belong to
-    # that user; root reads them all
+    # Run as the plex user (pms-docker's uid/gid 1000), not root: Plex keeps
+    # Preferences.xml and its token at mode 600, and the unprivileged mover drops
+    # all capabilities, so root can't bypass file permissions and is denied
     moverSecurityContext:
-      runAsUser: 0
-      runAsGroup: 0
+      runAsUser: 1000
+      runAsGroup: 1000

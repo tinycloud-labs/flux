@@ -20,8 +20,8 @@ spec:
     secretName: bw-auth-token
     secretKey: token
 ---
-# Same Discord webhook as apps/discord-webhook (Flux events); Alertmanager reads it
-# from /etc/alertmanager/secrets/discord-webhook/address
+# Discord webhook for the monitoring stack, separate from apps/discord-webhook (Flux
+# events); Alertmanager reads it from /etc/alertmanager/secrets/discord-webhook/address
 apiVersion: k8s.bitwarden.com/v1
 kind: BitwardenSecret
 metadata:
@@ -36,7 +36,7 @@ spec:
   secretName: discord-webhook
   onlyMappedSecrets: true
   map:
-    - bwSecretId: a677efc5-c46b-41bc-a638-b48d00883466
+    - bwSecretId: 3631a747-5d27-450c-abe2-b50800433aa3
       secretKeyName: address
   authToken:
     secretName: bw-auth-token
