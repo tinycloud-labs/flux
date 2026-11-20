@@ -143,3 +143,25 @@ spec:
   authToken:
     secretName: bw-auth-token
     secretKey: token
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: volsync-plex-config
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: volsync-plex-config
+  namespace: apps
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: volsync-plex-config
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: 513f62b5-b973-4121-98d1-b508003a7040
+      secretKeyName: RESTIC_REPOSITORY
+    - bwSecretId: dd4e9a66-a9d3-49fc-84d1-b502002cb6c2
+      secretKeyName: RESTIC_PASSWORD
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

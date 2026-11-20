@@ -1,0 +1,43 @@
+# Nightly restic backup of the Plex config disk (Proxmox CSI) into the Synology repo.
+# Restore steps: apps/volsync-repo/RESTORE.md (same procedure as Jellyfin)
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: plex-config
+  namespace: apps
+spec:
+  sourcePVC: plex-config-csi
+  trigger:
+    # 03:30 daily, after Jellyfin's 03:00 run. The copy is taken from the live disk,
+    # so SQLite is only as consistent as Plex is quiet at that moment. Plex's own
+    # scheduled database backups in /backups (NFS) are the consistent fallback
+    schedule: "30 3 * * *"
+  restic:
+    repository: volsync-plex-config
+    # The Proxmox CSI driver has no snapshot support, so the mover reads the PVC directly
+    copyMethod: Direct
+    pruneIntervalDays: 14
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 6
+    moverVolumes:
+      - mountPath: repo   # appears at /mnt/repo
+        volumeSource:
+          persistentVolumeClaim:
+            claimName: volsync-repo
+    # The disk is ReadWriteOnce and attached to one worker VM,
+    # so the mover must run on the same node as Plex
+    moverAffinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: plex-media-server
+                app.kubernetes.io/instance: plex
+            topologyKey: kubernetes.io/hostname
+    # pms-docker starts as root and drops to the plex user, so files belong to
+    # that user; root reads them all
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
