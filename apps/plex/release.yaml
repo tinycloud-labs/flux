@@ -1,0 +1,277 @@
+# Plex "green": until a DNS cut-over to plex.shakir.cloud
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: plex
+  namespace: apps
+spec:
+  interval: 1h0m0s
+  releaseName: plex
+  # Same reason as Jellyfin: the config disk binds on first use and then has to
+  # attach, so the first install takes longer than Helm's default 5m
+  timeout: 10m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  # Storage releases must be Ready before Plex installs or upgrades
+  dependsOn:
+    - name: plex-config-csi
+      namespace: apps
+    - name: plex-nfs
+      namespace: apps
+    - name: plex-mediaserver-nfs
+      namespace: apps
+    - name: plex-mediaintake-nfs
+      namespace: apps
+  chart:
+    spec:
+      chart: plex-media-server
+      version: "1.9.0"
+      sourceRef:
+        kind: HelmRepository
+        name: plex
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    # Only overrides are listed; see `helm show values plex-media-server --repo https://raw.githubusercontent.com/plexinc/pms-docker/gh-pages`
+    # The image tag follows the chart version (plexinc/pms-docker)
+
+    # Resources are named "plex" instead of "plex-plex-media-server"
+    fullnameOverride: plex
+
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      url: plex-green.shakir.cloud
+
+    pms:
+      # Config and SQLite database on a Proxmox CSI disk (plex-config-csi below)
+      configExistingClaim: plex-config-csi
+
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        # Same cap as the VM's mem_limit
+        limits:
+          memory: 8Gi
+
+      # The first start creates the database; don't let a liveness probe kill it
+      startupProbe:
+        httpGet:
+          path: /identity
+          port: 32400
+        periodSeconds: 10
+        failureThreshold: 60
+      livenessProbe:
+        httpGet:
+          path: /identity
+          port: 32400
+        periodSeconds: 60
+        timeoutSeconds: 5
+        failureThreshold: 3
+      readinessProbe:
+        httpGet:
+          path: /identity
+          port: 32400
+        periodSeconds: 30
+        timeoutSeconds: 5
+
+    extraEnv:
+      TZ: America/Los_Angeles
+      # Server name shown in Plex apps, so it can't be confused with the VM
+      HOSTNAME: plex-green
+      # TLS ends at HAProxy, so clients must be told https on 443
+      ADVERTISE_IP: https://plex-green.shakir.cloud:443
+
+    # Same container paths as on the VM, so library paths carry over unchanged.
+    # /transcode is an emptyDir the chart always adds
+    extraVolumes:
+      - name: plex-nfs
+        persistentVolumeClaim:
+          claimName: plex-nfs
+      - name: mediaserver
+        persistentVolumeClaim:
+          claimName: plex-mediaserver-nfs
+      - name: mediaintake
+        persistentVolumeClaim:
+          claimName: plex-mediaintake-nfs
+    extraVolumeMounts:
+      # Plex's own scheduled database backups (Settings > Scheduled Tasks)
+      - name: plex-nfs
+        mountPath: /backups
+        subPath: db-backups
+      - name: mediaserver
+        mountPath: /data
+        subPath: data
+      - name: mediaintake
+        mountPath: /tv
+        subPath: tv
+      - name: mediaintake
+        mountPath: /movies
+        subPath: movies
+      - name: mediaintake
+        mountPath: /anime
+        subPath: anime
+
+---
+# Plex config and SQLite database. A Proxmox CSI disk, not NFS: SQLite on NFS corrupts
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: plex-config-csi
+  namespace: apps
+spec:
+  interval: 1h0m0s
+  releaseName: plex-config-csi
+  chart:
+    spec:
+      chart: storage
+      version: "0.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  # The PVC only binds once Plex's pod uses it (WaitForFirstConsumer).
+  # Waiting here would deadlock with the dependsOn on the plex release.
+  install:
+    disableWait: true
+  upgrade:
+    disableWait: true
+
+  values:
+    labels:
+      app: plex
+    annotations:
+      volume.kubernetes.io/description: "Plex config, SQLite database and metadata"
+
+    persistence:
+      name: plex-config-csi
+      # Posters, thumbnails and metadata live here too, not only the database
+      size: 30Gi
+      accessMode: ReadWriteOnce
+      storageClassName: proxmox-retain
+      # After the first install, pin the new disk like Jellyfin does:
+      # copy the PV's spec.csi.volumeHandle into existingVolume.handle
+      # existingVolume:
+      #   handle: ""
+      #   fsType: xfs
+      #   volumeAttributes:
+      #     backup: "0"
+      #     discard: "on"
+      #     iothread: "1"
+      #     replicate: "0"
+      #     ssd: "1"
+      #     storage: "tank"
+
+---
+# Plex's folder on the NAS, next to the other apps: its own database backups
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: plex-nfs
+  namespace: apps
+spec:
+  interval: 1h0m0s
+  releaseName: plex-nfs
+  chart:
+    spec:
+      chart: storage
+      version: "0.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    labels:
+      app: plex
+    annotations:
+      volume.kubernetes.io/description: "Plex database backups"
+      custom.synology/path-hint: "maps to /vol1/k3s-main/plex"
+
+    persistence:
+      name: plex-nfs
+      size: 100Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/k3s-main/plex
+
+---
+# Media library, shared with the Plex VM (mounted there at /mediaserver)
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: plex-mediaserver-nfs
+  namespace: apps
+spec:
+  interval: 1h0m0s
+  releaseName: plex-mediaserver-nfs
+  chart:
+    spec:
+      chart: storage
+      version: "0.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    labels:
+      app: plex
+    annotations:
+      volume.kubernetes.io/description: "Plex media library (/data)"
+
+    persistence:
+      name: plex-mediaserver-nfs
+      size: 100Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/mediaserver
+
+---
+# Incoming TV, movies and anime, shared with the Plex VM (mounted there at /mediaintake)
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: plex-mediaintake-nfs
+  namespace: apps
+spec:
+  interval: 1h0m0s
+  releaseName: plex-mediaintake-nfs
+  chart:
+    spec:
+      chart: storage
+      version: "0.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    labels:
+      app: plex
+    annotations:
+      volume.kubernetes.io/description: "Plex sorted media"
+
+    persistence:
+      name: plex-mediaintake-nfs
+      size: 100Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/mediaintake

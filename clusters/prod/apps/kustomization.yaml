@@ -19,6 +19,7 @@ resources:
   - ../../../apps/metube
   - ../../../apps/omni-tools
   - ../../../apps/paperless-ngx
+  - ../../../apps/plex
   - ../../../apps/romm
   - ../../../apps/volsync-repo
   - ../notifications

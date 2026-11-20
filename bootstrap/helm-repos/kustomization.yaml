@@ -16,5 +16,6 @@ resources:
   - jellyfin.yaml
   - karakeep.yaml
   - metallb.yaml
+  - plex.yaml
   - prometheus-stack.yaml
   - tinycloud-labs.yaml
