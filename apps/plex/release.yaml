@@ -1,4 +1,3 @@
-# Plex "green": until a DNS cut-over to plex.shakir.cloud
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -46,7 +45,7 @@ spec:
     ingress:
       enabled: true
       ingressClassName: traefik
-      url: plex-green.shakir.cloud
+      url: plex.shakir.cloud
 
     # Direct LAN address, Plex clients connect here instead of falling back to the relay.
     # - 10.10.50.97 is taken from the MetalLB pool (I need to expand it later, this is the last IP)
@@ -93,11 +92,10 @@ spec:
 
     extraEnv:
       TZ: America/Los_Angeles
-      # Server name shown in Plex apps, so it can't be confused with the VM
-      HOSTNAME: plex-green
       # Published to plex.tv as the server's addresses ("Custom server access URLs"):
-      # the LAN address first, then the ingress (TLS ends at HAProxy, hence https on 443)
-      ADVERTISE_IP: http://10.10.50.97:32400/,https://plex-green.shakir.cloud:443
+      # the LAN address first, then the ingress (TLS ends at HAProxy, hence https on 443).
+      # Applied on every start, so it overrides edits made in Plex's settings
+      ADVERTISE_IP: http://10.10.50.97:32400/,https://plex.shakir.cloud:443
 
     # Same container paths as on the VM, so library paths carry over unchanged.
     # /transcode is an emptyDir the chart always adds
@@ -168,18 +166,17 @@ spec:
       size: 30Gi
       accessMode: ReadWriteOnce
       storageClassName: proxmox-retain
-      # After the first install, pin the new disk like Jellyfin does:
-      # copy the PV's spec.csi.volumeHandle into existingVolume.handle
-      # existingVolume:
-      #   handle: ""
-      #   fsType: xfs
-      #   volumeAttributes:
-      #     backup: "0"
-      #     discard: "on"
-      #     iothread: "1"
-      #     replicate: "0"
-      #     ssd: "1"
-      #     storage: "tank"
+      # Pinned to the existing disk, so a rebuild rebinds it instead of provisioning a new one
+      existingVolume:
+        handle: "homelab/pve1/tank/vm-9999-pvc-29ac1c2f-4b49-44eb-b716-dff97784a7b2"
+        fsType: xfs
+        volumeAttributes:
+          backup: "0"
+          discard: "on"
+          iothread: "1"
+          replicate: "0"
+          ssd: "1"
+          storage: "tank"
 
 ---
 # Plex's folder on the NAS, next to the other apps: its own database backups
