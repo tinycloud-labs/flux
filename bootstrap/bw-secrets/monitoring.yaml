@@ -191,3 +191,26 @@ spec:
   authToken:
     secretName: bw-auth-token
     secretKey: token
+---
+# Plex token for Grafana's "Plex" data source (library counts, recently added, now
+# playing); Grafana reads it from the PLEX_TOKEN env var
+# (clusters/prod/monitoring/prometheus/release.yaml)
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: plex-token
+    app.kubernetes.io/part-of: sm-operator
+    app.kubernetes.io/managed-by: flux
+  name: plex-token
+  namespace: monitoring
+spec:
+  organizationId: 7cf8a916-b01f-49d2-945c-b3d5005679cf
+  secretName: plex-token
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: a761467e-9e19-4490-9e49-b508013aa5f6
+      secretKeyName: token
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

@@ -1,0 +1,1295 @@
+{
+  "uid": "homelab_plex",
+  "title": "Plex",
+  "tags": [
+    "homelab",
+    "plex"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "editable": false,
+  "graphTooltip": 0,
+  "refresh": "5m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": true
+  },
+  "description": "Plex library counts, recent additions and current streams, from Plex's own API (data source: Plex). If a library is recreated, its ID changes: update the hidden music/movies/tv/anime variables (IDs are listed in the Libraries table).",
+  "annotations": {
+    "list": []
+  },
+  "links": [],
+  "templating": {
+    "list": [
+      {
+        "type": "constant",
+        "name": "music",
+        "label": "Music library ID",
+        "query": "34",
+        "hide": 2
+      },
+      {
+        "type": "constant",
+        "name": "movies",
+        "label": "Movies library ID",
+        "query": "1",
+        "hide": 2
+      },
+      {
+        "type": "constant",
+        "name": "tv",
+        "label": "TV Shows library ID",
+        "query": "2",
+        "hide": 2
+      },
+      {
+        "type": "constant",
+        "name": "anime",
+        "label": "Anime library ID",
+        "query": "12",
+        "hide": 2
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Music",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Artists",
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "description": "Artists in the Music library.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "([MediaContainer.{\"count\": totalSize}])",
+          "columns": [
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections/${music}/all",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "type",
+                "value": "8"
+              },
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "0"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#E5A00D"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Albums",
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 1
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "description": "Albums in the Music library.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "([MediaContainer.{\"count\": totalSize}])",
+          "columns": [
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections/${music}/all",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "type",
+                "value": "9"
+              },
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "0"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#E5A00D"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Tracks",
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "description": "Tracks in the Music library.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "([MediaContainer.{\"count\": totalSize}])",
+          "columns": [
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections/${music}/all",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "type",
+                "value": "10"
+              },
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "0"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#E5A00D"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "row",
+      "title": "Video",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "panels": []
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Movies",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 7
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "description": "Movies in the Movies library (course libraries such as Programming are not counted).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "([MediaContainer.{\"count\": totalSize}])",
+          "columns": [
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections/${movies}/all",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "type",
+                "value": "1"
+              },
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "0"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#E5A00D"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "TV shows",
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 4,
+        "y": 7
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "description": "Shows in the TV Shows library.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "([MediaContainer.{\"count\": totalSize}])",
+          "columns": [
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections/${tv}/all",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "type",
+                "value": "2"
+              },
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "0"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#E5A00D"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "TV episodes",
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 9,
+        "y": 7
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "description": "Episodes in the TV Shows library.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "([MediaContainer.{\"count\": totalSize}])",
+          "columns": [
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections/${tv}/all",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "type",
+                "value": "4"
+              },
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "0"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#E5A00D"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "Anime series",
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 14,
+        "y": 7
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "description": "Series in the Anime library.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "([MediaContainer.{\"count\": totalSize}])",
+          "columns": [
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections/${anime}/all",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "type",
+                "value": "2"
+              },
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "0"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#E5A00D"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Anime episodes",
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 19,
+        "y": 7
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "description": "Episodes in the Anime library.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "([MediaContainer.{\"count\": totalSize}])",
+          "columns": [
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections/${anime}/all",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "type",
+                "value": "4"
+              },
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "0"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#E5A00D"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "row",
+      "title": "Activity",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "panels": []
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Recently added albums",
+      "description": "The 15 albums most recently added to the Music library.",
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "[MediaContainer.Metadata.{\"album\": title, \"artist\": parentTitle, \"year\": year, \"added\": addedAt * 1000}]",
+          "columns": [
+            {
+              "selector": "album",
+              "text": "Album",
+              "type": "string"
+            },
+            {
+              "selector": "artist",
+              "text": "Artist",
+              "type": "string"
+            },
+            {
+              "selector": "year",
+              "text": "Year",
+              "type": "number"
+            },
+            {
+              "selector": "added",
+              "text": "Added",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections/${music}/recentlyAdded",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "15"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Added"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Year"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Year"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Added"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "type": "table",
+      "title": "Recently added",
+      "description": "The 15 most recent additions across all libraries.",
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "[MediaContainer.Metadata.{\"title\": type = \"season\" ? parentTitle & \" \u00b7 \" & title : (type = \"episode\" ? grandparentTitle & \" \u00b7 \" & title : (type = \"album\" ? parentTitle & \" \u00b7 \" & title : title)), \"library\": librarySectionTitle, \"added\": addedAt * 1000}]",
+          "columns": [
+            {
+              "selector": "title",
+              "text": "Title",
+              "type": "string"
+            },
+            {
+              "selector": "library",
+              "text": "Library",
+              "type": "string"
+            },
+            {
+              "selector": "added",
+              "text": "Added",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/recentlyAdded",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [
+              {
+                "key": "X-Plex-Container-Start",
+                "value": "0"
+              },
+              {
+                "key": "X-Plex-Container-Size",
+                "value": "15"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Added"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Library"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Added"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Now playing",
+      "description": "Streams playing right now. Stream shows Transcode when Plex is converting on the CPU.",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "[MediaContainer.Metadata.{\"title\": grandparentTitle ? grandparentTitle & \" \u00b7 \" & title : title, \"player\": Player.title & \" (\" & Player.product & \")\", \"state\": Player.state, \"stream\": TranscodeSession ? \"Transcode\" : \"Direct\"}]",
+          "columns": [
+            {
+              "selector": "title",
+              "text": "Title",
+              "type": "string"
+            },
+            {
+              "selector": "player",
+              "text": "Player",
+              "type": "string"
+            },
+            {
+              "selector": "state",
+              "text": "State",
+              "type": "string"
+            },
+            {
+              "selector": "stream",
+              "text": "Stream",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/status/sessions",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": []
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Nothing playing",
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Stream"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Stream"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Transcode": {
+                        "color": "orange",
+                        "index": 0
+                      },
+                      "Direct": {
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "type": "table",
+      "title": "Libraries",
+      "description": "Every library on the server. The ID column is what the hidden music/movies/tv/anime dashboard variables point at.",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "plex"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "plex"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "[MediaContainer.Directory.{\"library\": title, \"type\": type, \"id\": key, \"scanned\": scannedAt * 1000}]",
+          "columns": [
+            {
+              "selector": "library",
+              "text": "Library",
+              "type": "string"
+            },
+            {
+              "selector": "type",
+              "text": "Type",
+              "type": "string"
+            },
+            {
+              "selector": "id",
+              "text": "ID",
+              "type": "string"
+            },
+            {
+              "selector": "scanned",
+              "text": "Last scan",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "url": "http://plex.apps.svc.cluster.local:32400/library/sections",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": []
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last scan"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last scan"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
