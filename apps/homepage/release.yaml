@@ -166,6 +166,11 @@ spec:
                   href: https://deemix.shakir.cloud
                   siteMonitor: https://deemix.shakir.cloud
                   description: Deemix Music Manager
+              - Picard:
+                  icon: musicbrainz-picard
+                  href: https://picard.shakir.cloud
+                  siteMonitor: https://picard.shakir.cloud
+                  description: MusicBrainz Picard Music Tagger
               - RomM:
                   icon: romm
                   href: https://romm.shakir.cloud

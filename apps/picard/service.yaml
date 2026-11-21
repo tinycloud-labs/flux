@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: picard
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: picard
+spec:
+  selector:
+    app.kubernetes.io/name: picard
+  ports:
+    - name: web
+      port: 5800
+      targetPort: web
+---
+# noVNC uses a WebSocket on the same host and path; Traefik passes it through as is
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: picard
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: picard
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: picard.shakir.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: picard
+                port:
+                  name: web

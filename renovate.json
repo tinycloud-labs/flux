@@ -10,9 +10,10 @@
     ]
   },
   "kubernetes": {
-    "description": "Images in plain Kubernetes manifests, for apps without a Helm chart (NetAlertX)",
+    "description": "Images in plain Kubernetes manifests, for apps without a Helm chart (NetAlertX, Picard)",
     "managerFilePatterns": [
-      "/^apps/netalertx/.+\\.ya?ml$/"
+      "/^apps/netalertx/.+\\.ya?ml$/",
+      "/^apps/picard/.+\\.ya?ml$/"
     ]
   },
   "packageRules": [
