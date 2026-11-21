@@ -1,0 +1,100 @@
+# MusicBrainz Picard, the desktop tagger, served to the browser over noVNC
+# (jlesage/musicbrainz-picard). Upstream ships no Helm chart, and it needs three
+# volumes (unichart takes one), so these are plain manifests.
+#
+# Music comes from Picard's own NFS PV/PVCs (storage.yaml), not Plex's or
+# Deemix's claims, so each app can change or go away on its own:
+# - picard-mediaserver-nfs -> /volume1/mediaserver
+# - picard-deemix-nfs      -> /volume1/k3s-main/deemix, downloads/ only
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: picard
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: picard
+spec:
+  replicas: 1
+  # The config disk is ReadWriteOnce, so the old pod must release it first
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: picard
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: picard
+    spec:
+      containers:
+        - name: picard
+          image: jlesage/musicbrainz-picard:v26.11.1@sha256:80f082c3631e68e9163b1ed658d2612e8ec8396bfed51090ed3967cad08e2964 # renovate: depName=jlesage/musicbrainz-picard
+          env:
+            - name: TZ
+              value: America/Los_Angeles
+            # Same uid/gid as Plex and Deemix, which own the files on these shares.
+            # The container starts as root, then runs Picard as this user
+            - name: USER_ID
+              value: "1000"
+            - name: GROUP_ID
+              value: "1000"
+            # Reopens Picard if its window is closed or it crashes
+            - name: KEEP_APP_RUNNING
+              value: "1"
+            # Login page in front of the GUI: anyone who reaches it can rename and
+            # delete music on the NAS. Credentials come from the picard-web-auth secret.
+            # TLS ends upstream (HAProxy), so the container itself serves plain HTTP;
+            # ALLOW_INSECURE lets the login page work without the container's own HTTPS
+            - name: WEB_AUTHENTICATION
+              value: "1"
+            - name: WEB_AUTHENTICATION_ALLOW_INSECURE
+              value: "1"
+            - name: WEB_AUTHENTICATION_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: picard-web-auth
+                  key: username
+            - name: WEB_AUTHENTICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: picard-web-auth
+                  key: password
+          ports:
+            # Web GUI (noVNC). The raw VNC port (5900) isn't exposed
+            - name: web
+              containerPort: 5800
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          startupProbe:
+            tcpSocket:
+              port: web
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket:
+              port: web
+            periodSeconds: 60
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            # Picard's file browser opens at /storage
+            - name: mediaserver
+              mountPath: /storage/mediaserver
+            - name: deemix
+              mountPath: /storage/deemix
+              subPath: downloads
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: picard-config-csi
+        - name: mediaserver
+          persistentVolumeClaim:
+            claimName: picard-mediaserver-nfs
+        - name: deemix
+          persistentVolumeClaim:
+            claimName: picard-deemix-nfs

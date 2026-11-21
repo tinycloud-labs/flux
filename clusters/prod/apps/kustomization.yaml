@@ -20,6 +20,7 @@ resources:
   - ../../../apps/netalertx
   - ../../../apps/omni-tools
   - ../../../apps/paperless-ngx
+  - ../../../apps/picard
   - ../../../apps/plex
   - ../../../apps/romm
   - ../../../apps/volsync-repo

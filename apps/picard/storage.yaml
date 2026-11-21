@@ -1,0 +1,118 @@
+# Picard config (/config): Picard's settings and plugins, plus the container's
+# logs and certificates. A Proxmox CSI disk, not NFS: Picard saves settings
+# through Qt's QSettings, which takes a lock file on every save (NFS locking
+# isn't reliable), and the small writes stay off the NAS HDDs.
+#
+# proxmox-delete, not pinned: a cluster rebuild starts Picard with default
+# settings. Nothing here is hard to redo (options, plugins, scripts).
+#
+# Writes are small: settings on save, plus the container's rotated logs.
+# The music is on the NAS: the two NFS releases below
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: picard-config-csi
+  namespace: apps
+spec:
+  interval: 1h0m0s
+  releaseName: picard-config-csi
+  chart:
+    spec:
+      chart: storage
+      version: "0.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  # The PVC only binds once Picard's pod uses it (WaitForFirstConsumer)
+  install:
+    disableWait: true
+  upgrade:
+    disableWait: true
+
+  values:
+    labels:
+      app: picard
+    annotations:
+      volume.kubernetes.io/description: "MusicBrainz Picard config"
+
+    persistence:
+      name: picard-config-csi
+      size: 1Gi
+      accessMode: ReadWriteOnce
+      storageClassName: proxmox-delete
+
+---
+# Music library on the NAS (/volume1/mediaserver). Picard's own PV/PVC on the
+# same share Plex uses, so neither app depends on the other's claim
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: picard-mediaserver-nfs
+  namespace: apps
+spec:
+  interval: 1h0m0s
+  releaseName: picard-mediaserver-nfs
+  chart:
+    spec:
+      chart: storage
+      version: "0.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    labels:
+      app: picard
+    annotations:
+      volume.kubernetes.io/description: "Picard: music library (/storage/mediaserver)"
+
+    persistence:
+      name: picard-mediaserver-nfs
+      size: 100Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/mediaserver
+
+---
+# Deemix's share on the NAS (/volume1/k3s-main/deemix). Picard's own PV/PVC;
+# the Deployment mounts only downloads/, not Deemix's config/
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: picard-deemix-nfs
+  namespace: apps
+spec:
+  interval: 1h0m0s
+  releaseName: picard-deemix-nfs
+  chart:
+    spec:
+      chart: storage
+      version: "0.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: tinycloud-labs
+        namespace: flux-system
+      interval: 2h0m0s
+
+  values:
+    labels:
+      app: picard
+    annotations:
+      volume.kubernetes.io/description: "Picard Deemix integration (/storage/deemix)"
+      custom.synology/path-hint: "maps to /vol1/k3s-main/deemix"
+
+    persistence:
+      name: picard-deemix-nfs
+      size: 100Mi
+      accessMode: ReadWriteMany
+      reclaimPolicy: Retain
+      nfs:
+        server: synology.shakir.cloud
+        path: /volume1/k3s-main/deemix
