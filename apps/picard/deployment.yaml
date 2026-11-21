@@ -41,6 +41,10 @@ spec:
             # Reopens Picard if its window is closed or it crashes
             - name: KEEP_APP_RUNNING
               value: "1"
+            # Plays Picard's audio in the browser (VNC carries no sound).
+            # Raw PCM over the GUI's connection, about 1.4 Mbit/s while playing; no disk writes
+            - name: WEB_AUDIO
+              value: "1"
             # Login page in front of the GUI: anyone who reaches it can rename and
             # delete music on the NAS. Credentials come from the picard-web-auth secret.
             # TLS ends upstream (HAProxy), so the container itself serves plain HTTP;
