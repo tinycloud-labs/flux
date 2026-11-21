@@ -12,19 +12,22 @@ spec:
   chart:
     spec:
       chart: paperless-ngx
-      version: "0.1.2"
+      version: "0.2.0"
       sourceRef:
         kind: HelmRepository
         name: tinycloud-labs
         namespace: flux-system
       interval: 2h0m0s
 
+  # Note: Image tags are set only here (Renovate updates them, with digests). The
+  # chart's values.yaml defaults are fallbacks, which the chart repo's Renovate
+  # leaves alone
   values:
     paperlessngx:
       image:
         repository: ghcr.io/paperless-ngx/paperless-ngx
         pullPolicy: IfNotPresent
-        tag: "2.20.15@sha256:6c86cad803970ea782683a8e80e7403444c5bf3cf70de63b4d3c8e87500db92f"
+        tag: "3.4.0@sha256:7c1d98afd200def9e2bad3a377d30829e8d486554b3c818995af5860114ea17f"
       replicaCount: 1
 
       env:
@@ -38,8 +41,19 @@ spec:
           value: "ara"
         - name: PAPERLESS_FILENAME_FORMAT
           value: "{{ correspondent }}/{{ created_year }}-{{ created_month }}-{{ title }}"
-        - name: PAPERLESS_CONSUMER_POLLING
+        # v3 renamed PAPERLESS_CONSUMER_POLLING. Polling, because inotify
+        # doesn't see changes on the NFS share
+        - name: PAPERLESS_CONSUMER_POLLING_INTERVAL
           value: "30"
+        # v3 keeps duplicates by default; this restores v2's rejection
+        - name: PAPERLESS_CONSUMER_DELETE_DUPLICATES
+          value: "true"
+        # Required since v3 (bootstrap/bw-secrets/apps.yaml)
+        - name: PAPERLESS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: paperless-secret-key
+              key: secret-key
 
     adminSecret:
       enabled: true
