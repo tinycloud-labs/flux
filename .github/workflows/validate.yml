@@ -1,0 +1,104 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to the same PR or branch cancels the run already in progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CLUSTER_PATH: clusters/prod
+  FLUX_VERSION: 2.10.0
+  KUBECONFORM_VERSION: 0.8.0
+
+jobs:
+  manifests:
+    name: Flux manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Flux CLI
+        uses: fluxcd/flux2/action@3fa784edd773d56630bb9f62645e08f70c2cff0a # v2.10.0
+        with:
+          version: ${{ env.FLUX_VERSION }}
+
+      - name: Install kubeconform
+        run: |
+          curl -sSfL "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" |
+            sudo tar -xzf - -C /usr/local/bin kubeconform
+
+      - name: Validate
+        run: scripts/validate.sh "./${CLUSTER_PATH}"
+
+  helmreleases:
+    name: HelmReleases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # An empty base makes flate test every HelmRelease. With a base set,
+      # it would only test the ones that changed since that revision.
+      - name: Install flate
+        uses: home-operations/flate/action@4e07f351352d235a335e5a1f0a088eab7ec40997 # v0.8.0
+        with:
+          base: ''
+
+      # Renders every HelmRelease with its chart and values (helm template).
+      - name: Test (flate)
+        run: flate test hr --path "$CLUSTER_PATH" --no-progress
+
+  helmrelease-diff:
+    name: HelmRelease diff
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # flate diffs against this commit (exported as FLATE_BASE) and fetches
+      # it from origin itself, so the shallow checkout is enough.
+      - name: Install flate
+        uses: home-operations/flate/action@4e07f351352d235a335e5a1f0a088eab7ec40997 # v0.8.0
+        with:
+          base: ${{ github.event.pull_request.base.sha }}
+
+      - name: Diff (flate)
+        run: flate diff hr --path "$CLUSTER_PATH" --output github --no-progress > diff.txt
+
+      # Keeps one comment per PR up to date instead of adding a new one per push.
+      - name: Comment on PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if ! grep -q . diff.txt; then
+            # Only update an earlier diff comment; don't add noise to PRs that
+            # never changed a HelmRelease. Fails harmlessly if there is none.
+            gh pr comment "$PR_URL" --edit-last --body "No HelmRelease changes." || true
+            exit 0
+          fi
+
+          {
+            echo "### HelmRelease diff"
+            echo
+            echo '```diff'
+            # GitHub comments are limited to 65536 characters.
+            head -c 60000 diff.txt
+            echo
+            echo '```'
+          } > comment.md
+          gh pr comment "$PR_URL" --edit-last --create-if-none --body-file comment.md
