@@ -7,7 +7,6 @@ resources:
   - anza-labs.yaml
   - backube.yaml
   - bw-secrets-manager.yaml
-  - cert-manager.yaml
   - csi-driver-nfs.yaml
   - csi-driver-proxmox.yaml
   - grafana.yaml
