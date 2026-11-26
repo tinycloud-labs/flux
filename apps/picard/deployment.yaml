@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: picard
-          image: jlesage/musicbrainz-picard:v26.11.1@sha256:80f082c3631e68e9163b1ed658d2612e8ec8396bfed51090ed3967cad08e2964 # renovate: depName=jlesage/musicbrainz-picard
+          image: jlesage/musicbrainz-picard:v26.11.4@sha256:25d1c34d6f953e922344a5641149126988076c748fea7fec4d03c9f6062d0707 # renovate: depName=jlesage/musicbrainz-picard
           env:
             - name: TZ
               value: America/Los_Angeles
